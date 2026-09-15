@@ -122,7 +122,7 @@ export default async function FlightsSearchPage({
 
 function FlightOfferCard({ offer }: { offer: FlightOffer }) {
   return (
-    <MotionListItem className="card sm:flex sm:items-center sm:justify-between">
+    <MotionListItem className="listing-row sm:flex-row sm:items-center sm:justify-between p-4">
       <div className="flex-1 space-y-3">
         {offer.isBhutaneseCarrier && (
           <span className="badge bg-gold-100 text-gold-800">Bhutanese carrier</span>
@@ -134,7 +134,11 @@ function FlightOfferCard({ offer }: { offer: FlightOffer }) {
           {offer.cabinClass.replace("_", " ").toLowerCase()}
         </p>
       </div>
-      <div className="mt-3 sm:mt-0 sm:ml-6">
+      <div className="mt-4 border-t border-stone-100 pt-3 text-right sm:mt-0 sm:ml-6 sm:border-0 sm:pt-0">
+        <p className="font-display text-xl font-bold text-brand-800">
+          Nu. {offer.totalPrice.toLocaleString()}
+        </p>
+        <p className="mb-2 text-xs text-stone-500">total</p>
         <FlightBookingButton offer={offer} />
       </div>
     </MotionListItem>

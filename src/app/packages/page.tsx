@@ -1,18 +1,32 @@
 import { prisma } from "@/lib/prisma";
-import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
+import ListingRow from "@/components/listing/ListingRow";
+import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
+import type { TripDifficulty } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
-const DIFFICULTY_LABEL: Record<string, string> = {
+const DIFFICULTY_LABEL: Record<TripDifficulty, string> = {
   EASY: "Easy",
   MODERATE: "Moderate",
   CHALLENGING: "Challenging",
 };
 
-export default async function PackagesPage() {
+type SearchParams = { difficulty?: string; maxPrice?: string };
+
+export default async function PackagesPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const { difficulty, maxPrice } = await searchParams;
+
   const itineraries = await prisma.itinerary.findMany({
-    where: { status: "PUBLISHED" },
+    where: {
+      status: "PUBLISHED",
+      ...(difficulty ? { difficulty: difficulty as TripDifficulty } : {}),
+      ...(maxPrice ? { pricePerPerson: { lte: Number(maxPrice) } } : {}),
+    },
     orderBy: { pricePerPerson: "asc" },
     include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: true } } },
   });
@@ -20,44 +34,76 @@ export default async function PackagesPage() {
   return (
     <div>
       <h1 className="mb-1 text-2xl font-bold">Package Tours</h1>
-      <p className="mb-8 text-sm text-stone-600">
-        Ready-made itineraries combining a guide, transport, and
-        accommodation into one trip. Want something different?{" "}
+      <p className="mb-6 text-sm text-stone-600">
+        Ready-made itineraries combining a guide, transport, and accommodation into one trip.
+        Want something different?{" "}
         <a href="/custom-tour" className="text-brand-700 hover:underline">
           Request a custom tour
         </a>{" "}
         instead.
       </p>
 
-      {itineraries.length === 0 ? (
-        <p className="text-stone-600">No packages published yet.</p>
-      ) : (
-        <ScrollReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {itineraries.map((it) => {
-            const destinationNames = uniqueOrdered(
-              it.days.map((d) => d.destination?.name).filter((n): n is string => Boolean(n))
-            );
-            return (
-              <MotionCard key={it.id} href={`/packages/${it.slug}`} className="card block">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold">{it.title}</h2>
-                  <span className="badge bg-stone-100 text-stone-600">
-                    {DIFFICULTY_LABEL[it.difficulty]}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-stone-600">{it.summary}</p>
-                {destinationNames.length > 0 && (
-                  <p className="mt-2 text-xs text-stone-400">{destinationNames.join(" · ")}</p>
-                )}
-                <p className="mt-3 text-sm text-stone-500">{it.durationDays} days</p>
-                <p className="mt-1 font-medium text-brand-800">
-                  Nu. {Number(it.pricePerPerson).toLocaleString()} / person
-                </p>
-              </MotionCard>
-            );
-          })}
-        </ScrollReveal>
-      )}
+      <form method="get" className="flex flex-col gap-6 lg:flex-row">
+        <FilterSidebar>
+          <FilterGroup title="Difficulty">
+            <select name="difficulty" defaultValue={difficulty ?? ""} className="input">
+              <option value="">Any difficulty</option>
+              {Object.entries(DIFFICULTY_LABEL).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </FilterGroup>
+          <FilterGroup title="Max price / person">
+            <input
+              name="maxPrice"
+              type="number"
+              placeholder="Nu. per person"
+              defaultValue={maxPrice ?? ""}
+              className="input"
+            />
+          </FilterGroup>
+          <button type="submit" className="btn-primary w-full">
+            Show results
+          </button>
+        </FilterSidebar>
+
+        <div className="min-w-0 flex-1">
+          <p className="mb-4 text-sm text-stone-600">
+            <span className="font-semibold text-stone-900">{itineraries.length}</span> package
+            {itineraries.length === 1 ? "" : "s"} found
+          </p>
+
+          {itineraries.length === 0 ? (
+            <p className="text-stone-600">No packages match your filters yet.</p>
+          ) : (
+            <ScrollReveal className="flex flex-col gap-4">
+              {itineraries.map((it) => {
+                const destinationNames = uniqueOrdered(
+                  it.days.map((d) => d.destination?.name).filter((n): n is string => Boolean(n))
+                );
+                return (
+                  <ListingRow
+                    key={it.id}
+                    href={`/packages/${it.slug}`}
+                    imageUrl={it.coverPhotoUrl}
+                    imageFallback={it.title[0]}
+                    badge={DIFFICULTY_LABEL[it.difficulty]}
+                    title={it.title}
+                    subtitle={it.summary}
+                    tags={[`${it.durationDays} days`, ...destinationNames.slice(0, 3)]}
+                    ratingAverage={null}
+                    ratingCount={0}
+                    priceLabel={`Nu. ${Number(it.pricePerPerson).toLocaleString()}`}
+                    priceSubLabel="per person"
+                  />
+                );
+              })}
+            </ScrollReveal>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

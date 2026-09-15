@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
+import ListingRow from "@/components/listing/ListingRow";
+import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -30,59 +31,85 @@ export default async function VehiclesSearchPage({
     orderBy: { ratePerDay: "asc" },
   });
 
+  const ratings = await prisma.review.groupBy({
+    by: ["targetId"],
+    where: { targetType: "VEHICLE", targetId: { in: vehicles.map((v) => v.id) } },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+  const ratingById = new Map(ratings.map((r) => [r.targetId, r]));
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Transport</h1>
 
-      <form className="card mb-6 grid gap-3 sm:grid-cols-4" method="get">
-        <select name="type" defaultValue={type ?? ""} className="input">
-          <option value="">Any type</option>
-          {VEHICLE_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <input
-          name="minCapacity"
-          type="number"
-          placeholder="Min capacity"
-          defaultValue={minCapacity ?? ""}
-          className="input"
-        />
-        <input
-          name="maxPrice"
-          type="number"
-          placeholder="Max BTN/day"
-          defaultValue={maxPrice ?? ""}
-          className="input"
-        />
-        <button type="submit" className="btn-primary">
-          Filter
-        </button>
-      </form>
+      <form method="get" className="flex flex-col gap-6 lg:flex-row">
+        <FilterSidebar>
+          <FilterGroup title="Vehicle type">
+            <select name="type" defaultValue={type ?? ""} className="input">
+              <option value="">Any type</option>
+              {VEHICLE_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </FilterGroup>
+          <FilterGroup title="Min capacity">
+            <input
+              name="minCapacity"
+              type="number"
+              placeholder="Seats"
+              defaultValue={minCapacity ?? ""}
+              className="input"
+            />
+          </FilterGroup>
+          <FilterGroup title="Max price / day">
+            <input
+              name="maxPrice"
+              type="number"
+              placeholder="Nu. per day"
+              defaultValue={maxPrice ?? ""}
+              className="input"
+            />
+          </FilterGroup>
+          <button type="submit" className="btn-primary w-full">
+            Show results
+          </button>
+        </FilterSidebar>
 
-      {vehicles.length === 0 ? (
-        <p className="text-stone-600">No vehicles match your filters yet.</p>
-      ) : (
-        <ScrollReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {vehicles.map((v) => (
-            <MotionCard key={v.id} href={`/vehicles/${v.id}`} className="card block">
-              <h2 className="font-semibold">
-                {v.type} · {v.operator.businessName}
-              </h2>
-              <p className="text-sm text-stone-600">Capacity: {v.capacity}</p>
-              <p className="text-sm text-stone-500">Driver: {v.driverName}</p>
-              {v.gpsDevice && (
-                <p className="mt-1 text-xs text-brand-700">GPS-tracked</p>
-              )}
-              <p className="mt-2 font-medium text-brand-800">
-                Nu. {Number(v.ratePerDay).toLocaleString()} / day
-              </p>
-            </MotionCard>
-          ))}
-        </ScrollReveal>
-      )}
+        <div className="min-w-0 flex-1">
+          <p className="mb-4 text-sm text-stone-600">
+            <span className="font-semibold text-stone-900">{vehicles.length}</span> vehicle
+            {vehicles.length === 1 ? "" : "s"} found
+          </p>
+
+          {vehicles.length === 0 ? (
+            <p className="text-stone-600">No vehicles match your filters yet.</p>
+          ) : (
+            <ScrollReveal className="flex flex-col gap-4">
+              {vehicles.map((v) => {
+                const rating = ratingById.get(v.id);
+                return (
+                  <ListingRow
+                    key={v.id}
+                    href={`/vehicles/${v.id}`}
+                    imageFallback={v.type[0]}
+                    badge={v.gpsDevice ? "GPS-tracked" : undefined}
+                    title={`${v.type} · ${v.operator.businessName}`}
+                    subtitle={`Driver: ${v.driverName}`}
+                    tags={[`Capacity: ${v.capacity}`]}
+                    ratingAverage={rating?._avg.rating ?? null}
+                    ratingCount={rating?._count.rating ?? 0}
+                    priceLabel={`Nu. ${Number(v.ratePerDay).toLocaleString()}`}
+                    priceSubLabel="per day"
+                  />
+                );
+              })}
+            </ScrollReveal>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

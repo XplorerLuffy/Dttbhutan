@@ -41,7 +41,7 @@ export default function FlightBookingButton({ offer }: { offer: FlightOffer }) {
   return (
     <div className="text-right">
       <button type="button" onClick={handleBook} disabled={isSubmitting} className="btn-primary">
-        {isSubmitting ? "Booking..." : `Book · Nu. ${offer.totalPrice.toLocaleString()}`}
+        {isSubmitting ? "Booking..." : "Select"}
       </button>
       {needsLogin && (
         <p className="mt-1 text-xs text-amber-700">

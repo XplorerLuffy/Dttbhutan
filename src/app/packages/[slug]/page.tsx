@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ItineraryBookingForm from "@/components/booking/ItineraryBookingForm";
+import DetailGallery from "@/components/listing/DetailGallery";
 
 const DIFFICULTY_LABEL: Record<string, string> = {
   EASY: "Easy",
@@ -23,7 +24,10 @@ export default async function PackageDetailPage({
   if (!itinerary || itinerary.status !== "PUBLISHED") notFound();
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <div>
+      <DetailGallery photos={[itinerary.coverPhotoUrl]} label={itinerary.title} />
+
+      <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{itinerary.title}</h1>
@@ -89,14 +93,15 @@ export default async function PackageDetailPage({
         </div>
       </div>
 
-      <div>
-        <div className="card mb-4">
+      <div className="sticky-booking-card">
+        <div className="price-summary-card">
           <p className="text-2xl font-bold text-brand-800">
             Nu. {Number(itinerary.pricePerPerson).toLocaleString()}
           </p>
           <p className="text-sm text-stone-500">per person</p>
         </div>
         <ItineraryBookingForm itineraryId={itinerary.id} maxGroupSize={itinerary.maxGroupSize} />
+      </div>
       </div>
     </div>
   );
