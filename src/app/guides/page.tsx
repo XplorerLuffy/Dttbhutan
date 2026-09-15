@@ -1,5 +1,7 @@
-import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import MotionCard from "@/components/MotionCard";
+import ScrollReveal from "@/components/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -72,22 +74,34 @@ export default async function GuidesSearchPage({
       {guides.length === 0 ? (
         <p className="text-stone-600">No guides match your filters yet.</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {guides.map((g) => (
-            <Link key={g.id} href={`/guides/${g.id}`} className="card hover:shadow-md">
-              <h2 className="font-semibold">{g.user.name}</h2>
-              <p className="text-sm text-stone-600">
-                {g.languages.join(", ")}
-              </p>
-              <p className="mt-1 text-sm text-stone-500">
-                {g.specialties.join(" · ")}
-              </p>
-              <p className="mt-2 font-medium text-emerald-800">
+            <MotionCard key={g.id} href={`/guides/${g.id}`} className="card block">
+              <div className="flex items-center gap-3">
+                {g.photoUrl ? (
+                  <Image
+                    src={g.photoUrl}
+                    alt={g.user.name}
+                    width={48}
+                    height={48}
+                    unoptimized
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 font-display text-lg text-brand-700">
+                    {g.user.name[0]}
+                  </div>
+                )}
+                <h2 className="font-semibold">{g.user.name}</h2>
+              </div>
+              <p className="mt-3 text-sm text-stone-600">{g.languages.join(", ")}</p>
+              <p className="mt-1 text-sm text-stone-500">{g.specialties.join(" · ")}</p>
+              <p className="mt-2 font-medium text-brand-800">
                 Nu. {Number(g.ratePerDay).toLocaleString()} / day
               </p>
-            </Link>
+            </MotionCard>
           ))}
-        </div>
+        </ScrollReveal>
       )}
     </div>
   );

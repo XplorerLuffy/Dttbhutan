@@ -1,6 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 import L from "leaflet";
 
@@ -16,6 +17,68 @@ function dotIcon(color: string) {
 }
 
 export type MapPoint = { latitude: number; longitude: number; label?: string };
+
+const ANIMATION_MS = 1400;
+
+function easeInOutCubic(t: number) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+/**
+ * The vehicle marker. Whenever `position` changes (a new GPS ping came
+ * in), eases the marker from wherever it currently sits to the new point
+ * over ~1.4s instead of jumping instantly — GPS pings arrive every so
+ * often, not continuously, so without this the marker would visibly
+ * teleport on every refresh.
+ */
+function AnimatedVehicleMarker({ position }: { position: MapPoint }) {
+  const markerRef = useRef<L.Marker>(null);
+  const prevPositionRef = useRef<MapPoint>(position);
+  const frameRef = useRef<number>();
+
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!marker) return;
+
+    const from = prevPositionRef.current;
+    const to = position;
+    prevPositionRef.current = position;
+
+    if (from.latitude === to.latitude && from.longitude === to.longitude) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      marker.setLatLng([to.latitude, to.longitude]);
+      return;
+    }
+
+    const start = performance.now();
+    function step(now: number) {
+      const t = Math.min(1, (now - start) / ANIMATION_MS);
+      const eased = easeInOutCubic(t);
+      const lat = from.latitude + (to.latitude - from.latitude) * eased;
+      const lng = from.longitude + (to.longitude - from.longitude) * eased;
+      marker!.setLatLng([lat, lng]);
+      if (t < 1) {
+        frameRef.current = requestAnimationFrame(step);
+      }
+    }
+    frameRef.current = requestAnimationFrame(step);
+
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, [position]);
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={[prevPositionRef.current.latitude, prevPositionRef.current.longitude]}
+      icon={dotIcon("#d1842a")}
+    >
+      <Popup>Current position</Popup>
+    </Marker>
+  );
+}
 
 export default function LiveTrackingMap({
   route,
@@ -41,7 +104,7 @@ export default function LiveTrackingMap({
       {route.length >= 2 && (
         <Polyline
           positions={route.map((p) => [p.latitude, p.longitude])}
-          pathOptions={{ color: "#0f766e", dashArray: "6 6", weight: 3 }}
+          pathOptions={{ color: "#1c6741", dashArray: "6 6", weight: 3 }}
         />
       )}
 
@@ -55,14 +118,7 @@ export default function LiveTrackingMap({
         </Marker>
       ))}
 
-      {currentPosition && (
-        <Marker
-          position={[currentPosition.latitude, currentPosition.longitude]}
-          icon={dotIcon("#059669")}
-        >
-          <Popup>Current position</Popup>
-        </Marker>
-      )}
+      {currentPosition && <AnimatedVehicleMarker position={currentPosition} />}
     </MapContainer>
   );
 }

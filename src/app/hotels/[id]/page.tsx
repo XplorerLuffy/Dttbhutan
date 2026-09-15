@@ -45,7 +45,7 @@ export default async function HotelDetailPage({
             <div className="card mb-2">
               <h3 className="font-semibold">{rt.name}</h3>
               <p className="text-sm text-stone-500">Sleeps {rt.capacity}</p>
-              <p className="mt-1 font-medium text-emerald-800">
+              <p className="mt-1 font-medium text-brand-800">
                 Nu. {Number(rt.pricePerNight).toLocaleString()} / night
               </p>
             </div>

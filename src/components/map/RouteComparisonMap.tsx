@@ -47,7 +47,7 @@ export default function RouteComparisonMap({
         {actualTrail.length >= 2 && (
           <Polyline
             positions={actualTrail.map((p) => [p.latitude, p.longitude])}
-            pathOptions={{ color: "#059669", weight: 4 }}
+            pathOptions={{ color: "#1c6741", weight: 4 }}
           />
         )}
 
@@ -58,7 +58,7 @@ export default function RouteComparisonMap({
         ))}
 
         {actualTrail[0] && (
-          <Marker position={[actualTrail[0].latitude, actualTrail[0].longitude]} icon={dotIcon("#059669")}>
+          <Marker position={[actualTrail[0].latitude, actualTrail[0].longitude]} icon={dotIcon("#1c6741")}>
             <Popup>GPS start</Popup>
           </Marker>
         )}
@@ -80,7 +80,7 @@ export default function RouteComparisonMap({
           <span className="inline-block h-0.5 w-4 border-t-2 border-dashed border-stone-400" /> Planned route
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-0.5 w-4 bg-emerald-600" /> Actual GPS trail
+          <span className="inline-block h-0.5 w-4 bg-pine-600" /> Actual GPS trail
         </span>
       </div>
     </div>

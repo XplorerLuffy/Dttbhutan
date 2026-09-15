@@ -46,7 +46,7 @@ export default async function AdminHomePage() {
         {cards.map((c) => (
           <Link key={c.href} href={c.href} className="card hover:shadow-md">
             <p className="text-sm text-stone-500">{c.title}</p>
-            <p className="mt-1 text-3xl font-bold text-emerald-800">{c.value}</p>
+            <p className="mt-1 text-3xl font-bold text-brand-800">{c.value}</p>
             <p className="text-xs text-stone-400">{c.hint}</p>
           </Link>
         ))}

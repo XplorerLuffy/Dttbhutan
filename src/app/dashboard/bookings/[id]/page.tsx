@@ -70,7 +70,7 @@ export default async function BookingDetailPage({
             <StatusBadge status={booking.status} />
           </div>
 
-          <p className="mt-3 font-medium text-emerald-800">
+          <p className="mt-3 font-medium text-brand-800">
             Total: Nu. {Number(booking.totalPrice).toLocaleString()}
           </p>
 
@@ -111,7 +111,7 @@ export default async function BookingDetailPage({
               <dt className="text-stone-500">Cabin</dt>
               <dd>{booking.flightBooking.cabinClass.replace("_", " ")}</dd>
             </dl>
-            <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 font-mono text-sm text-emerald-800">
+            <p className="mt-3 rounded-md bg-brand-50 px-3 py-2 font-mono text-sm text-brand-800">
               PNR: {booking.flightBooking.pnr}
             </p>
             <p className="mt-1 text-xs text-stone-400">
@@ -129,7 +129,7 @@ export default async function BookingDetailPage({
             </p>
             <Link
               href={`/track/${booking.trip.shareToken}`}
-              className="mt-2 inline-block text-emerald-700 hover:underline"
+              className="mt-2 inline-block text-brand-700 hover:underline"
             >
               Open live tracking page →
             </Link>

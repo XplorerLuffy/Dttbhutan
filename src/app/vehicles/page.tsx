@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import MotionCard from "@/components/MotionCard";
+import ScrollReveal from "@/components/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -64,23 +65,23 @@ export default async function VehiclesSearchPage({
       {vehicles.length === 0 ? (
         <p className="text-stone-600">No vehicles match your filters yet.</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {vehicles.map((v) => (
-            <Link key={v.id} href={`/vehicles/${v.id}`} className="card hover:shadow-md">
+            <MotionCard key={v.id} href={`/vehicles/${v.id}`} className="card block">
               <h2 className="font-semibold">
                 {v.type} · {v.operator.businessName}
               </h2>
               <p className="text-sm text-stone-600">Capacity: {v.capacity}</p>
               <p className="text-sm text-stone-500">Driver: {v.driverName}</p>
               {v.gpsDevice && (
-                <p className="mt-1 text-xs text-emerald-700">GPS-tracked</p>
+                <p className="mt-1 text-xs text-brand-700">GPS-tracked</p>
               )}
-              <p className="mt-2 font-medium text-emerald-800">
+              <p className="mt-2 font-medium text-brand-800">
                 Nu. {Number(v.ratePerDay).toLocaleString()} / day
               </p>
-            </Link>
+            </MotionCard>
           ))}
-        </div>
+        </ScrollReveal>
       )}
     </div>
   );

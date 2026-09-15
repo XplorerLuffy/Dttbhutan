@@ -1,5 +1,7 @@
-import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import MotionCard from "@/components/MotionCard";
+import ScrollReveal from "@/components/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -75,20 +77,32 @@ export default async function HotelsSearchPage({
       {hotels.length === 0 ? (
         <p className="text-stone-600">No hotels match your filters yet.</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {hotels.map((h) => (
-            <Link key={h.id} href={`/hotels/${h.id}`} className="card hover:shadow-md">
+            <MotionCard key={h.id} href={`/hotels/${h.id}`} className="card block overflow-hidden">
+              {h.photoUrls[0] && (
+                <div className="-mx-4 -mt-4 mb-3 h-36 w-[calc(100%+2rem)] overflow-hidden">
+                  <Image
+                    src={h.photoUrls[0]}
+                    alt={h.name}
+                    width={400}
+                    height={200}
+                    unoptimized
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
               <h2 className="font-semibold">{h.name}</h2>
               <p className="text-sm text-stone-600">{h.location}</p>
               <p className="mt-1 text-sm text-stone-500">{h.amenities.join(" · ")}</p>
               {h.roomTypes[0] && (
-                <p className="mt-2 font-medium text-emerald-800">
+                <p className="mt-2 font-medium text-brand-800">
                   From Nu. {Number(h.roomTypes[0].pricePerNight).toLocaleString()} / night
                 </p>
               )}
-            </Link>
+            </MotionCard>
           ))}
-        </div>
+        </ScrollReveal>
       )}
     </div>
   );

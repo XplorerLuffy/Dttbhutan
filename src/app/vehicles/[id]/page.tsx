@@ -32,14 +32,14 @@ export default async function VehicleDetailPage({
         <p className="mt-1 text-stone-600">Capacity: {vehicle.capacity}</p>
         <p className="text-sm text-stone-500">Driver: {vehicle.driverName}</p>
         {vehicle.gpsDevice && (
-          <p className="mt-2 text-sm text-emerald-700">
+          <p className="mt-2 text-sm text-brand-700">
             This vehicle is GPS-tracked — trip mileage is verified against the
             planned route, and you&apos;ll get a live tracking link once your
             trip starts.
           </p>
         )}
 
-        <p className="mt-4 text-lg font-semibold text-emerald-800">
+        <p className="mt-4 text-lg font-semibold text-brand-800">
           Nu. {Number(vehicle.ratePerDay).toLocaleString()} / day
           {vehicle.ratePerKm && (
             <span className="ml-2 text-sm font-normal text-stone-500">

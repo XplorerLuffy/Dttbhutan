@@ -69,7 +69,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-md bg-emerald-700 px-4 py-2 font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+          className="w-full rounded-md bg-brand-700 px-4 py-2 font-medium text-white hover:bg-brand-800 disabled:opacity-50"
         >
           {isSubmitting ? "Logging in..." : "Log in"}
         </button>
@@ -77,7 +77,7 @@ export default function LoginPage() {
 
       <p className="mt-4 text-sm text-stone-600">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-emerald-700 hover:underline">
+        <Link href="/register" className="text-brand-700 hover:underline">
           Sign up
         </Link>
       </p>

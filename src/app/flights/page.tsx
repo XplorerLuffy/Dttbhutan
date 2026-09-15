@@ -1,6 +1,8 @@
 import { searchFlights } from "@/lib/flights/aggregator";
 import { flightSearchSchema } from "@/lib/validation";
 import FlightBookingButton from "@/components/booking/FlightBookingButton";
+import ScrollReveal from "@/components/ScrollReveal";
+import MotionListItem from "@/components/MotionListItem";
 import type { FlightLeg, FlightOffer } from "@/lib/flights/aggregator";
 
 export const dynamic = "force-dynamic";
@@ -108,11 +110,11 @@ export default async function FlightsSearchPage({
       ) : offers.length === 0 ? (
         <p className="text-stone-500">No flights found for these dates.</p>
       ) : (
-        <div className="space-y-3">
+        <ScrollReveal className="space-y-3">
           {offers.map((offer) => (
             <FlightOfferCard key={offer.id} offer={offer} />
           ))}
-        </div>
+        </ScrollReveal>
       )}
     </div>
   );
@@ -120,10 +122,10 @@ export default async function FlightsSearchPage({
 
 function FlightOfferCard({ offer }: { offer: FlightOffer }) {
   return (
-    <div className="card sm:flex sm:items-center sm:justify-between">
+    <MotionListItem className="card sm:flex sm:items-center sm:justify-between">
       <div className="flex-1 space-y-3">
         {offer.isBhutaneseCarrier && (
-          <span className="badge bg-amber-100 text-amber-800">Bhutanese carrier</span>
+          <span className="badge bg-gold-100 text-gold-800">Bhutanese carrier</span>
         )}
         <LegRow leg={offer.outbound} />
         {offer.inbound && <LegRow leg={offer.inbound} />}
@@ -135,7 +137,7 @@ function FlightOfferCard({ offer }: { offer: FlightOffer }) {
       <div className="mt-3 sm:mt-0 sm:ml-6">
         <FlightBookingButton offer={offer} />
       </div>
-    </div>
+    </MotionListItem>
   );
 }
 

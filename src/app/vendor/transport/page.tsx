@@ -50,7 +50,7 @@ export default async function TransportVendorDashboard() {
             </div>
             <div className="flex items-center gap-2">
               {v.gpsDevice ? (
-                <span className="text-xs text-emerald-700">GPS linked</span>
+                <span className="text-xs text-brand-700">GPS linked</span>
               ) : (
                 <span className="text-xs text-stone-400">No GPS device</span>
               )}

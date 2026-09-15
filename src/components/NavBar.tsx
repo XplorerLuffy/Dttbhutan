@@ -9,7 +9,7 @@ export default async function NavBar() {
   return (
     <header className="border-b border-stone-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="text-lg font-bold text-emerald-800">
+        <Link href="/" className="font-display text-lg font-semibold text-brand-800">
           Dtt Bhutan
         </Link>
 
@@ -31,7 +31,7 @@ export default async function NavBar() {
             <>
               <Link
                 href={dashboardPathForRole(user.role)}
-                className="font-medium text-emerald-700 hover:text-emerald-900"
+                className="font-medium text-brand-700 hover:text-brand-900"
               >
                 Dashboard
               </Link>
@@ -44,7 +44,7 @@ export default async function NavBar() {
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-emerald-700 px-3 py-1.5 font-medium text-white hover:bg-emerald-800"
+                className="rounded-md bg-brand-700 px-3 py-1.5 font-medium text-white hover:bg-brand-800"
               >
                 Sign up
               </Link>

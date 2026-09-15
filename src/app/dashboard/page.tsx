@@ -75,7 +75,7 @@ function Section({ title, bookings }: { title: string; bookings: BookingRow[] })
               <div className="text-right">
                 <StatusBadge status={b.status} />
                 {b.type === "VEHICLE" && b.trip && (
-                  <p className="mt-1 text-xs text-emerald-700">Live tracking available</p>
+                  <p className="mt-1 text-xs text-brand-700">Live tracking available</p>
                 )}
               </div>
             </Link>

@@ -39,7 +39,7 @@ export default async function GuideDetailPage({
 
         {guide.bio && <p className="mt-4 text-stone-700">{guide.bio}</p>}
 
-        <p className="mt-4 text-lg font-semibold text-emerald-800">
+        <p className="mt-4 text-lg font-semibold text-brand-800">
           Nu. {Number(guide.ratePerDay).toLocaleString()} / day
         </p>
 
