@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { DZONGKHAGS } from "./data/dzongkhags";
 
 const prisma = new PrismaClient();
 
@@ -41,6 +42,24 @@ async function main() {
   const admin = await upsertUser("admin@dttbhutan.bt", "Agency Admin", "ADMIN");
   const traveler = await upsertUser("traveler@example.com", "Sonam Wangmo", "TRAVELER");
 
+  // --- Destinations: all 20 dzongkhags -----------------------------------
+  const destinationsByName: Record<string, Awaited<ReturnType<typeof prisma.destination.upsert>>> = {};
+  for (const d of DZONGKHAGS) {
+    destinationsByName[d.name] = await prisma.destination.upsert({
+      where: { name: d.name },
+      update: {},
+      create: {
+        name: d.name,
+        slug: d.slug,
+        region: d.region,
+        description: d.description,
+        highlights: d.highlights,
+        latitude: d.latitude,
+        longitude: d.longitude,
+      },
+    });
+  }
+
   // --- Guides -------------------------------------------------------------
   const guideUser1 = await upsertUser("pemba.guide@example.com", "Pemba Sherpa", "GUIDE");
   const guide1 = await prisma.guideProfile.upsert({
@@ -55,6 +74,14 @@ async function main() {
       ratePerDay: 2500,
       bio: "Licensed TCB guide specializing in high-altitude treks and monastery tours.",
       status: "APPROVED",
+      destinations: {
+        connect: [
+          { id: destinationsByName["Paro"].id },
+          { id: destinationsByName["Thimphu"].id },
+          { id: destinationsByName["Punakha"].id },
+          { id: destinationsByName["Haa"].id },
+        ],
+      },
     },
   });
 
@@ -84,7 +111,7 @@ async function main() {
         ownerId: hotelOwner1.id,
         name: "Tshering Boutique Hotel",
         description: "A cozy boutique hotel with mountain views in the heart of Thimphu.",
-        location: "Thimphu",
+        destinationId: destinationsByName["Thimphu"].id,
         address: "Norzin Lam, Thimphu",
         latitude: THIMPHU.lat,
         longitude: THIMPHU.lng,
@@ -111,7 +138,7 @@ async function main() {
       data: {
         ownerId: hotelOwner2.id,
         name: "Punakha Riverside Homestay",
-        location: "Punakha",
+        destinationId: destinationsByName["Punakha"].id,
         amenities: ["WiFi", "Home-cooked meals"],
         status: "PENDING",
         roomTypes: { create: [{ name: "Family Room", capacity: 4, pricePerNight: 1800, totalRooms: 3 }] },
@@ -392,6 +419,205 @@ async function main() {
       aggregatorProvider: "mock",
       aggregatorOfferId: "seed-mock-offer",
       pnr: "SEED42",
+    },
+  });
+
+  // --- Itineraries: agency-authored package tours ------------------------
+  const westernHighlights = await prisma.itinerary.upsert({
+    where: { slug: "cultural-highlights-western-bhutan" },
+    update: {},
+    create: {
+      title: "Cultural Highlights of Western Bhutan",
+      slug: "cultural-highlights-western-bhutan",
+      summary:
+        "A 5-day introduction to Bhutan's most iconic sights — Tiger's Nest, the capital, and the former winter capital at Punakha.",
+      description:
+        "Our most popular package: a comfortable, guide-led loop through Paro, Thimphu, and Punakha, with a private vehicle throughout. Ideal for a first visit to Bhutan.",
+      durationDays: 5,
+      pricePerPerson: 45000,
+      maxGroupSize: 8,
+      difficulty: "MODERATE",
+      status: "PUBLISHED",
+      includes: [
+        "Licensed English-speaking guide",
+        "Private vehicle & driver",
+        "3-star hotel accommodation",
+        "All meals as specified",
+        "Entrance fees to listed sites",
+      ],
+      excludes: [
+        "International/domestic flights",
+        "Sustainable Development Fee (SDF)",
+        "Visa fee",
+        "Personal expenses & tips",
+      ],
+      days: {
+        create: [
+          {
+            dayNumber: 1,
+            title: "Arrive in Paro",
+            description: "Land at Bhutan's only international airport and settle in.",
+            destinationId: destinationsByName["Paro"].id,
+            activities: ["Airport pickup", "Rinpung Dzong visit", "National Museum of Bhutan"],
+            mealsIncluded: ["Dinner"],
+          },
+          {
+            dayNumber: 2,
+            title: "Hike to Tiger's Nest",
+            description: "A half-day hike to Bhutan's most iconic monastery, perched on a cliffside.",
+            destinationId: destinationsByName["Paro"].id,
+            activities: ["Hike to Paro Taktsang (Tiger's Nest)"],
+            mealsIncluded: ["Breakfast", "Lunch", "Dinner"],
+          },
+          {
+            dayNumber: 3,
+            title: "Drive to Thimphu",
+            description: "Explore the capital city's landmarks.",
+            destinationId: destinationsByName["Thimphu"].id,
+            activities: ["Buddha Dordenma statue", "Tashichho Dzong", "Weekend Market"],
+            mealsIncluded: ["Breakfast", "Lunch", "Dinner"],
+          },
+          {
+            dayNumber: 4,
+            title: "Drive to Punakha via Dochula Pass",
+            description: "Stop at the 108-chorten pass before descending to the fertile Punakha valley.",
+            destinationId: destinationsByName["Punakha"].id,
+            activities: ["Dochula Pass", "Punakha Dzong", "Punakha Suspension Bridge"],
+            mealsIncluded: ["Breakfast", "Lunch", "Dinner"],
+          },
+          {
+            dayNumber: 5,
+            title: "Departure",
+            description: "Transfer back to Paro for your onward flight.",
+            destinationId: destinationsByName["Wangdue Phodrang"].id,
+            activities: ["Optional Phobjikha Valley detour", "Transfer to Paro airport"],
+            mealsIncluded: ["Breakfast"],
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.itinerary.upsert({
+    where: { slug: "bumthang-spiritual-trail" },
+    update: {},
+    create: {
+      title: "Bumthang Spiritual Trail",
+      slug: "bumthang-spiritual-trail",
+      summary: "A 4-day journey into Bhutan's spiritual heartland, via the royal seat at Trongsa.",
+      description:
+        "Central Bhutan sees far fewer visitors than the west — this package visits some of the country's oldest temples and the ancestral home of the royal family.",
+      durationDays: 4,
+      pricePerPerson: 38000,
+      maxGroupSize: 6,
+      difficulty: "EASY",
+      status: "PUBLISHED",
+      includes: ["Licensed guide", "Private vehicle & driver", "Hotel accommodation", "All meals"],
+      excludes: ["Flights", "Sustainable Development Fee (SDF)", "Visa fee", "Personal expenses"],
+      days: {
+        create: [
+          {
+            dayNumber: 1,
+            title: "Drive to Trongsa",
+            destinationId: destinationsByName["Trongsa"].id,
+            activities: ["Trongsa Dzong", "Ta Dzong Royal Heritage Museum"],
+            mealsIncluded: ["Breakfast", "Dinner"],
+          },
+          {
+            dayNumber: 2,
+            title: "Drive to Bumthang",
+            destinationId: destinationsByName["Bumthang"].id,
+            activities: ["Jambay Lhakhang", "Kurjey Lhakhang"],
+            mealsIncluded: ["Breakfast", "Lunch", "Dinner"],
+          },
+          {
+            dayNumber: 3,
+            title: "Bumthang valleys",
+            destinationId: destinationsByName["Bumthang"].id,
+            activities: ["Tamshing Monastery", "Local cheese & honey tasting"],
+            mealsIncluded: ["Breakfast", "Lunch", "Dinner"],
+          },
+          {
+            dayNumber: 4,
+            title: "Departure",
+            destinationId: destinationsByName["Bumthang"].id,
+            activities: ["Return transfer"],
+            mealsIncluded: ["Breakfast"],
+          },
+        ],
+      },
+    },
+  });
+
+  // A package still being put together — demonstrates the DRAFT status,
+  // not visible on the public /packages listing.
+  await prisma.itinerary.upsert({
+    where: { slug: "eastern-bhutan-discovery" },
+    update: {},
+    create: {
+      title: "Eastern Bhutan Discovery",
+      slug: "eastern-bhutan-discovery",
+      summary: "An off-the-beaten-path route through Bhutan's least-visited dzongkhags.",
+      durationDays: 7,
+      pricePerPerson: 62000,
+      difficulty: "CHALLENGING",
+      status: "DRAFT",
+      includes: [],
+      excludes: [],
+      days: {
+        create: [
+          {
+            dayNumber: 1,
+            title: "Drive to Mongar",
+            destinationId: destinationsByName["Mongar"].id,
+            activities: ["Mongar Dzong"],
+            mealsIncluded: ["Breakfast", "Dinner"],
+          },
+        ],
+      },
+    },
+  });
+
+  // Traveler books the flagship package — starts PENDING, like guide/hotel/
+  // vehicle bookings, since the agency still needs to assign the actual
+  // guide, hotel rooms, and vehicle before confirming.
+  const itineraryBookingRecord = await prisma.booking.create({
+    data: {
+      travelerId: traveler.id,
+      type: "ITINERARY",
+      status: "PENDING",
+      startDate: daysFromNow(45),
+      endDate: daysFromNow(45 + westernHighlights.durationDays),
+      totalPrice: Number(westernHighlights.pricePerPerson) * 2,
+    },
+  });
+  await prisma.itineraryBooking.create({
+    data: {
+      bookingId: itineraryBookingRecord.id,
+      itineraryId: westernHighlights.id,
+      travelers: 2,
+      notes: "Celebrating our anniversary — a quieter hotel room if possible.",
+    },
+  });
+
+  // --- A custom tour request (no fixed itinerary yet — agency to quote) --
+  await prisma.customTourRequest.create({
+    data: {
+      travelerId: traveler.id,
+      startDate: daysFromNow(120),
+      endDate: daysFromNow(130),
+      travelers: 2,
+      budgetPerPerson: 60000,
+      notes:
+        "Interested in remote monasteries and local homestays rather than hotels. Flexible on exact dates in April.",
+      status: "NEW",
+      destinations: {
+        connect: [
+          { id: destinationsByName["Bumthang"].id },
+          { id: destinationsByName["Trongsa"].id },
+          { id: destinationsByName["Zhemgang"].id },
+        ],
+      },
     },
   });
 

@@ -12,7 +12,7 @@ export default async function AdminVendorsPage() {
 
   const [guides, hotels, operators] = await Promise.all([
     prisma.guideProfile.findMany({ include: { user: true }, orderBy: { createdAt: "desc" } }),
-    prisma.hotel.findMany({ include: { owner: true }, orderBy: { createdAt: "desc" } }),
+    prisma.hotel.findMany({ include: { owner: true, destination: true }, orderBy: { createdAt: "desc" } }),
     prisma.transportOperator.findMany({
       include: { owner: true, vehicles: true },
       orderBy: { createdAt: "desc" },
@@ -56,7 +56,7 @@ export default async function AdminVendorsPage() {
                   {h.name} <StatusBadge status={h.status} />
                 </p>
                 <p className="text-sm text-stone-500">
-                  {h.location} · owner: {h.owner.name}
+                  {h.destination.name} · owner: {h.owner.name}
                 </p>
                 {h.adminNote && (
                   <p className="text-xs text-stone-400">Note: {h.adminNote}</p>

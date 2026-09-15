@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         ownerId: user.id,
         name: hotel.name,
         description: hotel.description,
-        location: hotel.location,
+        destinationId: hotel.destinationId,
         address: hotel.address,
         latitude: hotel.latitude,
         longitude: hotel.longitude,

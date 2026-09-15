@@ -21,12 +21,19 @@ export default async function TravelerDashboardPage() {
       trip: true,
       review: true,
       flightBooking: true,
+      itineraryBooking: { include: { itinerary: true } },
     },
   });
 
   const now = new Date();
   const upcoming = bookings.filter((b) => b.endDate >= now && b.status !== "CANCELLED");
   const past = bookings.filter((b) => b.endDate < now || b.status === "CANCELLED");
+
+  const customTourRequests = await prisma.customTourRequest.findMany({
+    where: { travelerId: user.id },
+    orderBy: { createdAt: "desc" },
+    include: { destinations: true },
+  });
 
   return (
     <div>
@@ -37,6 +44,26 @@ export default async function TravelerDashboardPage() {
 
       <Section title="Upcoming & active" bookings={upcoming} />
       <Section title="Past & cancelled" bookings={past} />
+
+      {customTourRequests.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-3 text-lg font-semibold">Custom tour requests</h2>
+          <div className="space-y-3">
+            {customTourRequests.map((r) => (
+              <div key={r.id} className="card">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">{r.destinations.map((d) => d.name).join(", ")}</p>
+                  <StatusBadge status={r.status} />
+                </div>
+                <p className="text-sm text-stone-500">
+                  {r.startDate.toDateString()} → {r.endDate.toDateString()} · {r.travelers} traveler
+                  {r.travelers > 1 ? "s" : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -49,6 +76,7 @@ type BookingRow = Prisma.BookingGetPayload<{
     trip: true;
     review: true;
     flightBooking: true;
+    itineraryBooking: { include: { itinerary: true } };
   };
 }>;
 
@@ -91,5 +119,6 @@ function bookingLabel(b: BookingRow) {
   if (b.type === "HOTEL") return `Hotel: ${b.roomType?.hotel.name} (${b.roomType?.name})`;
   if (b.type === "FLIGHT")
     return `Flight: ${b.flightBooking?.origin} → ${b.flightBooking?.destination} (${b.flightBooking?.airline})`;
+  if (b.type === "ITINERARY") return `Package: ${b.itineraryBooking?.itinerary.title}`;
   return `Transport: ${b.vehicle?.operator.businessName} (${b.vehicle?.type})`;
 }

@@ -26,6 +26,46 @@ function nightsOrDays(startDate: Date, endDate: Date) {
  * the mileage verification module depends on (via Vehicle -> GpsDevice).
  */
 export async function createBooking(travelerId: string, input: BookingInput) {
+  if (input.type === "ITINERARY") {
+    const itinerary = await prisma.itinerary.findUnique({ where: { id: input.itineraryId } });
+    if (!itinerary || itinerary.status !== "PUBLISHED") {
+      throw new BookingNotFoundError("Package not found");
+    }
+    if (itinerary.maxGroupSize && input.travelers > itinerary.maxGroupSize) {
+      throw new BookingConflictError(`This package allows at most ${itinerary.maxGroupSize} travelers per booking`);
+    }
+
+    const endDate = new Date(input.startDate);
+    endDate.setDate(endDate.getDate() + itinerary.durationDays);
+    const totalPrice = Number(itinerary.pricePerPerson) * input.travelers;
+
+    return prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.create({
+        data: {
+          travelerId,
+          type: "ITINERARY",
+          // Package tours need the agency to assign an actual guide, hotel
+          // rooms, and vehicle before confirming — not an instant reservation.
+          status: "PENDING",
+          startDate: input.startDate,
+          endDate,
+          totalPrice,
+        },
+      });
+
+      const itineraryBooking = await tx.itineraryBooking.create({
+        data: {
+          bookingId: booking.id,
+          itineraryId: itinerary.id,
+          travelers: input.travelers,
+          notes: input.notes,
+        },
+      });
+
+      return { ...booking, itineraryBooking };
+    });
+  }
+
   if (input.type === "FLIGHT") {
     const { offer } = input;
     const { pnr, aggregatorOfferId } = await bookFlight(offer);

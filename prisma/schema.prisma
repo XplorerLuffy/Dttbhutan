@@ -47,6 +47,37 @@ model User {
   bookings           Booking[]
   reviews            Review[]
   sentMessages       Message[]
+  customTourRequests CustomTourRequest[]
+}
+
+// ---------------------------------------------------------------------------
+// Destinations — Bhutan's 20 dzongkhags (districts). Hotels sit in one;
+// guides can cover several; itinerary days visit one; custom tour requests
+// name whichever ones the traveler wants to see.
+// ---------------------------------------------------------------------------
+
+enum DzongkhagRegion {
+  WEST
+  CENTRAL
+  EAST
+}
+
+model Destination {
+  id          String          @id @default(cuid())
+  name        String          @unique // dzongkhag name, e.g. "Paro"
+  slug        String          @unique
+  region      DzongkhagRegion
+  description String?
+  highlights  String[] // notable sites/attractions
+  photoUrl    String?
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime        @default(now())
+
+  hotels             Hotel[]
+  guides             GuideProfile[]      @relation("GuideCoverage")
+  itineraryDays      ItineraryDay[]
+  customTourRequests CustomTourRequest[] @relation("CustomTourDestinations")
 }
 
 // ---------------------------------------------------------------------------
@@ -54,23 +85,24 @@ model User {
 // ---------------------------------------------------------------------------
 
 model GuideProfile {
-  id               String       @id @default(cuid())
-  userId           String       @unique
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  licenseNumber    String // TCB (Tourism Council of Bhutan) guide license number
-  languages        String[]
-  specialties      String[] // trekking, cultural, historical, adventure, etc.
-  yearsExperience  Int          @default(0)
-  ratePerDay       Decimal      @db.Decimal(10, 2)
-  bio              String?
-  photoUrl         String?
-  status           VendorStatus @default(PENDING)
-  adminNote        String? // reason for rejection/suspension, or verification notes
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licenseNumber   String // TCB (Tourism Council of Bhutan) guide license number
+  languages       String[]
+  specialties     String[] // trekking, cultural, historical, adventure, etc.
+  yearsExperience Int          @default(0)
+  ratePerDay      Decimal      @db.Decimal(10, 2)
+  bio             String?
+  photoUrl        String?
+  status          VendorStatus @default(PENDING)
+  adminNote       String? // reason for rejection/suspension, or verification notes
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   blockedDates GuideBlockedDate[]
   bookings     Booking[]
+  destinations Destination[]      @relation("GuideCoverage") // dzongkhags this guide covers
 }
 
 // Dates a guide has explicitly marked unavailable (holidays, other commitments).
@@ -94,8 +126,9 @@ model Hotel {
   owner              User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name               String
   description        String?
-  location           String // town/district, e.g. "Paro", "Thimphu"
-  address            String?
+  destinationId      String
+  destination        Destination  @relation(fields: [destinationId], references: [id])
+  address            String? // specific address/area within the destination
   latitude           Float?
   longitude          Float?
   amenities          String[]
@@ -148,20 +181,20 @@ enum VehicleType {
 }
 
 model Vehicle {
-  id                  String       @id @default(cuid())
+  id                  String            @id @default(cuid())
   operatorId          String
   operator            TransportOperator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
   type                VehicleType
   capacity            Int
-  plateNumber         String       @unique
+  plateNumber         String            @unique
   driverName          String
   driverLicenseNumber String
-  ratePerDay          Decimal      @db.Decimal(10, 2)
-  ratePerKm           Decimal?     @db.Decimal(10, 2)
-  status              VendorStatus @default(PENDING)
+  ratePerDay          Decimal           @db.Decimal(10, 2)
+  ratePerKm           Decimal?          @db.Decimal(10, 2)
+  status              VendorStatus      @default(PENDING)
   adminNote           String?
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   gpsDevice GpsDevice?
   bookings  Booking[]
@@ -177,6 +210,7 @@ enum BookingType {
   HOTEL
   VEHICLE
   FLIGHT
+  ITINERARY
 }
 
 enum BookingStatus {
@@ -187,15 +221,15 @@ enum BookingStatus {
 }
 
 model Booking {
-  id         String        @id @default(cuid())
-  travelerId String
-  traveler   User          @relation(fields: [travelerId], references: [id], onDelete: Cascade)
-  type       BookingType
-  status     BookingStatus @default(PENDING)
-  startDate  DateTime
-  endDate    DateTime
-  totalPrice Decimal       @db.Decimal(10, 2)
-  commissionRate Decimal   @default(0.10) @db.Decimal(5, 4) // platform commission, e.g. 0.10 = 10%
+  id             String        @id @default(cuid())
+  travelerId     String
+  traveler       User          @relation(fields: [travelerId], references: [id], onDelete: Cascade)
+  type           BookingType
+  status         BookingStatus @default(PENDING)
+  startDate      DateTime
+  endDate        DateTime
+  totalPrice     Decimal       @db.Decimal(10, 2)
+  commissionRate Decimal       @default(0.10) @db.Decimal(5, 4) // platform commission, e.g. 0.10 = 10%
 
   guideId    String?
   guide      GuideProfile? @relation(fields: [guideId], references: [id])
@@ -207,11 +241,12 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  review        Review?
-  messages      Message[]
-  payment       Payment?
-  trip          Trip? // only present for VEHICLE bookings
-  flightBooking FlightBooking? // only present for FLIGHT bookings
+  review           Review?
+  messages         Message[]
+  payment          Payment?
+  trip             Trip? // only present for VEHICLE bookings
+  flightBooking    FlightBooking? // only present for FLIGHT bookings
+  itineraryBooking ItineraryBooking? // only present for ITINERARY bookings
 
   @@index([guideId, startDate, endDate])
   @@index([roomTypeId, startDate, endDate])
@@ -238,9 +273,9 @@ enum CabinClass {
 }
 
 model FlightBooking {
-  id         String     @id @default(cuid())
-  bookingId  String     @unique
-  booking    Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   origin      String // IATA airport code, e.g. "PBH"
   destination String // IATA airport code, e.g. "BKK"
@@ -259,6 +294,106 @@ model FlightBooking {
   createdAt DateTime @default(now())
 }
 
+// ---------------------------------------------------------------------------
+// Itineraries — pre-built, agency-authored package tours spanning multiple
+// days/destinations, bookable as a single line item. Distinct from a
+// CustomTourRequest, which is an inquiry (no fixed itinerary or price yet)
+// that the agency turns into a bespoke quote by hand.
+// ---------------------------------------------------------------------------
+
+enum ItineraryStatus {
+  DRAFT // being built, not visible to travelers
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TripDifficulty {
+  EASY
+  MODERATE
+  CHALLENGING
+}
+
+model Itinerary {
+  id             String          @id @default(cuid())
+  title          String
+  slug           String          @unique
+  summary        String
+  description    String?
+  durationDays   Int
+  pricePerPerson Decimal         @db.Decimal(10, 2)
+  maxGroupSize   Int?
+  difficulty     TripDifficulty  @default(EASY)
+  status         ItineraryStatus @default(DRAFT)
+  coverPhotoUrl  String?
+  includes       String[] // e.g. "Licensed guide", "All ground transport", "3-star hotels"
+  excludes       String[] // e.g. "International flights", "Visa fee", "Personal expenses"
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  days     ItineraryDay[]
+  bookings ItineraryBooking[]
+}
+
+model ItineraryDay {
+  id            String       @id @default(cuid())
+  itineraryId   String
+  itinerary     Itinerary    @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  dayNumber     Int
+  title         String
+  description   String?
+  destinationId String?
+  destination   Destination? @relation(fields: [destinationId], references: [id])
+  activities    String[]
+  mealsIncluded String[] // e.g. ["Breakfast", "Dinner"]
+
+  @@unique([itineraryId, dayNumber])
+}
+
+// A traveler's booking of a fixed package (ITINERARY-type Booking). Starts
+// PENDING like guide/hotel/vehicle bookings — package tours need the
+// agency to actually assign a guide, hotels, and transport before
+// confirming, unlike a flight's synchronous ticketing.
+model ItineraryBooking {
+  id          String    @id @default(cuid())
+  bookingId   String    @unique
+  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id])
+  travelers   Int       @default(1)
+  notes       String?
+  createdAt   DateTime  @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Custom tour requests — a traveler describes what they want (destinations,
+// dates, group size, budget) and the agency follows up with a bespoke
+// quote. Not a booking: no fixed itinerary or price exists yet.
+// ---------------------------------------------------------------------------
+
+enum CustomTourRequestStatus {
+  NEW
+  IN_REVIEW
+  QUOTED
+  CLOSED
+}
+
+model CustomTourRequest {
+  id              String                  @id @default(cuid())
+  travelerId      String
+  traveler        User                    @relation(fields: [travelerId], references: [id], onDelete: Cascade)
+  startDate       DateTime
+  endDate         DateTime
+  travelers       Int                     @default(1)
+  budgetPerPerson Decimal?                @db.Decimal(10, 2)
+  notes           String?
+  status          CustomTourRequestStatus @default(NEW)
+  adminNote       String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  destinations Destination[] @relation("CustomTourDestinations")
+}
+
 enum PaymentMethod {
   BANK_TRANSFER
   MOBILE_WALLET
@@ -273,16 +408,16 @@ enum PaymentStatus {
 }
 
 model Payment {
-  id             String        @id @default(cuid())
-  bookingId      String        @unique
-  booking        Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  amount         Decimal       @db.Decimal(10, 2)
-  commissionAmount Decimal     @db.Decimal(10, 2)
-  method         PaymentMethod
-  status         PaymentStatus @default(PENDING)
-  reference      String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  bookingId        String        @unique
+  booking          Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount           Decimal       @db.Decimal(10, 2)
+  commissionAmount Decimal       @db.Decimal(10, 2)
+  method           PaymentMethod
+  status           PaymentStatus @default(PENDING)
+  reference        String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 enum ReviewTargetType {
@@ -351,12 +486,12 @@ enum TripStatus {
 }
 
 model Trip {
-  id           String     @id @default(cuid())
-  bookingId    String     @unique
-  booking      Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  vehicleId    String
-  vehicle      Vehicle    @relation(fields: [vehicleId], references: [id])
-  status       TripStatus @default(NOT_STARTED)
+  id        String     @id @default(cuid())
+  bookingId String     @unique
+  booking   Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  vehicleId String
+  vehicle   Vehicle    @relation(fields: [vehicleId], references: [id])
+  status    TripStatus @default(NOT_STARTED)
 
   // Planned route, captured at booking time, used as the baseline to compare
   // GPS-verified actual distance against.
@@ -379,17 +514,17 @@ model Trip {
 }
 
 model GpsPosition {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   deviceId   String
   device     GpsDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   tripId     String?
-  trip       Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  trip       Trip?     @relation(fields: [tripId], references: [id], onDelete: SetNull)
   latitude   Float
   longitude  Float
   speedKmh   Float?
   heading    Float?
   recordedAt DateTime // timestamp reported by the device
-  receivedAt DateTime @default(now()) // timestamp the platform received it (for connectivity-gap diagnostics)
+  receivedAt DateTime  @default(now()) // timestamp the platform received it (for connectivity-gap diagnostics)
 
   @@index([tripId, recordedAt])
   @@index([deviceId, recordedAt])

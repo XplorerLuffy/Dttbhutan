@@ -6,7 +6,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 export const dynamic = "force-dynamic";
 
 type SearchParams = {
-  location?: string;
+  destinationId?: string;
   amenity?: string;
   maxPrice?: string;
 };
@@ -16,29 +16,30 @@ export default async function HotelsSearchPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { location, amenity, maxPrice } = await searchParams;
+  const { destinationId, amenity, maxPrice } = await searchParams;
 
-  const [hotels, allApproved] = await Promise.all([
+  const [hotels, destinations, allApproved] = await Promise.all([
     prisma.hotel.findMany({
       where: {
         status: "APPROVED",
-        ...(location ? { location: { equals: location, mode: "insensitive" } } : {}),
+        ...(destinationId ? { destinationId } : {}),
         ...(amenity ? { amenities: { has: amenity } } : {}),
         ...(maxPrice
           ? { roomTypes: { some: { pricePerNight: { lte: Number(maxPrice) } } } }
           : {}),
       },
       include: {
+        destination: true,
         roomTypes: { orderBy: { pricePerNight: "asc" }, take: 1 },
       },
     }),
+    prisma.destination.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.hotel.findMany({
       where: { status: "APPROVED" },
-      select: { location: true, amenities: true },
+      select: { amenities: true },
     }),
   ]);
 
-  const locations = uniqueSorted(allApproved.map((h) => h.location));
   const amenities = uniqueSorted(allApproved.flatMap((h) => h.amenities));
 
   return (
@@ -46,11 +47,11 @@ export default async function HotelsSearchPage({
       <h1 className="mb-4 text-2xl font-bold">Hotels & Stays</h1>
 
       <form className="card mb-6 grid gap-3 sm:grid-cols-4" method="get">
-        <select name="location" defaultValue={location ?? ""} className="input">
-          <option value="">Any location</option>
-          {locations.map((l) => (
-            <option key={l} value={l}>
-              {l}
+        <select name="destinationId" defaultValue={destinationId ?? ""} className="input">
+          <option value="">Any destination</option>
+          {destinations.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
             </option>
           ))}
         </select>
@@ -93,7 +94,7 @@ export default async function HotelsSearchPage({
                 </div>
               )}
               <h2 className="font-semibold">{h.name}</h2>
-              <p className="text-sm text-stone-600">{h.location}</p>
+              <p className="text-sm text-stone-600">{h.destination.name}</p>
               <p className="mt-1 text-sm text-stone-500">{h.amenities.join(" · ")}</p>
               {h.roomTypes[0] && (
                 <p className="mt-2 font-medium text-brand-800">

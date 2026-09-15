@@ -17,6 +17,7 @@ type BookingDetail = Prisma.BookingGetPayload<{
     trip: true;
     review: true;
     flightBooking: true;
+    itineraryBooking: { include: { itinerary: true } };
     messages: { include: { sender: { select: { name: true; role: true } } } };
   };
 }>;
@@ -40,6 +41,7 @@ export default async function BookingDetailPage({
       trip: true,
       review: true,
       flightBooking: true,
+      itineraryBooking: { include: { itinerary: true } },
       messages: {
         orderBy: { createdAt: "asc" },
         include: { sender: { select: { name: true, role: true } } },
@@ -121,6 +123,31 @@ export default async function BookingDetailPage({
           </div>
         )}
 
+        {booking.type === "ITINERARY" && booking.itineraryBooking && (
+          <div className="card">
+            <h3 className="font-semibold">Package details</h3>
+            <p className="mt-2 text-sm">
+              <Link
+                href={`/packages/${booking.itineraryBooking.itinerary.slug}`}
+                className="text-brand-700 hover:underline"
+              >
+                {booking.itineraryBooking.itinerary.title}
+              </Link>
+            </p>
+            <p className="mt-1 text-sm text-stone-500">
+              {booking.itineraryBooking.travelers} traveler
+              {booking.itineraryBooking.travelers > 1 ? "s" : ""} ·{" "}
+              {booking.itineraryBooking.itinerary.durationDays} days
+            </p>
+            {booking.itineraryBooking.notes && (
+              <p className="mt-2 text-sm text-stone-600">Notes: {booking.itineraryBooking.notes}</p>
+            )}
+            <p className="mt-2 text-xs text-stone-400">
+              This is a request — our team will confirm the assigned guide, hotel, and vehicle with you.
+            </p>
+          </div>
+        )}
+
         {booking.type === "VEHICLE" && booking.trip && (
           <div className="card">
             <h3 className="font-semibold">Trip tracking</h3>
@@ -144,7 +171,7 @@ export default async function BookingDetailPage({
           </div>
         )}
 
-        {booking.type !== "FLIGHT" && booking.status === "COMPLETED" && isTraveler && (
+        {booking.type !== "FLIGHT" && booking.type !== "ITINERARY" && booking.status === "COMPLETED" && isTraveler && (
           booking.review ? (
             <div className="card">
               <h3 className="font-semibold">Your review</h3>
@@ -179,5 +206,6 @@ function bookingTitle(booking: BookingDetail) {
     return `Hotel: ${booking.roomType?.hotel.name} — ${booking.roomType?.name}`;
   if (booking.type === "FLIGHT")
     return `Flight: ${booking.flightBooking?.origin} → ${booking.flightBooking?.destination}`;
+  if (booking.type === "ITINERARY") return `Package: ${booking.itineraryBooking?.itinerary.title}`;
   return `Transport: ${booking.vehicle?.operator.businessName} (${booking.vehicle?.type})`;
 }

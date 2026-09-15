@@ -21,12 +21,13 @@ export const guideProfileSchema = z.object({
   ratePerDay: z.coerce.number().positive(),
   bio: z.string().max(2000).optional(),
   photoUrl: z.string().url().optional().or(z.literal("")),
+  destinationIds: z.array(z.string().min(1)).default([]),
 });
 
 export const hotelSchema = z.object({
   name: z.string().min(2).max(150),
   description: z.string().max(3000).optional(),
-  location: z.string().min(2).max(100),
+  destinationId: z.string().min(1),
   address: z.string().max(300).optional(),
   latitude: z.coerce.number().min(-90).max(90).optional(),
   longitude: z.coerce.number().min(-180).max(180).optional(),
@@ -128,17 +129,74 @@ export const flightBookingSchema = z.object({
   offer: flightOfferSchema,
 });
 
+export const itineraryBookingSchema = z.object({
+  type: z.literal("ITINERARY"),
+  itineraryId: z.string().min(1),
+  startDate: z.coerce.date(),
+  travelers: z.coerce.number().int().min(1).max(30),
+  notes: z.string().max(2000).optional(),
+});
+
 export const bookingSchema = z
   .discriminatedUnion("type", [
     guideBookingSchema,
     hotelBookingSchema,
     vehicleBookingSchema,
     flightBookingSchema,
+    itineraryBookingSchema,
   ])
-  .refine((data) => data.type === "FLIGHT" || data.endDate > data.startDate, {
+  .refine((data) => data.type === "FLIGHT" || data.type === "ITINERARY" || data.endDate > data.startDate, {
     message: "endDate must be after startDate",
     path: ["endDate"],
   });
+
+export const itineraryDayInputSchema = z.object({
+  dayNumber: z.coerce.number().int().min(1),
+  title: z.string().min(1).max(150),
+  description: z.string().max(2000).optional(),
+  destinationId: z.string().min(1).optional().or(z.literal("")),
+  activities: z.array(z.string().min(1)).default([]),
+  mealsIncluded: z.array(z.string().min(1)).default([]),
+});
+
+export const itineraryAdminSchema = z.object({
+  title: z.string().min(2).max(150),
+  slug: z
+    .string()
+    .min(2)
+    .max(150)
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens only"),
+  summary: z.string().min(2).max(500),
+  description: z.string().max(5000).optional(),
+  durationDays: z.coerce.number().int().min(1).max(60),
+  pricePerPerson: z.coerce.number().positive(),
+  maxGroupSize: z.coerce.number().int().positive().optional(),
+  difficulty: z.enum(["EASY", "MODERATE", "CHALLENGING"]),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
+  coverPhotoUrl: z.string().optional(),
+  includes: z.array(z.string().min(1)).default([]),
+  excludes: z.array(z.string().min(1)).default([]),
+  days: z.array(itineraryDayInputSchema).min(1),
+});
+
+export const customTourRequestSchema = z
+  .object({
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date(),
+    travelers: z.coerce.number().int().min(1).max(30),
+    budgetPerPerson: z.coerce.number().positive().optional(),
+    notes: z.string().max(2000).optional(),
+    destinationIds: z.array(z.string().min(1)).min(1),
+  })
+  .refine((data) => data.endDate > data.startDate, {
+    message: "endDate must be after startDate",
+    path: ["endDate"],
+  });
+
+export const customTourRequestAdminUpdateSchema = z.object({
+  status: z.enum(["NEW", "IN_REVIEW", "QUOTED", "CLOSED"]),
+  adminNote: z.string().max(2000).optional(),
+});
 
 export const flightSearchSchema = z.object({
   origin: z.string().trim().length(3),

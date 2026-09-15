@@ -15,10 +15,13 @@ export default function Footer() {
           <FooterColumn
             title="Explore"
             links={[
+              { href: "/destinations", label: "Destinations" },
               { href: "/guides", label: "Tour guides" },
               { href: "/hotels", label: "Hotels & stays" },
               { href: "/vehicles", label: "Transport" },
               { href: "/flights", label: "Flights" },
+              { href: "/packages", label: "Package tours" },
+              { href: "/custom-tour", label: "Custom tour request" },
             ]}
           />
           <FooterColumn

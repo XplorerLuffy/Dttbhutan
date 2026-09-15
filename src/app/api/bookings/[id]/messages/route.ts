@@ -54,7 +54,10 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const { id } = await params;
-  const booking = await assertParticipant(id, user.id);
+  const booking =
+    user.role === "ADMIN"
+      ? await prisma.booking.findUnique({ where: { id } })
+      : await assertParticipant(id, user.id);
   if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json().catch(() => null);

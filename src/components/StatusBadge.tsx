@@ -8,6 +8,10 @@ const CLASS_BY_STATUS: Record<string, string> = {
   COMPLETED: "badge-approved",
   IN_PROGRESS: "badge-pending",
   NOT_STARTED: "badge-suspended",
+  NEW: "badge-pending",
+  IN_REVIEW: "badge bg-gold-100 text-gold-800",
+  QUOTED: "badge-approved",
+  CLOSED: "badge-suspended",
 };
 
 export default function StatusBadge({ status }: { status: string }) {

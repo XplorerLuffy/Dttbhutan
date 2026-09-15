@@ -9,13 +9,14 @@ export default async function AdminHomePage() {
   if (!user) redirect("/login");
   if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
 
-  const [pendingGuides, pendingHotels, pendingOperators, pendingBookings, flaggedTrips] =
+  const [pendingGuides, pendingHotels, pendingOperators, pendingBookings, flaggedTrips, newCustomTourRequests] =
     await Promise.all([
       prisma.guideProfile.count({ where: { status: "PENDING" } }),
       prisma.hotel.count({ where: { status: "PENDING" } }),
       prisma.transportOperator.count({ where: { status: "PENDING" } }),
       prisma.booking.count({ where: { status: "PENDING" } }),
       prisma.tripDistanceReport.count({ where: { flagged: true } }),
+      prisma.customTourRequest.count({ where: { status: "NEW" } }),
     ]);
 
   const cards = [
@@ -37,6 +38,18 @@ export default async function AdminHomePage() {
       value: flaggedTrips,
       hint: "flagged for review",
     },
+    {
+      href: "/admin/packages",
+      title: "Package tours",
+      value: null,
+      hint: "manage itineraries",
+    },
+    {
+      href: "/admin/custom-tours",
+      title: "Custom tour requests",
+      value: newCustomTourRequests,
+      hint: "new inquiries",
+    },
   ];
 
   return (
@@ -46,7 +59,11 @@ export default async function AdminHomePage() {
         {cards.map((c) => (
           <Link key={c.href} href={c.href} className="card hover:shadow-md">
             <p className="text-sm text-stone-500">{c.title}</p>
-            <p className="mt-1 text-3xl font-bold text-brand-800">{c.value}</p>
+            {c.value === null ? (
+              <p className="mt-1 text-lg font-semibold text-brand-800">Manage →</p>
+            ) : (
+              <p className="mt-1 text-3xl font-bold text-brand-800">{c.value}</p>
+            )}
             <p className="text-xs text-stone-400">{c.hint}</p>
           </Link>
         ))}

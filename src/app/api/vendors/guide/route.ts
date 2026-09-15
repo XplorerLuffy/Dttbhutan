@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
         // admin reviews and approves/rejects it manually before the guide
         // becomes bookable.
         status: "PENDING",
+        destinations: { connect: parsed.data.destinationIds.map((id) => ({ id })) },
       },
     });
 

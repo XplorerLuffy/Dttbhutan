@@ -1,16 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-type Tab = "guides" | "hotels" | "transport" | "flights";
+type Tab = "guides" | "hotels" | "transport" | "flights" | "packages" | "destinations";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "guides", label: "Guides" },
   { id: "hotels", label: "Hotels" },
   { id: "transport", label: "Transport" },
   { id: "flights", label: "Flights" },
+  { id: "packages", label: "Packages" },
+  { id: "destinations", label: "Destinations" },
 ];
+
+type Destination = { id: string; name: string; slug: string };
 
 /**
  * Booking.com-style unified search: one card, category tabs up top, a
@@ -18,12 +23,13 @@ const TABS: { id: Tab; label: string }[] = [
  * it navigates to that category's existing search page with the matching
  * query params, so no separate search backend is needed here.
  */
-export default function SearchTabs() {
+export default function SearchTabs({ destinations }: { destinations: Destination[] }) {
   const [tab, setTab] = useState<Tab>("guides");
+  const router = useRouter();
 
   return (
     <div className="mx-auto max-w-3xl rounded-2xl bg-white p-2 shadow-xl">
-      <div className="flex gap-1 border-b border-stone-100 px-2 pt-1">
+      <div className="flex flex-wrap gap-1 border-b border-stone-100 px-2 pt-1">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -60,11 +66,14 @@ export default function SearchTabs() {
 
         {tab === "hotels" && (
           <form method="get" action="/hotels" className="grid gap-2 sm:grid-cols-4">
-            <input
-              name="location"
-              placeholder="Where in Bhutan? (e.g. Paro)"
-              className="input sm:col-span-3"
-            />
+            <select name="destinationId" defaultValue="" className="input sm:col-span-3">
+              <option value="">Any destination</option>
+              {destinations.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
             <SearchButton />
           </form>
         )}
@@ -117,6 +126,49 @@ export default function SearchTabs() {
             <input type="hidden" name="cabinClass" value="ECONOMY" />
             <SearchButton />
           </form>
+        )}
+
+        {tab === "packages" && (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <p className="flex-1 self-center text-sm text-stone-500">
+              Ready-made multi-day tours bundling a guide, hotels, and transport.
+            </p>
+            <motion.a
+              href="/packages"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="btn-primary text-center"
+            >
+              Browse packages
+            </motion.a>
+          </div>
+        )}
+
+        {tab === "destinations" && (
+          <div className="grid gap-2 sm:grid-cols-4">
+            <select
+              defaultValue=""
+              onChange={(e) => e.target.value && router.push(`/destinations/${e.target.value}`)}
+              className="input sm:col-span-3"
+            >
+              <option value="" disabled>
+                Jump to a dzongkhag
+              </option>
+              {destinations.map((d) => (
+                <option key={d.id} value={d.slug}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            <motion.a
+              href="/destinations"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="btn-primary text-center"
+            >
+              Browse all
+            </motion.a>
+          </div>
         )}
       </div>
     </div>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import HotelBookingForm from "@/components/booking/HotelBookingForm";
@@ -12,7 +13,7 @@ export default async function HotelDetailPage({
 
   const hotel = await prisma.hotel.findUnique({
     where: { id },
-    include: { roomTypes: true },
+    include: { roomTypes: true, destination: true },
   });
 
   if (!hotel || hotel.status !== "APPROVED") notFound();
@@ -27,7 +28,11 @@ export default async function HotelDetailPage({
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
         <h1 className="text-2xl font-bold">{hotel.name}</h1>
-        <p className="mt-1 text-stone-600">{hotel.location}</p>
+        <p className="mt-1 text-stone-600">
+          <Link href={`/destinations/${hotel.destination.slug}`} className="hover:text-brand-700 hover:underline">
+            {hotel.destination.name}
+          </Link>
+        </p>
         {hotel.address && <p className="text-sm text-stone-500">{hotel.address}</p>}
         <p className="mt-1 text-sm text-stone-500">{hotel.amenities.join(" · ")}</p>
 

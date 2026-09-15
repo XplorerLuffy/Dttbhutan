@@ -13,7 +13,10 @@ export default async function NavBar() {
           Dtt Bhutan
         </Link>
 
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <Link href="/destinations" className="text-stone-600 hover:text-stone-900">
+            Destinations
+          </Link>
           <Link href="/guides" className="text-stone-600 hover:text-stone-900">
             Guides
           </Link>
@@ -25,6 +28,9 @@ export default async function NavBar() {
           </Link>
           <Link href="/flights" className="text-stone-600 hover:text-stone-900">
             Flights
+          </Link>
+          <Link href="/packages" className="text-stone-600 hover:text-stone-900">
+            Packages
           </Link>
 
           {user ? (

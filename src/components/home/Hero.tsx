@@ -5,7 +5,9 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SearchTabs from "./SearchTabs";
 
-export default function Hero() {
+type Destination = { id: string; name: string; slug: string };
+
+export default function Hero({ destinations }: { destinations: Destination[] }) {
   const heroRef = useRef<HTMLDivElement>(null);
   const backLayerRef = useRef<HTMLDivElement>(null);
   const frontLayerRef = useRef<HTMLDivElement>(null);
@@ -56,7 +58,7 @@ export default function Hero() {
       </div>
 
       <div className="relative mt-10 sm:mt-12">
-        <SearchTabs />
+        <SearchTabs destinations={destinations} />
       </div>
     </div>
   );

@@ -2,14 +2,16 @@
 
 A booking marketplace for a Bhutanese travel agency, functionally modeled on
 Booking.com's search/compare/book UX, covering four bookable categories —
-tour guides, hotels, transport (vehicles + drivers), and flights — plus a
-GPS tracking module for trip mileage verification and live traveler
-tracking.
+tour guides, hotels, transport (vehicles + drivers), and flights — across
+all 20 of Bhutan's dzongkhags (districts), plus agency-authored package
+tours, custom tour requests, and a GPS tracking module for trip mileage
+verification and live traveler tracking.
 
 This is a working MVP covering phases 1–5 (and most of 6–7) of the build
 plan: vendor registration + admin approval, unified search/booking across
-all four categories, GPS mileage verification, live tracking, flights via a
-mock aggregator, reviews, messaging, and a first design/animation pass. See
+all four categories, destination browsing, package tours and custom tour
+requests, GPS mileage verification, live tracking, flights via a mock
+aggregator, reviews, messaging, and a first design/animation pass. See
 [Current status & what's stubbed](#current-status--whats-stubbed) below for
 exactly what is and isn't wired up to real infrastructure.
 
@@ -74,8 +76,10 @@ trip where the quoted/planned route was 90 km but the GPS trail proves only
 reports** to see it flagged, with the planned-vs-actual route drawn on the
 map — this is the exact scenario described in the brief (a driver
 over-reporting distance to overcharge clients). There's also a trip
-already `IN_PROGRESS` for testing the live-tracking view, and a confirmed
-flight booking with a demo PNR, without needing to create either manually.
+already `IN_PROGRESS` for testing the live-tracking view, a confirmed
+flight booking with a demo PNR, two published package tours (with a
+pending booking on one), and a custom tour request already sitting in the
+admin inbox — all without needing to create any of it manually.
 
 ## Architecture notes / decisions
 
@@ -99,12 +103,14 @@ flight booking with a demo PNR, without needing to create either manually.
 - **Commission** is tracked per-booking (`Booking.commissionRate`,
   defaulting to 10%) but there's no payment gateway wired up — see below.
 - **Unified search** (the homepage's category-tabbed search bar,
-  `src/components/home/SearchTabs.tsx`) is a thin UI layer over the four
-  categories' existing search pages — each tab is a plain GET form
+  `src/components/home/SearchTabs.tsx`) is a thin UI layer over each
+  category's existing search page — most tabs are a plain GET form
   submitting to `/guides`, `/hotels`, `/vehicles`, or `/flights` with that
-  page's existing query params. There's no separate cross-category search
-  index; each category still queries its own table (or, for flights, calls
-  the aggregator) independently.
+  page's existing query params; the Packages tab is just a link to
+  `/packages`, and the Destinations tab jumps straight to a chosen
+  dzongkhag. There's no separate cross-category search index; each
+  category still queries its own table (or, for flights, calls the
+  aggregator) independently.
 - **Photo uploads** (`src/app/api/uploads/route.ts`) write to local disk
   under `public/uploads/` — fine for development, but this does not
   survive a redeploy on most hosting platforms and won't work across
@@ -162,6 +168,38 @@ Bhutan's two carriers (Drukair / Royal Bhutan Airlines, and Bhutan
 Airlines) are pinned first in results for routes into/out of Paro (PBH) —
 flip `PIN_BHUTAN_CARRIERS` in that file to `false` for a general
 international-search feel instead, if the client prefers that.
+
+## Destinations, package tours & custom tour requests
+
+- **Destinations** (`prisma/data/dzongkhags.ts`, seeded into the
+  `Destination` table): all 20 of Bhutan's dzongkhags, grouped into the
+  three regions conventionally used for tourism itineraries (West/Central/
+  East — a simpler, more standard split than the 4-zone administrative
+  grouping, which doesn't map cleanly to how trips are actually planned).
+  `/destinations` browses all 20; `/destinations/[slug]` shows a
+  dzongkhag's description, highlights, approved hotels there, guides who
+  cover it, and any published packages that visit it. `Hotel.destinationId`
+  is a required FK (replacing what was a free-text `location` string), and
+  `GuideProfile.destinations` is a many-to-many "coverage area" relation —
+  both selected from the same 20-destination list at registration.
+- **Package tours** (`Itinerary` / `ItineraryDay` models): fixed,
+  agency-authored multi-day itineraries with a day-by-day breakdown (each
+  day optionally tagged to a destination), a per-person price, and
+  includes/excludes lists. Admins author these at `/admin/packages` (a
+  day-by-day builder, add/remove days freely) with a `DRAFT` status kept
+  hidden from travelers until set to `PUBLISHED`. Travelers browse
+  `/packages` and book at `/packages/[slug]` — an `ITINERARY`-type booking
+  starts `PENDING`, same as guide/hotel/vehicle bookings, since the agency
+  still needs to assign an actual guide, hotel rooms, and vehicle before
+  confirming (unlike a flight's synchronous ticketing).
+- **Custom tour requests** (`CustomTourRequest` model): for travelers who
+  want something a package doesn't cover. Not a booking — no fixed
+  itinerary or price exists yet. A traveler picks destinations, dates,
+  group size, and an optional budget at `/custom-tour`; the agency follows
+  up by hand (the admin inbox at `/admin/custom-tours` surfaces the
+  traveler's email/phone directly, since the actual quoting conversation
+  happens off-platform) and tracks status (`NEW` → `IN_REVIEW` → `QUOTED` →
+  `CLOSED`).
 
 ## Photo upload (camera + gallery)
 
@@ -226,10 +264,12 @@ the brief's connectivity concerns.
 
 Working end-to-end: vendor registration + admin approval (guides, hotels,
 transport), search/filter and booking across all four categories with
-availability-conflict checks, traveler/vendor/admin dashboards,
-per-booking messaging, reviews tied to completed bookings, GPS mileage
-verification, live tracking with a public share link, and flight search +
-booking with a generated PNR.
+availability-conflict checks, all 20 dzongkhag destinations with detail
+pages, agency-authored package tours (admin authoring UI + public
+booking), custom tour request intake and admin follow-up queue,
+traveler/vendor/admin dashboards, per-booking messaging, reviews tied to
+completed bookings, GPS mileage verification, live tracking with a public
+share link, and flight search + booking with a generated PNR.
 
 Not wired up to real infrastructure yet — by design, since these need
 answers only the client can give:
