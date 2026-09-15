@@ -176,6 +176,7 @@ enum BookingType {
   GUIDE
   HOTEL
   VEHICLE
+  FLIGHT
 }
 
 enum BookingStatus {
@@ -206,14 +207,56 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  review   Review?
-  messages Message[]
-  payment  Payment?
-  trip     Trip? // only present for VEHICLE bookings
+  review        Review?
+  messages      Message[]
+  payment       Payment?
+  trip          Trip? // only present for VEHICLE bookings
+  flightBooking FlightBooking? // only present for FLIGHT bookings
 
   @@index([guideId, startDate, endDate])
   @@index([roomTypeId, startDate, endDate])
   @@index([vehicleId, startDate, endDate])
+}
+
+// ---------------------------------------------------------------------------
+// Flights
+//
+// Bhutan has no domestic airline inventory of its own to sell directly —
+// this books through a third-party aggregator (Amadeus/Duffel/GDS reseller)
+// rather than owning inventory. `aggregatorProvider`/`aggregatorOfferId`
+// trace a booking back to that upstream system; `pnr` is what the traveler
+// actually needs (their airline reservation code). See
+// src/lib/flights/aggregator.ts — this build ships a mock provider behind
+// the same interface a real one would implement.
+// ---------------------------------------------------------------------------
+
+enum CabinClass {
+  ECONOMY
+  PREMIUM_ECONOMY
+  BUSINESS
+  FIRST
+}
+
+model FlightBooking {
+  id         String     @id @default(cuid())
+  bookingId  String     @unique
+  booking    Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  origin      String // IATA airport code, e.g. "PBH"
+  destination String // IATA airport code, e.g. "BKK"
+  departureAt DateTime
+  returnAt    DateTime? // null for one-way
+  passengers  Int        @default(1)
+  cabinClass  CabinClass @default(ECONOMY)
+
+  airline      String
+  flightNumber String
+
+  aggregatorProvider String // e.g. "mock", "amadeus", "duffel"
+  aggregatorOfferId  String // the offer/fare id returned by the aggregator's search
+  pnr                String // airline reservation code returned on ticketing
+
+  createdAt DateTime @default(now())
 }
 
 enum PaymentMethod {

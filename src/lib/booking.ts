@@ -5,6 +5,7 @@ import {
   isRoomTypeAvailable,
   isVehicleAvailable,
 } from "@/lib/availability";
+import { bookFlight } from "@/lib/flights/aggregator";
 import type { z } from "zod";
 import type { bookingSchema } from "@/lib/validation";
 
@@ -25,6 +26,46 @@ function nightsOrDays(startDate: Date, endDate: Date) {
  * the mileage verification module depends on (via Vehicle -> GpsDevice).
  */
 export async function createBooking(travelerId: string, input: BookingInput) {
+  if (input.type === "FLIGHT") {
+    const { offer } = input;
+    const { pnr, aggregatorOfferId } = await bookFlight(offer);
+
+    return prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.create({
+        data: {
+          travelerId,
+          type: "FLIGHT",
+          // Ticketing already happened synchronously via the aggregator
+          // (a real PNR was issued above), unlike guide/hotel/vehicle
+          // bookings which start PENDING awaiting the vendor's confirmation.
+          status: "CONFIRMED",
+          startDate: offer.outbound.departureAt,
+          endDate: offer.inbound?.departureAt ?? offer.outbound.arrivalAt,
+          totalPrice: offer.totalPrice,
+        },
+      });
+
+      const flightBooking = await tx.flightBooking.create({
+        data: {
+          bookingId: booking.id,
+          origin: offer.outbound.origin,
+          destination: offer.outbound.destination,
+          departureAt: offer.outbound.departureAt,
+          returnAt: offer.inbound?.departureAt,
+          passengers: offer.passengers,
+          cabinClass: offer.cabinClass,
+          airline: offer.outbound.airline,
+          flightNumber: offer.outbound.flightNumber,
+          aggregatorProvider: offer.provider,
+          aggregatorOfferId,
+          pnr,
+        },
+      });
+
+      return { ...booking, flightBooking };
+    });
+  }
+
   const duration = nightsOrDays(input.startDate, input.endDate);
 
   if (input.type === "GUIDE") {

@@ -20,6 +20,7 @@ export default async function TravelerDashboardPage() {
       vehicle: { include: { operator: true } },
       trip: true,
       review: true,
+      flightBooking: true,
     },
   });
 
@@ -47,6 +48,7 @@ type BookingRow = Prisma.BookingGetPayload<{
     vehicle: { include: { operator: true } };
     trip: true;
     review: true;
+    flightBooking: true;
   };
 }>;
 
@@ -87,5 +89,7 @@ function Section({ title, bookings }: { title: string; bookings: BookingRow[] })
 function bookingLabel(b: BookingRow) {
   if (b.type === "GUIDE") return `Guide: ${b.guide?.user.name}`;
   if (b.type === "HOTEL") return `Hotel: ${b.roomType?.hotel.name} (${b.roomType?.name})`;
+  if (b.type === "FLIGHT")
+    return `Flight: ${b.flightBooking?.origin} → ${b.flightBooking?.destination} (${b.flightBooking?.airline})`;
   return `Transport: ${b.vehicle?.operator.businessName} (${b.vehicle?.type})`;
 }

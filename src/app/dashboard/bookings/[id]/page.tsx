@@ -16,6 +16,7 @@ type BookingDetail = Prisma.BookingGetPayload<{
     vehicle: { include: { operator: true; gpsDevice: true } };
     trip: true;
     review: true;
+    flightBooking: true;
     messages: { include: { sender: { select: { name: true; role: true } } } };
   };
 }>;
@@ -38,6 +39,7 @@ export default async function BookingDetailPage({
       vehicle: { include: { operator: true, gpsDevice: true } },
       trip: true,
       review: true,
+      flightBooking: true,
       messages: {
         orderBy: { createdAt: "asc" },
         include: { sender: { select: { name: true, role: true } } },
@@ -88,6 +90,37 @@ export default async function BookingDetailPage({
           </div>
         </div>
 
+        {booking.type === "FLIGHT" && booking.flightBooking && (
+          <div className="card">
+            <h3 className="font-semibold">Flight details</h3>
+            <dl className="mt-2 grid grid-cols-2 gap-y-1 text-sm">
+              <dt className="text-stone-500">Route</dt>
+              <dd>{booking.flightBooking.origin} → {booking.flightBooking.destination}</dd>
+              <dt className="text-stone-500">Airline</dt>
+              <dd>{booking.flightBooking.airline} ({booking.flightBooking.flightNumber})</dd>
+              <dt className="text-stone-500">Departure</dt>
+              <dd>{booking.flightBooking.departureAt.toLocaleString()}</dd>
+              {booking.flightBooking.returnAt && (
+                <>
+                  <dt className="text-stone-500">Return</dt>
+                  <dd>{booking.flightBooking.returnAt.toLocaleString()}</dd>
+                </>
+              )}
+              <dt className="text-stone-500">Passengers</dt>
+              <dd>{booking.flightBooking.passengers}</dd>
+              <dt className="text-stone-500">Cabin</dt>
+              <dd>{booking.flightBooking.cabinClass.replace("_", " ")}</dd>
+            </dl>
+            <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 font-mono text-sm text-emerald-800">
+              PNR: {booking.flightBooking.pnr}
+            </p>
+            <p className="mt-1 text-xs text-stone-400">
+              Issued via a demo aggregator ({booking.flightBooking.aggregatorProvider}) — not a real
+              airline reservation. See README for production integration notes.
+            </p>
+          </div>
+        )}
+
         {booking.type === "VEHICLE" && booking.trip && (
           <div className="card">
             <h3 className="font-semibold">Trip tracking</h3>
@@ -111,7 +144,7 @@ export default async function BookingDetailPage({
           </div>
         )}
 
-        {booking.status === "COMPLETED" && isTraveler && (
+        {booking.type !== "FLIGHT" && booking.status === "COMPLETED" && isTraveler && (
           booking.review ? (
             <div className="card">
               <h3 className="font-semibold">Your review</h3>
@@ -125,14 +158,16 @@ export default async function BookingDetailPage({
       </div>
 
       <div>
-        <MessageThread
-          bookingId={booking.id}
-          currentUserName={user.name}
-          initialMessages={booking.messages.map((m) => ({
-            ...m,
-            createdAt: m.createdAt.toISOString(),
-          }))}
-        />
+        {booking.type !== "FLIGHT" && (
+          <MessageThread
+            bookingId={booking.id}
+            currentUserName={user.name}
+            initialMessages={booking.messages.map((m) => ({
+              ...m,
+              createdAt: m.createdAt.toISOString(),
+            }))}
+          />
+        )}
       </div>
     </div>
   );
@@ -142,5 +177,7 @@ function bookingTitle(booking: BookingDetail) {
   if (booking.type === "GUIDE") return `Guide: ${booking.guide?.user.name}`;
   if (booking.type === "HOTEL")
     return `Hotel: ${booking.roomType?.hotel.name} — ${booking.roomType?.name}`;
+  if (booking.type === "FLIGHT")
+    return `Flight: ${booking.flightBooking?.origin} → ${booking.flightBooking?.destination}`;
   return `Transport: ${booking.vehicle?.operator.businessName} (${booking.vehicle?.type})`;
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PhotoUpload from "@/components/PhotoUpload";
 
 function splitList(value: FormDataEntryValue | null) {
   return String(value ?? "")
@@ -14,6 +15,7 @@ export default function GuideRegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,7 +30,7 @@ export default function GuideRegisterPage() {
       yearsExperience: form.get("yearsExperience"),
       ratePerDay: form.get("ratePerDay"),
       bio: form.get("bio") || undefined,
-      photoUrl: form.get("photoUrl") || undefined,
+      photoUrl: photoUrl || undefined,
     };
 
     const res = await fetch("/api/vendors/guide", {
@@ -106,9 +108,7 @@ export default function GuideRegisterPage() {
           />
         </Field>
 
-        <Field label="Photo URL (optional)">
-          <input name="photoUrl" type="url" className="input" />
-        </Field>
+        <PhotoUpload label="Profile photo (optional)" onUploaded={setPhotoUrl} />
 
         <Field label="Bio (optional)">
           <textarea name="bio" rows={4} className="input" />

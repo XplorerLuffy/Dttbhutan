@@ -23,6 +23,9 @@ export default async function NavBar() {
           <Link href="/vehicles" className="text-stone-600 hover:text-stone-900">
             Transport
           </Link>
+          <Link href="/flights" className="text-stone-600 hover:text-stone-900">
+            Flights
+          </Link>
 
           {user ? (
             <>

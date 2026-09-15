@@ -32,6 +32,7 @@ export const hotelSchema = z.object({
   longitude: z.coerce.number().min(-180).max(180).optional(),
   amenities: z.array(z.string().min(1)).default([]),
   businessLicenseUrl: z.string().url().optional().or(z.literal("")),
+  photoUrls: z.array(z.string().min(1)).default([]),
 });
 
 export const roomTypeSchema = z.object({
@@ -98,16 +99,55 @@ export const vehicleBookingSchema = z.object({
     .min(2),
 });
 
+const flightLegSchema = z.object({
+  airline: z.string().min(1),
+  airlineCode: z.string().min(1),
+  flightNumber: z.string().min(1),
+  origin: z.string().length(3),
+  destination: z.string().length(3),
+  departureAt: z.string().min(1),
+  arrivalAt: z.string().min(1),
+  durationMinutes: z.number().int().positive(),
+});
+
+export const flightOfferSchema = z.object({
+  id: z.string().min(1),
+  provider: z.literal("mock"),
+  outbound: flightLegSchema,
+  inbound: flightLegSchema.nullable(),
+  cabinClass: z.enum(["ECONOMY", "PREMIUM_ECONOMY", "BUSINESS", "FIRST"]),
+  passengers: z.number().int().min(1).max(9),
+  pricePerPassenger: z.number().positive(),
+  totalPrice: z.number().positive(),
+  currency: z.literal("BTN"),
+  isBhutaneseCarrier: z.boolean(),
+});
+
+export const flightBookingSchema = z.object({
+  type: z.literal("FLIGHT"),
+  offer: flightOfferSchema,
+});
+
 export const bookingSchema = z
   .discriminatedUnion("type", [
     guideBookingSchema,
     hotelBookingSchema,
     vehicleBookingSchema,
+    flightBookingSchema,
   ])
-  .refine((data) => data.endDate > data.startDate, {
+  .refine((data) => data.type === "FLIGHT" || data.endDate > data.startDate, {
     message: "endDate must be after startDate",
     path: ["endDate"],
   });
+
+export const flightSearchSchema = z.object({
+  origin: z.string().trim().length(3),
+  destination: z.string().trim().length(3),
+  departureDate: z.string().min(1),
+  returnDate: z.string().min(1).optional(),
+  passengers: z.coerce.number().int().min(1).max(9),
+  cabinClass: z.enum(["ECONOMY", "PREMIUM_ECONOMY", "BUSINESS", "FIRST"]),
+});
 
 export const reviewSchema = z.object({
   bookingId: z.string().min(1),

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PhotoUpload from "@/components/PhotoUpload";
 
 function splitList(value: FormDataEntryValue | null) {
   return String(value ?? "")
@@ -14,6 +15,7 @@ export default function HotelRegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,6 +31,7 @@ export default function HotelRegisterPage() {
         address: form.get("address") || undefined,
         amenities: splitList(form.get("amenities")),
         businessLicenseUrl: form.get("businessLicenseUrl") || undefined,
+        photoUrls: photoUrl ? [photoUrl] : [],
       },
       roomType: {
         name: form.get("roomName"),
@@ -97,6 +100,8 @@ export default function HotelRegisterPage() {
         <Field label="Business license URL (optional)">
           <input name="businessLicenseUrl" type="url" className="input" />
         </Field>
+
+        <PhotoUpload label="Cover photo (optional)" onUploaded={setPhotoUrl} />
 
         <hr className="border-stone-200" />
         <h2 className="text-sm font-semibold text-stone-700">First room type</h2>

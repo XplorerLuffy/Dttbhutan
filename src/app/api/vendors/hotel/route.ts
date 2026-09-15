@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
         latitude: hotel.latitude,
         longitude: hotel.longitude,
         amenities: hotel.amenities,
+        photoUrls: hotel.photoUrls,
         businessLicenseUrl: hotel.businessLicenseUrl || null,
         status: "PENDING",
         roomTypes: {

@@ -368,6 +368,33 @@ async function main() {
     });
   }
 
+  // --- Booking 5: confirmed flight (mock aggregator) --------------------
+  const flightBooking = await prisma.booking.create({
+    data: {
+      travelerId: traveler.id,
+      type: "FLIGHT",
+      status: "CONFIRMED",
+      startDate: daysFromNow(30),
+      endDate: daysFromNow(30, 3),
+      totalPrice: 14500,
+    },
+  });
+  await prisma.flightBooking.create({
+    data: {
+      bookingId: flightBooking.id,
+      origin: "PBH",
+      destination: "BKK",
+      departureAt: daysFromNow(30),
+      passengers: 1,
+      cabinClass: "ECONOMY",
+      airline: "Drukair (Royal Bhutan Airlines)",
+      flightNumber: "KB201",
+      aggregatorProvider: "mock",
+      aggregatorOfferId: "seed-mock-offer",
+      pnr: "SEED42",
+    },
+  });
+
   console.log("Seed complete.");
   console.log("Admin login:", admin.email, "/ password123");
   console.log("Traveler login:", traveler.email, "/ password123");

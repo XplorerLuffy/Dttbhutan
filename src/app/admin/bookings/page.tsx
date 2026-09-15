@@ -18,6 +18,7 @@ export default async function AdminBookingsPage() {
       guide: { include: { user: true } },
       roomType: { include: { hotel: true } },
       vehicle: { include: { operator: true } },
+      flightBooking: true,
     },
   });
 
@@ -54,8 +55,13 @@ function vendorLabel(b: {
   guide: { user: { name: string } } | null;
   roomType: { hotel: { name: string } } | null;
   vehicle: { operator: { businessName: string } } | null;
+  flightBooking: { origin: string; destination: string; airline: string } | null;
 }) {
   if (b.type === "GUIDE") return b.guide?.user.name ?? "Guide";
   if (b.type === "HOTEL") return b.roomType?.hotel.name ?? "Hotel";
+  if (b.type === "FLIGHT")
+    return b.flightBooking
+      ? `${b.flightBooking.origin} → ${b.flightBooking.destination} (${b.flightBooking.airline})`
+      : "Flight";
   return b.vehicle?.operator.businessName ?? "Transport";
 }
