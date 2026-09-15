@@ -1,0 +1,146 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import StatusBadge from "@/components/StatusBadge";
+import MessageThread from "@/components/MessageThread";
+import ReviewForm from "@/components/ReviewForm";
+import { CancelBookingButton, SetBookingStatusButton } from "@/components/BookingActions";
+import type { Prisma } from "@prisma/client";
+
+type BookingDetail = Prisma.BookingGetPayload<{
+  include: {
+    traveler: true;
+    guide: { include: { user: true } };
+    roomType: { include: { hotel: true } };
+    vehicle: { include: { operator: true; gpsDevice: true } };
+    trip: true;
+    review: true;
+    messages: { include: { sender: { select: { name: true; role: true } } } };
+  };
+}>;
+
+export default async function BookingDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const { id } = await params;
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    include: {
+      traveler: true,
+      guide: { include: { user: true } },
+      roomType: { include: { hotel: true } },
+      vehicle: { include: { operator: true, gpsDevice: true } },
+      trip: true,
+      review: true,
+      messages: {
+        orderBy: { createdAt: "asc" },
+        include: { sender: { select: { name: true, role: true } } },
+      },
+    },
+  });
+  if (!booking) notFound();
+
+  const isTraveler = booking.travelerId === user.id;
+  const isVendorOwner =
+    booking.guide?.userId === user.id ||
+    booking.roomType?.hotel.ownerId === user.id ||
+    booking.vehicle?.operator.ownerId === user.id;
+  const isAdmin = user.role === "ADMIN";
+  if (!isTraveler && !isVendorOwner && !isAdmin) notFound();
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      <div className="space-y-4 lg:col-span-2">
+        <div className="card">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-xl font-bold">{bookingTitle(booking)}</h1>
+              <p className="text-sm text-stone-500">
+                {booking.startDate.toDateString()} → {booking.endDate.toDateString()}
+              </p>
+            </div>
+            <StatusBadge status={booking.status} />
+          </div>
+
+          <p className="mt-3 font-medium text-emerald-800">
+            Total: Nu. {Number(booking.totalPrice).toLocaleString()}
+          </p>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {isTraveler && booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
+              <CancelBookingButton bookingId={booking.id} />
+            )}
+            {(isVendorOwner || isAdmin) && booking.status === "PENDING" && (
+              <SetBookingStatusButton bookingId={booking.id} status="CONFIRMED" label="Confirm" />
+            )}
+            {(isVendorOwner || isAdmin) && booking.status === "CONFIRMED" && (
+              <SetBookingStatusButton bookingId={booking.id} status="COMPLETED" label="Mark completed" />
+            )}
+            {(isVendorOwner || isAdmin) && booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
+              <SetBookingStatusButton bookingId={booking.id} status="CANCELLED" label="Cancel" />
+            )}
+          </div>
+        </div>
+
+        {booking.type === "VEHICLE" && booking.trip && (
+          <div className="card">
+            <h3 className="font-semibold">Trip tracking</h3>
+            <p className="text-sm text-stone-500">
+              Status: {booking.trip.status.replace("_", " ")}
+            </p>
+            <Link
+              href={`/track/${booking.trip.shareToken}`}
+              className="mt-2 inline-block text-emerald-700 hover:underline"
+            >
+              Open live tracking page →
+            </Link>
+            {isAdmin && booking.trip.status === "COMPLETED" && (
+              <Link
+                href={`/admin/gps/trips/${booking.trip.id}`}
+                className="mt-1 block text-sm text-stone-500 hover:underline"
+              >
+                View mileage verification report →
+              </Link>
+            )}
+          </div>
+        )}
+
+        {booking.status === "COMPLETED" && isTraveler && (
+          booking.review ? (
+            <div className="card">
+              <h3 className="font-semibold">Your review</h3>
+              <p className="text-amber-600">{"★".repeat(booking.review.rating)}</p>
+              {booking.review.comment && <p className="text-sm text-stone-600">{booking.review.comment}</p>}
+            </div>
+          ) : (
+            <ReviewForm bookingId={booking.id} />
+          )
+        )}
+      </div>
+
+      <div>
+        <MessageThread
+          bookingId={booking.id}
+          currentUserName={user.name}
+          initialMessages={booking.messages.map((m) => ({
+            ...m,
+            createdAt: m.createdAt.toISOString(),
+          }))}
+        />
+      </div>
+    </div>
+  );
+}
+
+function bookingTitle(booking: BookingDetail) {
+  if (booking.type === "GUIDE") return `Guide: ${booking.guide?.user.name}`;
+  if (booking.type === "HOTEL")
+    return `Hotel: ${booking.roomType?.hotel.name} — ${booking.roomType?.name}`;
+  return `Transport: ${booking.vehicle?.operator.businessName} (${booking.vehicle?.type})`;
+}

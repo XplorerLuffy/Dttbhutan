@@ -1,0 +1,91 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { dashboardPathForRole } from "@/lib/roles";
+import StatusBadge from "@/components/StatusBadge";
+import type { Prisma } from "@prisma/client";
+
+export default async function TravelerDashboardPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.role !== "TRAVELER") redirect(dashboardPathForRole(user.role));
+
+  const bookings = await prisma.booking.findMany({
+    where: { travelerId: user.id },
+    orderBy: { startDate: "desc" },
+    include: {
+      guide: { include: { user: true } },
+      roomType: { include: { hotel: true } },
+      vehicle: { include: { operator: true } },
+      trip: true,
+      review: true,
+    },
+  });
+
+  const now = new Date();
+  const upcoming = bookings.filter((b) => b.endDate >= now && b.status !== "CANCELLED");
+  const past = bookings.filter((b) => b.endDate < now || b.status === "CANCELLED");
+
+  return (
+    <div>
+      <h1 className="mb-1 text-2xl font-bold">My trips</h1>
+      <p className="mb-6 text-sm text-stone-600">
+        Welcome back, {user.name}.
+      </p>
+
+      <Section title="Upcoming & active" bookings={upcoming} />
+      <Section title="Past & cancelled" bookings={past} />
+    </div>
+  );
+}
+
+type BookingRow = Prisma.BookingGetPayload<{
+  include: {
+    guide: { include: { user: true } };
+    roomType: { include: { hotel: true } };
+    vehicle: { include: { operator: true } };
+    trip: true;
+    review: true;
+  };
+}>;
+
+function Section({ title, bookings }: { title: string; bookings: BookingRow[] }) {
+  return (
+    <div className="mb-8">
+      <h2 className="mb-3 text-lg font-semibold">{title}</h2>
+      {bookings.length === 0 ? (
+        <p className="text-sm text-stone-500">Nothing here yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {bookings.map((b) => (
+            <Link
+              key={b.id}
+              href={`/dashboard/bookings/${b.id}`}
+              className="card flex items-center justify-between hover:shadow-md"
+            >
+              <div>
+                <p className="font-medium">{bookingLabel(b)}</p>
+                <p className="text-sm text-stone-500">
+                  {b.startDate.toDateString()} → {b.endDate.toDateString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <StatusBadge status={b.status} />
+                {b.type === "VEHICLE" && b.trip && (
+                  <p className="mt-1 text-xs text-emerald-700">Live tracking available</p>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function bookingLabel(b: BookingRow) {
+  if (b.type === "GUIDE") return `Guide: ${b.guide?.user.name}`;
+  if (b.type === "HOTEL") return `Hotel: ${b.roomType?.hotel.name} (${b.roomType?.name})`;
+  return `Transport: ${b.vehicle?.operator.businessName} (${b.vehicle?.type})`;
+}

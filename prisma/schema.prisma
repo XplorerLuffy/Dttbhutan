@@ -1,0 +1,373 @@
+// Bhutan Tour Booking Platform — data model
+// Covers: multi-vendor marketplace (guides, hotels, transport),
+// bookings/availability, reviews, payments, and the GPS tracking module
+// (device-to-vehicle-to-trip mapping, position log, mileage reports).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity & roles
+// ---------------------------------------------------------------------------
+
+enum Role {
+  TRAVELER
+  GUIDE
+  HOTEL_OPERATOR
+  TRANSPORT_OPERATOR
+  ADMIN
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         Role     @default(TRAVELER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  guideProfile       GuideProfile?
+  hotel              Hotel?
+  transportOperator  TransportOperator?
+  bookings           Booking[]
+  reviews            Review[]
+  sentMessages       Message[]
+}
+
+// ---------------------------------------------------------------------------
+// Vendor: Tour Guides
+// ---------------------------------------------------------------------------
+
+model GuideProfile {
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licenseNumber    String // TCB (Tourism Council of Bhutan) guide license number
+  languages        String[]
+  specialties      String[] // trekking, cultural, historical, adventure, etc.
+  yearsExperience  Int          @default(0)
+  ratePerDay       Decimal      @db.Decimal(10, 2)
+  bio              String?
+  photoUrl         String?
+  status           VendorStatus @default(PENDING)
+  adminNote        String? // reason for rejection/suspension, or verification notes
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  blockedDates GuideBlockedDate[]
+  bookings     Booking[]
+}
+
+// Dates a guide has explicitly marked unavailable (holidays, other commitments).
+// Actual booking conflicts are computed from Booking date ranges directly.
+model GuideBlockedDate {
+  id      String       @id @default(cuid())
+  guideId String
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  date    DateTime
+
+  @@unique([guideId, date])
+}
+
+// ---------------------------------------------------------------------------
+// Vendor: Hotels
+// ---------------------------------------------------------------------------
+
+model Hotel {
+  id                 String       @id @default(cuid())
+  ownerId            String       @unique
+  owner              User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name               String
+  description        String?
+  location           String // town/district, e.g. "Paro", "Thimphu"
+  address            String?
+  latitude           Float?
+  longitude          Float?
+  amenities          String[]
+  photoUrls          String[]
+  businessLicenseUrl String?
+  status             VendorStatus @default(PENDING)
+  adminNote          String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  roomTypes RoomType[]
+}
+
+model RoomType {
+  id            String   @id @default(cuid())
+  hotelId       String
+  hotel         Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  name          String // e.g. "Deluxe Double", "Suite"
+  capacity      Int
+  pricePerNight Decimal  @db.Decimal(10, 2)
+  totalRooms    Int      @default(1)
+  createdAt     DateTime @default(now())
+
+  bookings Booking[]
+}
+
+// ---------------------------------------------------------------------------
+// Vendor: Transportation (vehicles + drivers)
+// ---------------------------------------------------------------------------
+
+model TransportOperator {
+  id                 String       @id @default(cuid())
+  ownerId            String       @unique
+  owner              User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  businessName       String
+  businessLicenseUrl String?
+  status             VendorStatus @default(PENDING)
+  adminNote          String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  vehicles Vehicle[]
+}
+
+enum VehicleType {
+  SEDAN
+  SUV
+  VAN
+  BUS
+}
+
+model Vehicle {
+  id                  String       @id @default(cuid())
+  operatorId          String
+  operator            TransportOperator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  type                VehicleType
+  capacity            Int
+  plateNumber         String       @unique
+  driverName          String
+  driverLicenseNumber String
+  ratePerDay          Decimal      @db.Decimal(10, 2)
+  ratePerKm           Decimal?     @db.Decimal(10, 2)
+  status              VendorStatus @default(PENDING)
+  adminNote           String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  gpsDevice GpsDevice?
+  bookings  Booking[]
+  trips     Trip[]
+}
+
+// ---------------------------------------------------------------------------
+// Bookings, availability, reviews, payments
+// ---------------------------------------------------------------------------
+
+enum BookingType {
+  GUIDE
+  HOTEL
+  VEHICLE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  travelerId String
+  traveler   User          @relation(fields: [travelerId], references: [id], onDelete: Cascade)
+  type       BookingType
+  status     BookingStatus @default(PENDING)
+  startDate  DateTime
+  endDate    DateTime
+  totalPrice Decimal       @db.Decimal(10, 2)
+  commissionRate Decimal   @default(0.10) @db.Decimal(5, 4) // platform commission, e.g. 0.10 = 10%
+
+  guideId    String?
+  guide      GuideProfile? @relation(fields: [guideId], references: [id])
+  roomTypeId String?
+  roomType   RoomType?     @relation(fields: [roomTypeId], references: [id])
+  vehicleId  String?
+  vehicle    Vehicle?      @relation(fields: [vehicleId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  review   Review?
+  messages Message[]
+  payment  Payment?
+  trip     Trip? // only present for VEHICLE bookings
+
+  @@index([guideId, startDate, endDate])
+  @@index([roomTypeId, startDate, endDate])
+  @@index([vehicleId, startDate, endDate])
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  MOBILE_WALLET
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  bookingId      String        @unique
+  booking        Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount         Decimal       @db.Decimal(10, 2)
+  commissionAmount Decimal     @db.Decimal(10, 2)
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  reference      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+enum ReviewTargetType {
+  GUIDE
+  HOTEL
+  VEHICLE
+}
+
+model Review {
+  id         String           @id @default(cuid())
+  bookingId  String           @unique // one review per completed booking — prevents fake/unlinked reviews
+  booking    Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  travelerId String
+  traveler   User             @relation(fields: [travelerId], references: [id], onDelete: Cascade)
+  targetType ReviewTargetType
+  targetId   String // GuideProfile.id | Hotel.id | Vehicle.id
+  rating     Int // 1-5
+  comment    String?
+  createdAt  DateTime         @default(now())
+
+  @@index([targetType, targetId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([bookingId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// GPS tracking module
+//
+// Pipeline: physical GPS unit -> Traccar server (or vendor API/webhook) ->
+// POST /api/gps/ingest -> GpsPosition rows, linked to the vehicle's active
+// Trip. Two consumers share this pipeline: the admin mileage-verification
+// report, and the traveler/public live-tracking view.
+// ---------------------------------------------------------------------------
+
+enum GpsDeviceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model GpsDevice {
+  id               String          @id @default(cuid())
+  vehicleId        String          @unique
+  vehicle          Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  deviceIdentifier String          @unique // Traccar device "uniqueId" (e.g. IMEI) or vendor-platform device id
+  protocol         String? // Traccar protocol name, once the hardware model is confirmed
+  status           GpsDeviceStatus @default(ACTIVE)
+  createdAt        DateTime        @default(now())
+
+  positions GpsPosition[]
+}
+
+enum TripStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Trip {
+  id           String     @id @default(cuid())
+  bookingId    String     @unique
+  booking      Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  vehicleId    String
+  vehicle      Vehicle    @relation(fields: [vehicleId], references: [id])
+  status       TripStatus @default(NOT_STARTED)
+
+  // Planned route, captured at booking time, used as the baseline to compare
+  // GPS-verified actual distance against.
+  plannedDistanceKm Float
+  plannedRoute      Json // [{ lat, lng, label? }, ...] waypoints
+
+  startedAt DateTime?
+  endedAt   DateTime?
+
+  // Public shareable link for live tracking (no account required).
+  shareToken String @unique @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  positions GpsPosition[]
+  report    TripDistanceReport?
+
+  @@index([vehicleId, status])
+}
+
+model GpsPosition {
+  id         String   @id @default(cuid())
+  deviceId   String
+  device     GpsDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  tripId     String?
+  trip       Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  latitude   Float
+  longitude  Float
+  speedKmh   Float?
+  heading    Float?
+  recordedAt DateTime // timestamp reported by the device
+  receivedAt DateTime @default(now()) // timestamp the platform received it (for connectivity-gap diagnostics)
+
+  @@index([tripId, recordedAt])
+  @@index([deviceId, recordedAt])
+}
+
+// Cached, generated report comparing planned vs GPS-verified actual distance
+// for a completed trip. Regenerated whenever a trip is ended/recomputed.
+model TripDistanceReport {
+  id                String   @id @default(cuid())
+  tripId            String   @unique
+  trip              Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  actualDistanceKm  Float
+  plannedDistanceKm Float
+  deviationKm       Float
+  deviationPercent  Float
+  flagged           Boolean // true if deviation exceeds the dispute threshold
+  flagReason        String?
+  startLatitude     Float?
+  startLongitude    Float?
+  endLatitude       Float?
+  endLongitude      Float?
+  pointCount        Int
+  generatedAt       DateTime @default(now())
+}
