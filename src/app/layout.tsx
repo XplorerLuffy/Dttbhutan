@@ -20,7 +20,7 @@ const body = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Dtt Bhutan | Guides, Hotels, Transport & Flights",
+  title: "Droelma Tours & Travels | Guides, Hotels, Transport & Flights",
   description:
     "Book tour guides, hotels, transport, and flights for your Bhutan trip, with GPS-verified trip mileage and live tracking.",
 };

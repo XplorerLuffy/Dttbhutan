@@ -6,7 +6,9 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <div className="grid gap-8 sm:grid-cols-4">
           <div>
-            <p className="font-display text-lg font-semibold text-brand-800">Dtt Bhutan</p>
+            <p className="font-display text-lg font-semibold text-brand-800">
+              Droelma Tours &amp; Travels
+            </p>
             <p className="mt-2 text-sm text-stone-500">
               Guides, hotels, transport, and flights for your trip — with
               GPS-verified trip mileage and live tracking.
@@ -41,7 +43,7 @@ export default function Footer() {
           />
         </div>
         <p className="mt-10 text-xs text-stone-400">
-          © {new Date().getFullYear()} Dtt Bhutan. Built for a Bhutanese travel agency.
+          © {new Date().getFullYear()} Droelma Tours &amp; Travels.
         </p>
       </div>
     </footer>

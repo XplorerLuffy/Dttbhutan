@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { dashboardPathForRole } from "@/lib/roles";
 import LogoutButton from "@/components/LogoutButton";
+import LogoMark from "@/components/Logo";
 
 export default async function NavBar() {
   const user = await getCurrentUser();
@@ -9,8 +10,11 @@ export default async function NavBar() {
   return (
     <header className="border-b border-stone-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="font-display text-lg font-semibold text-brand-800">
-          Dtt Bhutan
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <LogoMark className="h-9 w-auto shrink-0" />
+          <span className="hidden font-display text-lg font-semibold text-brand-800 sm:inline">
+            Droelma Tours &amp; Travels
+          </span>
         </Link>
 
         <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">

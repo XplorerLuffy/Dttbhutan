@@ -1,6 +1,7 @@
-# Dtt Bhutan
+# Droelma Tours & Travels
 
-A booking marketplace for a Bhutanese travel agency, functionally modeled on
+A booking marketplace for Droelma Tours & Travels, a Bhutanese travel
+agency, functionally modeled on
 Booking.com's search/compare/book UX, covering four bookable categories —
 tour guides, hotels, transport (vehicles + drivers), and flights — across
 all 20 of Bhutan's dzongkhags (districts), plus agency-authored package
@@ -64,7 +65,7 @@ generate them.
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | `admin@dttbhutan.bt` | `password123` |
+| Admin | `admin@droelma.bt` | `password123` |
 | Traveler | `traveler@example.com` | `password123` |
 | Guide | `pemba.guide@example.com` | `password123` |
 | Hotel operator | `owner@tsheringhotel.bt` | `password123` |
@@ -214,10 +215,22 @@ default. Wired into guide profile and hotel cover-photo registration.
 
 ## Design & animation
 
-- **Palette**: a Bhutanese-motif palette (`tailwind.config.ts`) — deep
-  temple-maroon (`brand`), saffron/gold (`gold`), and pine green (`pine`)
-  — replacing a generic blue/white SaaS default. Status badges use `pine`
-  for success states, `amber` for pending, `red` for rejected/cancelled.
+- **Logo**: `src/components/Logo.tsx` is a hand-drawn SVG recreation of
+  the Droelma Tours & Travels mark (flame-topped glyph, gold/orange flame
+  petals, Bhutan silhouette) — **not the client's original artwork file**.
+  Image attachments in this session don't land on disk as a readable
+  file, so the source logo image couldn't be embedded directly; this is a
+  close approximation built from visual inspection. Replace this
+  component's contents with the real asset (e.g. an `<img>` pointing at a
+  file under `public/`) as soon as it can be committed to the repo —
+  ideally an SVG or a high-resolution PNG, for both the nav/footer usage
+  and `src/app/icon.svg` (the favicon, currently a simplified version of
+  the same recreation).
+- **Palette**: matched to the logo (`tailwind.config.ts`) — a royal blue
+  (`brand`) with a gold/orange flame accent (`gold`), plus pine green
+  (`pine`) kept as a UI-only success/positive semantic color, unrelated to
+  brand identity. Status badges use `pine` for success states, `amber` for
+  pending, `red` for rejected/cancelled.
 - **Typography**: Fraunces (serif display, headings) + Plus Jakarta Sans
   (body), loaded via `next/font/google` (self-hosted at build time, no
   runtime request to Google's CDN).

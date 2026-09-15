@@ -39,7 +39,7 @@ async function upsertUser(email: string, name: string, role: "TRAVELER" | "GUIDE
 async function main() {
   console.log("Seeding...");
 
-  const admin = await upsertUser("admin@dttbhutan.bt", "Agency Admin", "ADMIN");
+  const admin = await upsertUser("admin@droelma.bt", "Agency Admin", "ADMIN");
   const traveler = await upsertUser("traveler@example.com", "Sonam Wangmo", "TRAVELER");
 
   // --- Destinations: all 20 dzongkhags -----------------------------------

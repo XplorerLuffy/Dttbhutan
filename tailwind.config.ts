@@ -11,33 +11,33 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        // Bhutanese-motif palette: deep temple-maroon (brand), saffron/gold
-        // (accent — prayer flags, monastic robes), and pine green (the
-        // forested valleys) — standing in for the generic blue/white SaaS
-        // default.
+        // Droelma Tours & Travels brand palette, matched to the logo: a
+        // strong royal blue (brand) with a gold/orange flame-petal accent
+        // (gold), plus pine green kept as a UI-only success/positive
+        // semantic color (unrelated to brand identity).
         brand: {
-          50: "#fbf1f2",
-          100: "#f4dde0",
-          200: "#e8bcc3",
-          300: "#d8919d",
-          400: "#c26375",
-          500: "#a53d52",
-          600: "#86233a",
-          700: "#6b1a2e",
-          800: "#551526",
-          900: "#451220",
+          50: "#f0f7fd",
+          100: "#dcebf9",
+          200: "#b6d5f0",
+          300: "#82b6e6",
+          400: "#4a92d6",
+          500: "#1c72c4",
+          600: "#0b5ea8",
+          700: "#094a86",
+          800: "#0a3c6b",
+          900: "#0a3159",
         },
         gold: {
-          50: "#fdf7ec",
-          100: "#faecd0",
-          200: "#f4d69f",
-          300: "#ecbb69",
-          400: "#e3a03f",
-          500: "#d1842a",
-          600: "#ac6820",
-          700: "#874f1c",
-          800: "#6d411c",
-          900: "#5c371b",
+          50: "#fef8ec",
+          100: "#fcecc9",
+          200: "#f9d68e",
+          300: "#f5b94f",
+          400: "#f2a227",
+          500: "#e8871a",
+          600: "#c96914",
+          700: "#a54f15",
+          800: "#864017",
+          900: "#6f3517",
         },
         pine: {
           50: "#eff8f3",
