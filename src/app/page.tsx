@@ -4,6 +4,7 @@ import Hero from "@/components/home/Hero";
 import ScrollReveal from "@/components/ScrollReveal";
 import MotionCard from "@/components/MotionCard";
 import PropertyCard from "@/components/listing/PropertyCard";
+import TestimonialCarousel, { type Testimonial } from "@/components/home/TestimonialCarousel";
 
 const categories = [
   {
@@ -32,31 +33,41 @@ const categories = [
   },
 ];
 
-const trustPoints = [
-  {
-    title: "GPS-verified mileage",
-    description:
-      "Every vehicle trip is checked against its GPS trail, not the driver's word — the exact planned-vs-actual distance is on record.",
-  },
+const whyChoose = [
   {
     title: "Licensed & vetted vendors",
     description:
       "Guides carry a verified TCB license, and every hotel and transport operator is approved by our team before they're bookable.",
+    icon: IconShieldCheck,
+  },
+  {
+    title: "GPS-verified mileage",
+    description:
+      "Every vehicle trip is checked against its GPS trail, not the driver's word — the exact planned-vs-actual distance is on record.",
+    icon: IconMapPin,
   },
   {
     title: "Live trip tracking",
     description:
       "Follow your vehicle's last known location during your trip, and share the link with family — no account needed.",
+    icon: IconUsers,
+  },
+  {
+    title: "Ready-made or fully custom",
+    description:
+      "Book one of our priced itineraries as-is, or tell us what you want to see and we'll build a bespoke trip and quote it.",
+    icon: IconSliders,
   },
 ];
 
 export default async function HomePage() {
-  const [destinations, featuredPackages, popularHotels] = await Promise.all([
+  const [destinations, trendingPackages, popularHotels] = await Promise.all([
     prisma.destination.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } }),
     prisma.itinerary.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { pricePerPerson: "asc" },
-      take: 3,
+      take: 6,
+      include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: true } } },
     }),
     prisma.hotel.findMany({
       where: { status: "APPROVED" },
@@ -74,6 +85,8 @@ export default async function HomePage() {
     _count: { rating: true },
   });
   const ratingById = new Map(hotelRatings.map((r) => [r.targetId, r]));
+
+  const testimonials = await getTestimonials();
 
   return (
     <div>
@@ -129,10 +142,10 @@ export default async function HomePage() {
         </section>
       )}
 
-      {featuredPackages.length > 0 && (
+      {trendingPackages.length > 0 && (
         <section className="mt-20">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl font-semibold text-stone-900">Package tours</h2>
+            <h2 className="font-display text-2xl font-semibold text-stone-900">Trending packages</h2>
             <Link href="/packages" className="text-sm text-brand-700 hover:underline">
               View all →
             </Link>
@@ -144,17 +157,27 @@ export default async function HomePage() {
             </Link>{" "}
             built around what you want to see.
           </p>
-          <ScrollReveal className="mt-6 grid gap-4 sm:grid-cols-3">
-            {featuredPackages.map((p) => (
-              <MotionCard key={p.id} href={`/packages/${p.slug}`} className="card block">
-                <h3 className="font-semibold">{p.title}</h3>
-                <p className="mt-1 text-sm text-stone-600">{p.summary}</p>
-                <p className="mt-2 text-sm text-stone-500">{p.durationDays} days</p>
-                <p className="mt-1 font-medium text-brand-800">
-                  Nu. {Number(p.pricePerPerson).toLocaleString()} / person
-                </p>
-              </MotionCard>
-            ))}
+          <ScrollReveal className="mt-6 flex gap-4 overflow-x-auto pb-2">
+            {trendingPackages.map((p) => {
+              const locations = uniqueOrdered(
+                p.days.map((d) => d.destination?.name).filter((n): n is string => Boolean(n))
+              );
+              return (
+                <div key={p.id} className="w-64 shrink-0">
+                  <PropertyCard
+                    href={`/packages/${p.slug}`}
+                    imageUrl={p.coverPhotoUrl}
+                    imageFallback={p.title[0]}
+                    title={p.title}
+                    subtitle={locations.join(" • ") || undefined}
+                    ratingAverage={null}
+                    ratingCount={0}
+                    priceLabel={`Nu. ${Number(p.pricePerPerson).toLocaleString()}`}
+                    priceSubLabel={`per person · ${p.durationDays}d`}
+                  />
+                </div>
+              );
+            })}
           </ScrollReveal>
         </section>
       )}
@@ -180,14 +203,28 @@ export default async function HomePage() {
         </ScrollReveal>
       </section>
 
+      {testimonials.length > 0 && (
+        <section className="mt-20">
+          <h2 className="text-center font-display text-2xl font-semibold text-stone-900">
+            What our travelers say
+          </h2>
+          <div className="mt-8">
+            <TestimonialCarousel testimonials={testimonials} />
+          </div>
+        </section>
+      )}
+
       <section className="mt-20">
         <h2 className="text-center font-display text-2xl font-semibold text-stone-900">
-          Built to solve real problems, not just look nice
+          Why choose Droelma
         </h2>
-        <ScrollReveal className="mt-8 grid gap-8 sm:grid-cols-3">
-          {trustPoints.map((t) => (
-            <div key={t.title} className="text-center">
-              <h3 className="font-display text-lg font-semibold text-pine-800">{t.title}</h3>
+        <ScrollReveal className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {whyChoose.map((t) => (
+            <div key={t.title} className="card text-center">
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-pine-50">
+                <t.icon className="h-6 w-6 text-pine-700" />
+              </span>
+              <h3 className="mt-3 font-display text-base font-semibold text-stone-900">{t.title}</h3>
               <p className="mt-2 text-sm text-stone-600">{t.description}</p>
             </div>
           ))}
@@ -195,6 +232,45 @@ export default async function HomePage() {
       </section>
     </div>
   );
+}
+
+function uniqueOrdered(values: string[]) {
+  return Array.from(new Set(values));
+}
+
+async function getTestimonials(): Promise<Testimonial[]> {
+  const reviews = await prisma.review.findMany({
+    where: { comment: { not: null } },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+    include: { traveler: true },
+  });
+  if (reviews.length === 0) return [];
+
+  const guideIds = reviews.filter((r) => r.targetType === "GUIDE").map((r) => r.targetId);
+  const hotelIds = reviews.filter((r) => r.targetType === "HOTEL").map((r) => r.targetId);
+  const vehicleIds = reviews.filter((r) => r.targetType === "VEHICLE").map((r) => r.targetId);
+
+  const [guides, hotels, vehicles] = await Promise.all([
+    prisma.guideProfile.findMany({ where: { id: { in: guideIds } }, include: { user: true } }),
+    prisma.hotel.findMany({ where: { id: { in: hotelIds } } }),
+    prisma.vehicle.findMany({ where: { id: { in: vehicleIds } }, include: { operator: true } }),
+  ]);
+
+  const labelById = new Map<string, string>();
+  for (const g of guides) labelById.set(g.id, `Traveled with guide ${g.user.name}`);
+  for (const h of hotels) labelById.set(h.id, `Stayed at ${h.name}`);
+  for (const v of vehicles) labelById.set(v.id, `Rode with ${v.operator.businessName}`);
+
+  return reviews
+    .filter((r) => r.comment)
+    .map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      comment: r.comment as string,
+      travelerName: r.traveler.name,
+      contextLabel: labelById.get(r.targetId) ?? "Verified traveler",
+    }));
 }
 
 function IconCompass({ className }: { className?: string }) {
@@ -242,6 +318,55 @@ function IconPlane({ className }: { className?: string }) {
         d="M10.5 20l1.5-4.5L21 12l-1-2-8.5 2L9 6H7l1 6.5L2 15l1 2 4.5-1.5L9 20h1.5z"
         fill="currentColor"
       />
+    </svg>
+  );
+}
+
+function IconShieldCheck({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path
+        d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M9 12l2 2 4-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconMapPin({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path
+        d="M12 21s7-6.5 7-11.5a7 7 0 1 0-14 0C5 14.5 12 21 12 21z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <circle cx="12" cy="9.5" r="2.2" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function IconUsers({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3 19c.7-3 3-5 6-5s5.3 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="17" cy="9" r="2.3" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M15.5 14.2c2.3.4 4 2 4.6 4.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconSliders({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h13M21 18h-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="14" cy="6" r="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="8" cy="12" r="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="17" cy="18" r="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
