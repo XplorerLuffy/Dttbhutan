@@ -202,6 +202,9 @@ export const customTourRequestSchema = z
     budgetPerPerson: z.coerce.number().positive().optional(),
     notes: z.string().max(2000).optional(),
     destinationIds: z.array(z.string().min(1)).min(1),
+    guideId: z.string().min(1).optional(),
+    roomTypeId: z.string().min(1).optional(),
+    vehicleId: z.string().min(1).optional(),
   })
   .refine((data) => data.endDate > data.startDate, {
     message: "endDate must be after startDate",

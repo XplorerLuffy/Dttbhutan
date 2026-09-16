@@ -12,7 +12,13 @@ export default async function AdminCustomToursPage() {
 
   const requests = await prisma.customTourRequest.findMany({
     orderBy: { createdAt: "desc" },
-    include: { traveler: true, destinations: true },
+    include: {
+      traveler: true,
+      destinations: true,
+      guide: { include: { user: { select: { name: true } } } },
+      roomType: { include: { hotel: { select: { name: true } } } },
+      vehicle: { include: { operator: { select: { businessName: true } } } },
+    },
   });
 
   return (
@@ -43,6 +49,24 @@ export default async function AdminCustomToursPage() {
                 <p className="mt-1 text-sm text-stone-500">
                   {r.destinations.map((d) => d.name).join(", ")}
                 </p>
+                {(r.guide || r.roomType || r.vehicle) && (
+                  <div className="mt-2 rounded-md bg-stone-50 p-2 text-sm text-stone-700">
+                    {r.guide && <p>Guide: {r.guide.user.name}</p>}
+                    {r.roomType && (
+                      <p>
+                        Hotel: {r.roomType.hotel.name} · {r.roomType.name}
+                        {r.roomsNeeded && r.roomsNeeded > 1 ? ` (${r.roomsNeeded} rooms)` : ""}
+                      </p>
+                    )}
+                    {r.vehicle && <p>Vehicle: {r.vehicle.type} · {r.vehicle.operator.businessName}</p>}
+                    {r.estimatedTotalPrice != null && (
+                      <p className="mt-1 font-medium text-stone-900">
+                        Estimated Nu. {Number(r.estimatedTotalPrice).toLocaleString()} total · Nu.{" "}
+                        {Number(r.estimatedPricePerPerson).toLocaleString()}/person
+                      </p>
+                    )}
+                  </div>
+                )}
                 {r.notes && <p className="mt-2 text-sm text-stone-700">&ldquo;{r.notes}&rdquo;</p>}
               </div>
               <CustomTourRequestControls

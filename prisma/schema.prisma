@@ -100,9 +100,10 @@ model GuideProfile {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  blockedDates GuideBlockedDate[]
-  bookings     Booking[]
-  destinations Destination[]      @relation("GuideCoverage") // dzongkhags this guide covers
+  blockedDates       GuideBlockedDate[]
+  bookings           Booking[]
+  destinations       Destination[]       @relation("GuideCoverage") // dzongkhags this guide covers
+  customTourRequests CustomTourRequest[]
 }
 
 // Dates a guide has explicitly marked unavailable (holidays, other commitments).
@@ -152,7 +153,8 @@ model RoomType {
   totalRooms    Int      @default(1)
   createdAt     DateTime @default(now())
 
-  bookings Booking[]
+  bookings           Booking[]
+  customTourRequests CustomTourRequest[]
 }
 
 // ---------------------------------------------------------------------------
@@ -196,9 +198,10 @@ model Vehicle {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
-  gpsDevice GpsDevice?
-  bookings  Booking[]
-  trips     Trip[]
+  gpsDevice          GpsDevice?
+  bookings           Booking[]
+  trips              Trip[]
+  customTourRequests CustomTourRequest[]
 }
 
 // ---------------------------------------------------------------------------
@@ -409,6 +412,20 @@ model CustomTourRequest {
   adminNote       String?
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
+
+  // Traveler's self-service picks — all optional ("no preference" is valid).
+  // The server recomputes pricing from these vendors' real rates rather than
+  // trusting a client-sent total.
+  guideId     String?
+  guide       GuideProfile? @relation(fields: [guideId], references: [id])
+  roomTypeId  String?
+  roomType    RoomType?     @relation(fields: [roomTypeId], references: [id])
+  roomsNeeded Int?
+  vehicleId   String?
+  vehicle     Vehicle?      @relation(fields: [vehicleId], references: [id])
+
+  estimatedTotalPrice     Decimal? @db.Decimal(10, 2)
+  estimatedPricePerPerson Decimal? @db.Decimal(10, 2)
 
   destinations Destination[] @relation("CustomTourDestinations")
 }

@@ -14,7 +14,7 @@ export type BookingInput = z.infer<typeof bookingSchema>;
 export class BookingConflictError extends Error {}
 export class BookingNotFoundError extends Error {}
 
-function nightsOrDays(startDate: Date, endDate: Date) {
+export function nightsOrDays(startDate: Date, endDate: Date) {
   const ms = endDate.getTime() - startDate.getTime();
   return Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)));
 }
