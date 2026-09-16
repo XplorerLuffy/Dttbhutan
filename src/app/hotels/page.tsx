@@ -9,6 +9,8 @@ type SearchParams = {
   destinationId?: string;
   amenity?: string;
   maxPrice?: string;
+  adults?: string;
+  children?: string;
 };
 
 export default async function HotelsSearchPage({
@@ -16,7 +18,13 @@ export default async function HotelsSearchPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { destinationId, amenity, maxPrice } = await searchParams;
+  const { destinationId, amenity, maxPrice, adults, children } = await searchParams;
+
+  const guests = (Number(adults) || 0) + (Number(children) || 0);
+  const roomTypeFilter = {
+    ...(maxPrice ? { pricePerNight: { lte: Number(maxPrice) } } : {}),
+    ...(guests > 0 ? { capacity: { gte: guests } } : {}),
+  };
 
   const [hotels, destinations, allApproved] = await Promise.all([
     prisma.hotel.findMany({
@@ -24,9 +32,7 @@ export default async function HotelsSearchPage({
         status: "APPROVED",
         ...(destinationId ? { destinationId } : {}),
         ...(amenity ? { amenities: { has: amenity } } : {}),
-        ...(maxPrice
-          ? { roomTypes: { some: { pricePerNight: { lte: Number(maxPrice) } } } }
-          : {}),
+        ...(Object.keys(roomTypeFilter).length > 0 ? { roomTypes: { some: roomTypeFilter } } : {}),
       },
       include: {
         destination: true,

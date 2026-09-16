@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import DestinationField from "./searchbar/DestinationField";
+import DateRangeField from "./searchbar/DateRangeField";
+import OccupancyField from "./searchbar/OccupancyField";
 
 type Tab = "guides" | "hotels" | "transport" | "flights" | "packages" | "destinations";
 
@@ -65,15 +68,10 @@ export default function SearchTabs({ destinations }: { destinations: Destination
         )}
 
         {tab === "hotels" && (
-          <form method="get" action="/hotels" className="grid gap-2 sm:grid-cols-4">
-            <select name="destinationId" defaultValue="" className="input sm:col-span-3">
-              <option value="">Any destination</option>
-              {destinations.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+          <form method="get" action="/hotels" className="flex flex-col gap-2 sm:flex-row">
+            <DestinationField destinations={destinations} />
+            <DateRangeField />
+            <OccupancyField />
             <SearchButton />
           </form>
         )}
@@ -181,7 +179,7 @@ function SearchButton() {
       type="submit"
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
-      className="btn-primary"
+      className="btn-primary px-8 py-3 sm:shrink-0"
     >
       Search
     </motion.button>
