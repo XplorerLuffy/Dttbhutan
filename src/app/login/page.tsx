@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { dashboardPathForRole } from "@/lib/roles";
 import type { Role } from "@prisma/client";
+import AuthLayout from "@/components/auth/AuthLayout";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,8 +41,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <h1 className="mb-6 text-2xl font-bold">Log in</h1>
+    <AuthLayout>
+      <h1 className="mb-6 text-center text-2xl font-bold">Log in</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -75,12 +76,12 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-stone-600">
+      <p className="mt-4 text-center text-sm text-stone-600">
         Don&apos;t have an account?{" "}
         <Link href="/register" className="text-brand-700 hover:underline">
           Sign up
         </Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 }

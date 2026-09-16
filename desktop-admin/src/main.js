@@ -53,6 +53,18 @@ function createWindow() {
     console.error(`Failed to load admin dashboard: ${errorDescription} (${errorCode})`);
   });
 
+  // The website's marketing NavBar/Footer only render as direct <header>/
+  // <footer> children of <body> (the admin dashboard's own sidebar header
+  // is a plain <div>, so this can't touch it). Signed-out visits to /admin
+  // land on /login first, which isn't under /admin and still carries that
+  // marketing chrome — hide it here so the desktop app looks like the
+  // admin dashboard everywhere it can land, without changing the website.
+  win.webContents.on("did-finish-load", () => {
+    win.webContents.insertCSS(
+      "body > header, body > footer { display: none !important; }"
+    );
+  });
+
   // Keep the app pinned to the admin dashboard's own domain; anything
   // else (e.g. a link out to a support site) opens in the OS browser
   // instead of navigating the app window away from the dashboard.

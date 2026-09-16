@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AuthLayout from "@/components/auth/AuthLayout";
 
 const ROLE_OPTIONS = [
   { value: "TRAVELER", label: "Traveler — booking a trip" },
@@ -56,9 +57,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <h1 className="mb-1 text-2xl font-bold">Create your account</h1>
-      <p className="mb-6 text-sm text-stone-600">
+    <AuthLayout>
+      <h1 className="mb-1 text-center text-2xl font-bold">Create your account</h1>
+      <p className="mb-6 text-center text-sm text-stone-600">
         Vendors (guides, hotels, transport operators) go through an admin
         approval step before their listing goes live.
       </p>
@@ -129,12 +130,12 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-stone-600">
+      <p className="mt-4 text-center text-sm text-stone-600">
         Already have an account?{" "}
         <Link href="/login" className="text-brand-700 hover:underline">
           Log in
         </Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 }

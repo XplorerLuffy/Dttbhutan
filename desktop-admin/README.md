@@ -79,6 +79,17 @@ const ADMIN_URL = "https://dttbhutan.vercel.app/admin";
 Change it (and `ADMIN_HOST` just below it) if you ever need to point this
 at a staging environment instead.
 
+## No marketing chrome, anywhere in the app
+
+The admin dashboard itself (`/admin/*`) already has no site NavBar/Footer
+— it uses its own sidebar. But signing in first sends you through
+`/login`, which isn't part of `/admin` and would otherwise show the full
+marketing header/footer. The desktop app hides those on every page via a
+small injected stylesheet (`src/main.js`, on `did-finish-load`), so the
+whole app — login screen included — looks like a native admin tool
+rather than a browser tab on the marketing site. This is done entirely on
+the desktop-app side; the website itself is unchanged.
+
 ## Files
 
 - `src/main.js` — the Electron main process: creates the window, menu,
