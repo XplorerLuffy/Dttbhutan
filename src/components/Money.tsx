@@ -11,18 +11,20 @@ import { formatCurrency } from "@/lib/currency";
  * prices in their home currency can see the real figure too.
  */
 export default function Money({ btn, className }: { btn: number; className?: string }) {
-  const { currency } = useCurrency();
+  const { currency, rates } = useCurrency();
 
   // BTN and INR are pegged 1:1, so the parenthetical BTN reference below
   // would just repeat the same number for INR — skip it for both.
   if (currency === "BTN" || currency === "INR") {
-    return <span className={className}>{formatCurrency(btn, currency)}</span>;
+    return <span className={className}>{formatCurrency(btn, currency, rates)}</span>;
   }
 
   return (
     <span className={className}>
-      {formatCurrency(btn, currency)}
-      <span className="ml-1 text-[0.75em] font-normal text-stone-400">({formatCurrency(btn, "BTN")})</span>
+      {formatCurrency(btn, currency, rates)}
+      <span className="ml-1 text-[0.75em] font-normal text-stone-400">
+        ({formatCurrency(btn, "BTN", rates)})
+      </span>
     </span>
   );
 }

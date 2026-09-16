@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 import PageTransition from "@/components/PageTransition";
 import { CurrencyProvider } from "@/components/CurrencyProvider";
+import { getCurrentRates } from "@/lib/fx";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -26,17 +27,19 @@ export const metadata: Metadata = {
     "Book tour guides, hotels, transport, and flights for your Bhutan trip, with GPS-verified trip mileage and live tracking.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const rates = await getCurrentRates();
+
   return (
     <html lang="en">
       <body
         className={`${display.variable} ${body.variable} min-h-screen bg-stone-50 font-sans text-stone-900 antialiased`}
       >
-        <CurrencyProvider>
+        <CurrencyProvider rates={rates}>
           <SmoothScroll />
           <NavBar />
           <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">

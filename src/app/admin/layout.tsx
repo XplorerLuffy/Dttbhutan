@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/packages", label: "Package tours" },
   { href: "/admin/custom-tours", label: "Custom tour requests" },
   { href: "/admin/travel-guide", label: "Travel guide" },
+  { href: "/admin/exchange-rates", label: "Exchange rates" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

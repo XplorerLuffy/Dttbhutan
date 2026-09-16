@@ -1,19 +1,28 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { CurrencyCode, DEFAULT_CURRENCY } from "@/lib/currency";
+import { CurrencyCode, DEFAULT_CURRENCY, RateMap, CLIENT_DEFAULT_RATES } from "@/lib/currency";
 
 const STORAGE_KEY = "droelma-currency";
 
 const CurrencyContext = createContext<{
   currency: CurrencyCode;
   setCurrency: (c: CurrencyCode) => void;
+  rates: RateMap;
 }>({
   currency: DEFAULT_CURRENCY,
   setCurrency: () => {},
+  rates: CLIENT_DEFAULT_RATES,
 });
 
-export function CurrencyProvider({ children }: { children: React.ReactNode }) {
+export function CurrencyProvider({
+  children,
+  rates,
+}: {
+  children: React.ReactNode;
+  /** Current rates, fetched server-side (see getCurrentRates in src/lib/fx.ts). */
+  rates: RateMap;
+}) {
   const [currency, setCurrencyState] = useState<CurrencyCode>(DEFAULT_CURRENCY);
 
   // Read the viewer's last choice on mount. Wrapped in try/catch since
@@ -37,7 +46,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency }}>{children}</CurrencyContext.Provider>
+    <CurrencyContext.Provider value={{ currency, setCurrency, rates }}>{children}</CurrencyContext.Provider>
   );
 }
 

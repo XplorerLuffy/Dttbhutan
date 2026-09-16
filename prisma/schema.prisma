@@ -585,3 +585,20 @@ model TripDistanceReport {
   pointCount        Int
   generatedAt       DateTime @default(now())
 }
+
+// ---------------------------------------------------------------------------
+// Currency display — travelers can browse prices in USD/AUD/INR/EUR/GBP.
+// BTN stays the real transactional currency everywhere else in the app;
+// this table only feeds the display conversion.
+// ---------------------------------------------------------------------------
+
+// One row per non-BTN currency we display. btnPerUnit = how many BTN equal
+// one unit of that currency, refreshed automatically by a scheduled job
+// (see /api/cron/fx-rates) from a live rate source, so it tracks the real
+// market rate up or down without a code change.
+model ExchangeRate {
+  currency   String   @id // "USD" | "AUD" | "INR" | "EUR" | "GBP"
+  btnPerUnit Decimal  @db.Decimal(12, 4)
+  source     String // where this value came from, e.g. "frankfurter.app" or "manual"
+  updatedAt  DateTime @updatedAt
+}
