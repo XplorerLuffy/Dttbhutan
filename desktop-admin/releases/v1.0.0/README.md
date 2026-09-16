@@ -2,9 +2,11 @@
 
 These are the built installers for the Droelma Admin desktop app (a native
 wrapper around `https://dttbhutan.vercel.app/admin`). GitHub blocks single
-files over 100MB, so each installer is split into small `.part` files that
-you download and glue back together on your own machine. Nothing here is
-executable on its own — each `.NN.part` file is a raw chunk of bytes.
+files over 100MB. The Windows installer is under that limit, so it's a
+single downloadable `.exe` — no reassembly needed. The macOS and Linux
+builds are over 100MB, so those are split into small `.part` files that
+you download and glue back together on your own machine (each `.NN.part`
+file is a raw chunk of bytes, not executable on its own).
 
 Direct download links (replace nothing — these work as-is once this folder
 is pushed to the branch):
@@ -15,17 +17,10 @@ https://raw.githubusercontent.com/XplorerLuffy/Dttbhutan/claude/quirky-heisenber
 
 ## Windows
 
-Files: `DroelmaAdminSetup-win-1.0.0.exe.00.part`, `.01.part`
+File: `DroelmaAdminSetup-1.0.0.exe` (single file, ~78MB — just download and run it)
 
-Download both into the same folder, open Command Prompt there, and run:
-
-```
-copy /b DroelmaAdminSetup-win-1.0.0.exe.00.part+DroelmaAdminSetup-win-1.0.0.exe.01.part "Droelma Admin Setup 1.0.0.exe"
-```
-
-Then double-click `Droelma Admin Setup 1.0.0.exe` to install. It's
-unsigned, so Windows SmartScreen will warn on first run — click "More
-info" → "Run anyway".
+Double-click it to install. It's unsigned, so Windows SmartScreen will
+warn on first run — click "More info" → "Run anyway".
 
 ## macOS
 
@@ -58,7 +53,7 @@ chmod +x "Droelma Admin-1.0.0.AppImage"
 
 After reassembling, check the file matches the hash in `CHECKSUMS.txt`:
 
-- Windows (PowerShell): `Get-FileHash "Droelma Admin Setup 1.0.0.exe" -Algorithm SHA256`
+- Windows (PowerShell): `Get-FileHash "DroelmaAdminSetup-1.0.0.exe" -Algorithm SHA256`
 - macOS/Linux: `shasum -a 256 <file>` or `sha256sum <file>`
 
 If the hash doesn't match, re-download the parts — a part likely got
