@@ -6,6 +6,10 @@
   "private": true,
   "main": "src/main.js",
   "author": "Droelma Tours & Travels",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/XplorerLuffy/Dttbhutan.git"
+  },
   "scripts": {
     "start": "electron .",
     "build:linux": "electron-builder --linux --dir",
@@ -22,6 +26,7 @@
   "build": {
     "appId": "bt.droelma.admindesktop",
     "productName": "Droelma Admin",
+    "publish": null,
     "files": [
       "src/**/*"
     ],
