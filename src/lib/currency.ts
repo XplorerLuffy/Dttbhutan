@@ -4,18 +4,19 @@ export const DEFAULT_CURRENCY: CurrencyCode = "BTN";
 
 /**
  * How many BTN equal one unit of each currency. BTN and INR are pegged
- * 1:1 by Bhutan's Royal Monetary Authority, so that one is exact; the
- * rest are indicative market rates, not a live feed (this app has no FX
- * data source), and are only for browsing/comparison — every booking is
- * still charged in BTN at the prevailing rate on the day.
+ * 1:1 by Bhutan's Royal Monetary Authority, so that one is exact. The
+ * rest were set from rates supplied directly by the business (this app
+ * has no live FX feed) and are only for browsing/comparison — every
+ * booking is still charged in BTN at the prevailing rate on the day.
+ * Update these here whenever the business gives newer figures.
  */
 export const BTN_PER_UNIT: Record<CurrencyCode, number> = {
   BTN: 1,
   INR: 1,
-  USD: 84,
-  EUR: 91,
-  GBP: 106,
-  AUD: 55,
+  USD: 95.98,
+  EUR: 110.72,
+  GBP: 129.23,
+  AUD: 68.47,
 };
 
 export const CURRENCIES: { code: CurrencyCode; label: string; symbol: string }[] = [

@@ -13,8 +13,10 @@ import { formatCurrency } from "@/lib/currency";
 export default function Money({ btn, className }: { btn: number; className?: string }) {
   const { currency } = useCurrency();
 
-  if (currency === "BTN") {
-    return <span className={className}>{formatCurrency(btn, "BTN")}</span>;
+  // BTN and INR are pegged 1:1, so the parenthetical BTN reference below
+  // would just repeat the same number for INR — skip it for both.
+  if (currency === "BTN" || currency === "INR") {
+    return <span className={className}>{formatCurrency(btn, currency)}</span>;
   }
 
   return (
