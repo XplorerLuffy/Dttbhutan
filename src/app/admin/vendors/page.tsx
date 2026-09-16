@@ -27,8 +27,8 @@ export default async function AdminVendorsPage() {
         <h2 className="mb-3 text-lg font-semibold">Tour guides</h2>
         <div className="space-y-3">
           {guides.map((g) => (
-            <div key={g.id} className="card flex items-center justify-between">
-              <div>
+            <div key={g.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
                 <p className="font-medium">
                   {g.user.name} <StatusBadge status={g.status} />
                 </p>
@@ -50,8 +50,8 @@ export default async function AdminVendorsPage() {
         <h2 className="mb-3 text-lg font-semibold">Hotels</h2>
         <div className="space-y-3">
           {hotels.map((h) => (
-            <div key={h.id} className="card flex items-center justify-between">
-              <div>
+            <div key={h.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
                 <p className="font-medium">
                   {h.name} <StatusBadge status={h.status} />
                 </p>
@@ -74,8 +74,8 @@ export default async function AdminVendorsPage() {
         <div className="space-y-3">
           {operators.map((op) => (
             <div key={op.id} className="card">
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                   <p className="font-medium">
                     {op.businessName} <StatusBadge status={op.status} />
                   </p>
@@ -87,9 +87,9 @@ export default async function AdminVendorsPage() {
                 <VendorApprovalControls apiPath={`/api/admin/transport/${op.id}`} />
               </div>
               {op.vehicles.length > 0 && (
-                <div className="mt-3 space-y-2 border-t border-stone-100 pt-3">
+                <div className="mt-3 space-y-3 border-t border-stone-100 pt-3">
                   {op.vehicles.map((v) => (
-                    <div key={v.id} className="flex items-center justify-between text-sm">
+                    <div key={v.id} className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
                       <span>
                         {v.type} · {v.plateNumber} <StatusBadge status={v.status} />
                       </span>

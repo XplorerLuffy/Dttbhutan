@@ -26,8 +26,8 @@ export default function VendorApprovalControls({
   }
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <div className="flex gap-2">
+    <div className="flex w-full flex-col items-start gap-2 sm:w-auto sm:items-end">
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           disabled={isPending}
@@ -54,12 +54,12 @@ export default function VendorApprovalControls({
         </button>
       </div>
       {showRejectNote && (
-        <div className="flex gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Reason (optional)"
-            className="input"
+            className="input min-w-0 flex-1 sm:flex-initial"
           />
           <button
             type="button"

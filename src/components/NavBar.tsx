@@ -6,6 +6,7 @@ import LogoutButton from "@/components/LogoutButton";
 import LogoMark from "@/components/Logo";
 import DestinationsMenu from "@/components/nav/DestinationsMenu";
 import PackagesMenu from "@/components/nav/PackagesMenu";
+import MobileMenu from "@/components/nav/MobileMenu";
 
 export default async function NavBar() {
   const [user, destinations, packages] = await Promise.all([
@@ -26,12 +27,12 @@ export default async function NavBar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <LogoMark className="h-9 w-auto shrink-0" />
-          <span className="hidden font-display text-lg font-semibold text-brand-800 sm:inline">
+          <span className="font-display text-base font-semibold text-brand-800 sm:text-lg lg:hidden xl:inline">
             Droelma Tours &amp; Travels
           </span>
         </Link>
 
-        <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        <nav className="hidden flex-wrap items-center gap-x-4 gap-y-1 text-sm lg:flex">
           <DestinationsMenu destinations={destinations} />
           <Link href="/guides" className="text-stone-600 hover:text-stone-900">
             Guides
@@ -74,6 +75,14 @@ export default async function NavBar() {
             </>
           )}
         </nav>
+
+        <MobileMenu
+          destinations={destinations}
+          packages={packages}
+          isLoggedIn={Boolean(user)}
+          dashboardHref={user ? dashboardPathForRole(user.role) : null}
+          className="lg:hidden"
+        />
       </div>
     </header>
   );
