@@ -179,6 +179,21 @@ export const itineraryAdminSchema = z.object({
   days: z.array(itineraryDayInputSchema).min(1),
 });
 
+export const articleAdminSchema = z.object({
+  title: z.string().min(2).max(150),
+  slug: z
+    .string()
+    .min(2)
+    .max(150)
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens only"),
+  category: z.string().min(2).max(60),
+  excerpt: z.string().min(2).max(300),
+  content: z.string().min(2).max(20000),
+  coverPhotoUrl: z.string().optional(),
+  readMinutes: z.coerce.number().int().min(1).max(60),
+  status: z.enum(["DRAFT", "PUBLISHED"]),
+});
+
 export const customTourRequestSchema = z
   .object({
     startDate: z.coerce.date(),

@@ -7,6 +7,7 @@ const NAV = [
   { href: "/admin/gps/trips", label: "GPS mileage reports" },
   { href: "/admin/packages", label: "Package tours" },
   { href: "/admin/custom-tours", label: "Custom tour requests" },
+  { href: "/admin/travel-guide", label: "Travel guide" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

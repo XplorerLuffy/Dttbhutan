@@ -5,6 +5,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 import MotionCard from "@/components/MotionCard";
 import PropertyCard from "@/components/listing/PropertyCard";
 import TestimonialCarousel, { type Testimonial } from "@/components/home/TestimonialCarousel";
+import Image from "next/image";
 
 const categories = [
   {
@@ -61,7 +62,7 @@ const whyChoose = [
 ];
 
 export default async function HomePage() {
-  const [destinations, trendingPackages, popularHotels] = await Promise.all([
+  const [destinations, trendingPackages, popularHotels, articles] = await Promise.all([
     prisma.destination.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } }),
     prisma.itinerary.findMany({
       where: { status: "PUBLISHED" },
@@ -74,6 +75,11 @@ export default async function HomePage() {
       take: 4,
       orderBy: { createdAt: "desc" },
       include: { destination: true, roomTypes: { orderBy: { pricePerNight: "asc" }, take: 1 } },
+    }),
+    prisma.article.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { createdAt: "desc" },
+      take: 3,
     }),
   ]);
   const featuredDestinations = destinations.slice(0, 8);
@@ -202,6 +208,42 @@ export default async function HomePage() {
           ))}
         </ScrollReveal>
       </section>
+
+      {articles.length > 0 && (
+        <section className="mt-20">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-2xl font-semibold text-stone-900">From the Travel Guide</h2>
+            <Link href="/travel-guide" className="text-sm text-brand-700 hover:underline">
+              View all guides →
+            </Link>
+          </div>
+          <ScrollReveal className="mt-6 grid gap-4 sm:grid-cols-3">
+            {articles.map((a) => (
+              <MotionCard key={a.id} href={`/travel-guide/${a.slug}`} className="card block overflow-hidden">
+                {a.coverPhotoUrl ? (
+                  <div className="-mx-4 -mt-4 mb-3 h-36 w-[calc(100%+2rem)] overflow-hidden">
+                    <Image
+                      src={a.coverPhotoUrl}
+                      alt={a.title}
+                      width={400}
+                      height={200}
+                      unoptimized
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="-mx-4 -mt-4 mb-3 flex h-36 w-[calc(100%+2rem)] items-center justify-center bg-gradient-to-br from-brand-600 to-brand-900">
+                    <span className="font-display text-3xl text-white/30">{a.title[0]}</span>
+                  </div>
+                )}
+                <span className="badge bg-stone-100 text-stone-600">{a.category.toUpperCase()}</span>
+                <h3 className="mt-2 font-display text-base font-semibold text-stone-900">{a.title}</h3>
+                <p className="mt-2 text-xs text-stone-400">{a.readMinutes} min read</p>
+              </MotionCard>
+            ))}
+          </ScrollReveal>
+        </section>
+      )}
 
       {testimonials.length > 0 && (
         <section className="mt-20">

@@ -46,6 +46,9 @@ export default async function NavBar() {
             Flights
           </Link>
           <PackagesMenu packages={packages} />
+          <Link href="/travel-guide" className="text-stone-600 hover:text-stone-900">
+            Travel Guide
+          </Link>
 
           {user ? (
             <>

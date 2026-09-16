@@ -621,6 +621,69 @@ async function main() {
     },
   });
 
+  // --- Travel guide articles ------------------------------------------
+  await prisma.article.upsert({
+    where: { slug: "visa-and-entry-requirements-for-bhutan" },
+    update: {},
+    create: {
+      title: "Visa & Entry Requirements for Bhutan",
+      slug: "visa-and-entry-requirements-for-bhutan",
+      category: "Visa & Entry",
+      excerpt:
+        "Almost every visitor to Bhutan needs a visa arranged in advance through a licensed local operator. Here's what that actually involves.",
+      content: `Bhutan issues tourist visas only through licensed Bhutanese tour operators — you cannot apply directly to an embassy the way you might for most countries. In practice this means your operator (that's us) submits your passport details and travel dates to the Department of Immigration on your behalf once your trip and Sustainable Development Fee payment are confirmed.
+
+The main exceptions are travelers from India, Bangladesh, and the Maldives, who can enter with a valid passport (or, for Indian nationals, a voter ID card) and a permit issued at the port of entry rather than a pre-approved visa.
+
+For everyone else, the visa is typically approved within a few working days once your booking is confirmed, and the physical visa stamp is issued on arrival at Paro International Airport or at one of the land border crossings. We'll let you know exactly what we need from you — usually just a scanned passport copy and your travel dates — as soon as your trip is booked.`,
+      coverPhotoUrl: null,
+      readMinutes: 4,
+      status: "PUBLISHED",
+    },
+  });
+
+  await prisma.article.upsert({
+    where: { slug: "bhutans-sustainable-development-fee-explained" },
+    update: {},
+    create: {
+      title: "Bhutan's Sustainable Development Fee, Explained",
+      slug: "bhutans-sustainable-development-fee-explained",
+      category: "SDF Fee",
+      excerpt:
+        "Bhutan charges every international visitor a daily Sustainable Development Fee. Here's what it funds and how it factors into your trip cost.",
+      content: `Bhutan is one of the only countries in the world that charges visitors a dedicated daily fee specifically earmarked for environmental and social programs, rather than folding tourism revenue into general taxation. This is the Sustainable Development Fee, usually shortened to SDF.
+
+The fee is charged per person, per night of your stay, and is separate from what you pay for guides, hotels, transport, and meals. Bhutan's government has, at various points, adjusted the rate and offered discounts for longer stays and for regional visitors from India, Bangladesh, and the Maldives — so the exact figure depends on your nationality and travel dates.
+
+In practice, you don't need to calculate this yourself: when you book a package or request a custom quote through Droelma, the SDF is itemized separately from the rest of your trip cost so you can see exactly what's going where. It's paid as part of your visa processing, before you arrive.`,
+      coverPhotoUrl: null,
+      readMinutes: 5,
+      status: "PUBLISHED",
+    },
+  });
+
+  await prisma.article.upsert({
+    where: { slug: "best-time-to-visit-bhutan" },
+    update: {},
+    create: {
+      title: "Best Time to Visit Bhutan",
+      slug: "best-time-to-visit-bhutan",
+      category: "Festivals & Seasons",
+      excerpt:
+        "Bhutan rewards visitors in every season, but spring and autumn are when the weather, views, and festival calendar line up best.",
+      content: `Bhutan's tourist season peaks in spring (March to May) and autumn (September to November), when skies are generally clear, temperatures are mild across the western valleys, and most of the country's major religious festivals (tshechus) take place.
+
+Spring brings blooming rhododendrons across the higher valleys and some of the clearest mountain views of the year, while autumn offers similarly reliable weather along with the rice harvest across the western dzongkhags. Both seasons are when most of the well-known tshechus — multi-day masked-dance festivals held at dzongs and monasteries — are scheduled, though exact dates shift each year with the lunar calendar.
+
+Winter (December to February) is quieter and colder, especially at altitude, but skies are often crisp and clear, and it's a good time for travelers who want fewer crowds at sites like Paro's Tiger's Nest. Summer (June to August) brings the monsoon to most of the country, with heavier rain and cloud cover in the west, though central and eastern Bhutan see somewhat less rainfall.
+
+If your dates are flexible, ask us about aligning your trip with a specific dzongkhag's festival — it's one of the best ways to see Bhutanese culture up close.`,
+      coverPhotoUrl: null,
+      readMinutes: 4,
+      status: "PUBLISHED",
+    },
+  });
+
   console.log("Seed complete.");
   console.log("Admin login:", admin.email, "/ password123");
   console.log("Traveler login:", traveler.email, "/ password123");

@@ -334,6 +334,25 @@ model Itinerary {
   bookings ItineraryBooking[]
 }
 
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Article {
+  id            String        @id @default(cuid())
+  title         String
+  slug          String        @unique
+  category      String // e.g. "Visa & Entry", "SDF Fee", "Festivals & Seasons"
+  excerpt       String
+  content       String
+  coverPhotoUrl String?
+  readMinutes   Int           @default(5)
+  status        ArticleStatus @default(DRAFT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
 model ItineraryDay {
   id            String       @id @default(cuid())
   itineraryId   String
