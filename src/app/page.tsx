@@ -6,6 +6,7 @@ import MotionCard from "@/components/MotionCard";
 import PropertyCard from "@/components/listing/PropertyCard";
 import TestimonialCarousel, { type Testimonial } from "@/components/home/TestimonialCarousel";
 import Image from "next/image";
+import Money from "@/components/Money";
 
 const categories = [
   {
@@ -137,7 +138,7 @@ export default async function HomePage() {
                   ratingCount={rating?._count.rating ?? 0}
                   priceLabel={
                     h.roomTypes[0]
-                      ? `Nu. ${Number(h.roomTypes[0].pricePerNight).toLocaleString()}`
+                      ? <Money btn={Number(h.roomTypes[0].pricePerNight)} />
                       : "Contact for price"
                   }
                   priceSubLabel={h.roomTypes[0] ? "per night" : undefined}
@@ -178,7 +179,7 @@ export default async function HomePage() {
                     subtitle={locations.join(" • ") || undefined}
                     ratingAverage={null}
                     ratingCount={0}
-                    priceLabel={`Nu. ${Number(p.pricePerPerson).toLocaleString()}`}
+                    priceLabel={<Money btn={Number(p.pricePerPerson)} />}
                     priceSubLabel={`per person · ${p.durationDays}d`}
                   />
                 </div>

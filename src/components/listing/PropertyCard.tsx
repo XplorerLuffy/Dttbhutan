@@ -26,7 +26,7 @@ export default function PropertyCard({
   subtitle?: string;
   ratingAverage: number | null;
   ratingCount: number;
-  priceLabel: string;
+  priceLabel: React.ReactNode;
   priceSubLabel?: string;
 }) {
   return (

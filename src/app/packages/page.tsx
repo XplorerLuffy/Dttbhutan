@@ -3,6 +3,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 import ListingRow from "@/components/listing/ListingRow";
 import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
 import type { TripDifficulty } from "@prisma/client";
+import Money from "@/components/Money";
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +96,7 @@ export default async function PackagesPage({
                     tags={[`${it.durationDays} days`, ...destinationNames.slice(0, 3)]}
                     ratingAverage={null}
                     ratingCount={0}
-                    priceLabel={`Nu. ${Number(it.pricePerPerson).toLocaleString()}`}
+                    priceLabel={<Money btn={Number(it.pricePerPerson)} />}
                     priceSubLabel="per person"
                   />
                 );

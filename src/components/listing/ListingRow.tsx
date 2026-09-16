@@ -31,7 +31,7 @@ export default function ListingRow({
   tags?: string[];
   ratingAverage: number | null;
   ratingCount: number;
-  priceLabel: string;
+  priceLabel: React.ReactNode;
   priceSubLabel?: string;
   ctaLabel?: string;
 }) {

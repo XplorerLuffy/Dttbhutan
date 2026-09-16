@@ -4,6 +4,7 @@ import VehicleBookingForm from "@/components/booking/VehicleBookingForm";
 import ReviewList from "@/components/ReviewList";
 import RatingBadge from "@/components/listing/RatingBadge";
 import DetailGallery from "@/components/listing/DetailGallery";
+import Money from "@/components/Money";
 
 export default async function VehicleDetailPage({
   params,
@@ -65,12 +66,16 @@ export default async function VehicleDetailPage({
         <div className="sticky-booking-card">
           <div className="price-summary-card">
             <p className="text-2xl font-bold text-brand-800">
-              Nu. {Number(vehicle.ratePerDay).toLocaleString()}
+              <Money btn={Number(vehicle.ratePerDay)} />
             </p>
             <p className="text-xs text-stone-500">
               per day
               {vehicle.ratePerKm && (
-                <> + Nu. {Number(vehicle.ratePerKm).toLocaleString()}/km</>
+                <>
+                  {" "}
+                  + <Money btn={Number(vehicle.ratePerKm)} />
+                  /km
+                </>
               )}
             </p>
           </div>

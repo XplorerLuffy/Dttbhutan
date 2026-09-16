@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
+import Money from "@/components/Money";
 
 export default async function DestinationDetailPage({
   params,
@@ -68,7 +69,7 @@ export default async function DestinationDetailPage({
                 <p className="mt-1 text-sm text-stone-500">{h.amenities.join(" · ")}</p>
                 {h.roomTypes[0] && (
                   <p className="mt-2 font-medium text-brand-800">
-                    From Nu. {Number(h.roomTypes[0].pricePerNight).toLocaleString()} / night
+                    From <Money btn={Number(h.roomTypes[0].pricePerNight)} /> / night
                   </p>
                 )}
               </MotionCard>
@@ -88,7 +89,7 @@ export default async function DestinationDetailPage({
                 <h3 className="font-semibold">{g.user.name}</h3>
                 <p className="mt-1 text-sm text-stone-500">{g.specialties.join(" · ")}</p>
                 <p className="mt-2 font-medium text-brand-800">
-                  Nu. {Number(g.ratePerDay).toLocaleString()} / day
+                  <Money btn={Number(g.ratePerDay)} /> / day
                 </p>
               </MotionCard>
             ))}
@@ -107,7 +108,7 @@ export default async function DestinationDetailPage({
                 <h3 className="font-semibold">{it.title}</h3>
                 <p className="mt-1 text-sm text-stone-500">{it.durationDays} days</p>
                 <p className="mt-2 font-medium text-brand-800">
-                  Nu. {Number(it.pricePerPerson).toLocaleString()} / person
+                  <Money btn={Number(it.pricePerPerson)} /> / person
                 </p>
               </MotionCard>
             ))}

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import ScrollReveal from "@/components/ScrollReveal";
 import ListingRow from "@/components/listing/ListingRow";
 import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
+import Money from "@/components/Money";
 
 export const dynamic = "force-dynamic";
 
@@ -109,7 +110,7 @@ export default async function GuidesSearchPage({
                     tags={g.specialties}
                     ratingAverage={rating?._avg.rating ?? null}
                     ratingCount={rating?._count.rating ?? 0}
-                    priceLabel={`Nu. ${Number(g.ratePerDay).toLocaleString()}`}
+                    priceLabel={<Money btn={Number(g.ratePerDay)} />}
                     priceSubLabel="per day"
                   />
                 );

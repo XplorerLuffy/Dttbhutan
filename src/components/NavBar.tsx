@@ -7,6 +7,7 @@ import LogoMark from "@/components/Logo";
 import DestinationsMenu from "@/components/nav/DestinationsMenu";
 import PackagesMenu from "@/components/nav/PackagesMenu";
 import MobileMenu from "@/components/nav/MobileMenu";
+import CurrencySelector from "@/components/CurrencySelector";
 
 export default async function NavBar() {
   const [user, destinations, packages] = await Promise.all([
@@ -50,6 +51,7 @@ export default async function NavBar() {
           <Link href="/travel-guide" className="text-stone-600 hover:text-stone-900">
             Travel Guide
           </Link>
+          <CurrencySelector />
 
           {user ? (
             <>

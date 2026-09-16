@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
 import type { DzongkhagRegion } from "@prisma/client";
+import CurrencySelector from "@/components/CurrencySelector";
 
 type Destination = { id: string; name: string; slug: string; region: DzongkhagRegion };
 type Package = { id: string; title: string; slug: string; durationDays: number };
@@ -188,6 +189,11 @@ export default function MobileMenu({
               <Link href="/travel-guide" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
                 Travel Guide
               </Link>
+
+              <div className="flex items-center justify-between py-3">
+                <span className="text-sm text-stone-600">Currency</span>
+                <CurrencySelector />
+              </div>
             </nav>
 
             <div className="shrink-0 border-t border-stone-200 p-4">

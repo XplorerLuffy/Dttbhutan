@@ -4,6 +4,7 @@ import FlightBookingButton from "@/components/booking/FlightBookingButton";
 import ScrollReveal from "@/components/ScrollReveal";
 import MotionListItem from "@/components/MotionListItem";
 import type { FlightLeg, FlightOffer } from "@/lib/flights/aggregator";
+import Money from "@/components/Money";
 
 export const dynamic = "force-dynamic";
 
@@ -136,7 +137,7 @@ function FlightOfferCard({ offer }: { offer: FlightOffer }) {
       </div>
       <div className="mt-4 border-t border-stone-100 pt-3 text-right sm:mt-0 sm:ml-6 sm:border-0 sm:pt-0">
         <p className="font-display text-xl font-bold text-brand-800">
-          Nu. {offer.totalPrice.toLocaleString()}
+          <Money btn={offer.totalPrice} />
         </p>
         <p className="mb-2 text-xs text-stone-500">total</p>
         <FlightBookingButton offer={offer} />

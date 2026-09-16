@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { DzongkhagRegion, VehicleType } from "@prisma/client";
+import Money from "@/components/Money";
 
 type Destination = { id: string; name: string; region: DzongkhagRegion };
 type Guide = {
@@ -35,10 +36,6 @@ function nightsOrDays(start: string, end: string) {
   const ms = new Date(end).getTime() - new Date(start).getTime();
   if (ms <= 0) return 0;
   return Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)));
-}
-
-function money(n: number) {
-  return `Nu. ${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
 export default function CustomTourRequestForm({
@@ -309,7 +306,9 @@ export default function CustomTourRequestForm({
                     </span>
                   </span>
                 </span>
-                <span className="shrink-0 text-sm font-medium text-stone-700">{money(g.ratePerDay)}/day</span>
+                <span className="shrink-0 text-sm font-medium text-stone-700">
+                  <Money btn={g.ratePerDay} />/day
+                </span>
               </label>
             ))}
           </div>
@@ -352,7 +351,7 @@ export default function CustomTourRequestForm({
                   </span>
                 </span>
                 <span className="shrink-0 text-sm font-medium text-stone-700">
-                  {money(rt.pricePerNight)}/night
+                  <Money btn={rt.pricePerNight} />/night
                 </span>
               </label>
             ))}
@@ -397,7 +396,9 @@ export default function CustomTourRequestForm({
                     <span className="block text-xs text-stone-500">Up to {v.capacity} passengers</span>
                   </span>
                 </span>
-                <span className="shrink-0 text-sm font-medium text-stone-700">{money(v.ratePerDay)}/day</span>
+                <span className="shrink-0 text-sm font-medium text-stone-700">
+                  <Money btn={v.ratePerDay} />/day
+                </span>
               </label>
             ))}
           </div>
@@ -438,7 +439,7 @@ export default function CustomTourRequestForm({
               <div className="flex items-center justify-between">
                 <dt className="text-stone-600">Guide</dt>
                 <dd className="font-medium text-stone-900">
-                  {selectedGuide ? money(pricing.guideCost) : "—"}
+                  {selectedGuide ? <Money btn={pricing.guideCost} /> : "—"}
                 </dd>
               </div>
               <div className="flex items-center justify-between">
@@ -446,25 +447,27 @@ export default function CustomTourRequestForm({
                   Hotel{pricing.roomsNeeded > 1 ? ` (${pricing.roomsNeeded} rooms)` : ""}
                 </dt>
                 <dd className="font-medium text-stone-900">
-                  {selectedRoomType ? money(pricing.hotelCost) : "—"}
+                  {selectedRoomType ? <Money btn={pricing.hotelCost} /> : "—"}
                 </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-stone-600">Vehicle</dt>
                 <dd className="font-medium text-stone-900">
-                  {selectedVehicle ? money(pricing.vehicleCost) : "—"}
+                  {selectedVehicle ? <Money btn={pricing.vehicleCost} /> : "—"}
                 </dd>
               </div>
             </dl>
             <div className="border-t border-stone-200 pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-stone-600">Total</span>
-                <span className="font-semibold text-stone-900">{money(pricing.totalPrice)}</span>
+                <span className="font-semibold text-stone-900">
+                  <Money btn={pricing.totalPrice} />
+                </span>
               </div>
               <div className="mt-1 flex items-center justify-between">
                 <span className="text-sm text-stone-600">Per person</span>
                 <span className="font-display text-lg font-semibold text-brand-800">
-                  {money(pricing.pricePerPerson)}
+                  <Money btn={pricing.pricePerPerson} />
                 </span>
               </div>
             </div>

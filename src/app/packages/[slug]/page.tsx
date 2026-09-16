@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ItineraryBookingForm from "@/components/booking/ItineraryBookingForm";
 import DetailGallery from "@/components/listing/DetailGallery";
+import Money from "@/components/Money";
 
 const DIFFICULTY_LABEL: Record<string, string> = {
   EASY: "Easy",
@@ -96,7 +97,7 @@ export default async function PackageDetailPage({
       <div className="sticky-booking-card">
         <div className="price-summary-card">
           <p className="text-2xl font-bold text-brand-800">
-            Nu. {Number(itinerary.pricePerPerson).toLocaleString()}
+            <Money btn={Number(itinerary.pricePerPerson)} />
           </p>
           <p className="text-sm text-stone-500">per person</p>
         </div>

@@ -4,6 +4,7 @@ import GuideBookingForm from "@/components/booking/GuideBookingForm";
 import ReviewList from "@/components/ReviewList";
 import RatingBadge from "@/components/listing/RatingBadge";
 import DetailGallery from "@/components/listing/DetailGallery";
+import Money from "@/components/Money";
 
 export default async function GuideDetailPage({
   params,
@@ -69,7 +70,7 @@ export default async function GuideDetailPage({
         <div className="sticky-booking-card">
           <div className="price-summary-card">
             <p className="text-2xl font-bold text-brand-800">
-              Nu. {Number(guide.ratePerDay).toLocaleString()}
+              <Money btn={Number(guide.ratePerDay)} />
             </p>
             <p className="text-xs text-stone-500">per day</p>
           </div>

@@ -5,6 +5,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 import PageTransition from "@/components/PageTransition";
+import { CurrencyProvider } from "@/components/CurrencyProvider";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -35,12 +36,14 @@ export default function RootLayout({
       <body
         className={`${display.variable} ${body.variable} min-h-screen bg-stone-50 font-sans text-stone-900 antialiased`}
       >
-        <SmoothScroll />
-        <NavBar />
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-          <PageTransition>{children}</PageTransition>
-        </main>
-        <Footer />
+        <CurrencyProvider>
+          <SmoothScroll />
+          <NavBar />
+          <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+            <PageTransition>{children}</PageTransition>
+          </main>
+          <Footer />
+        </CurrencyProvider>
       </body>
     </html>
   );

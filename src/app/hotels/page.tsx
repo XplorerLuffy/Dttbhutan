@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import ScrollReveal from "@/components/ScrollReveal";
 import ListingRow from "@/components/listing/ListingRow";
 import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
+import Money from "@/components/Money";
 
 export const dynamic = "force-dynamic";
 
@@ -120,9 +121,7 @@ export default async function HotelsSearchPage({
                     ratingAverage={rating?._avg.rating ?? null}
                     ratingCount={rating?._count.rating ?? 0}
                     priceLabel={
-                      h.roomTypes[0]
-                        ? `Nu. ${Number(h.roomTypes[0].pricePerNight).toLocaleString()}`
-                        : "Contact for price"
+                      h.roomTypes[0] ? <Money btn={Number(h.roomTypes[0].pricePerNight)} /> : "Contact for price"
                     }
                     priceSubLabel={h.roomTypes[0] ? "per night" : undefined}
                   />

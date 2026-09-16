@@ -5,6 +5,7 @@ import HotelBookingForm from "@/components/booking/HotelBookingForm";
 import ReviewList from "@/components/ReviewList";
 import RatingBadge from "@/components/listing/RatingBadge";
 import DetailGallery from "@/components/listing/DetailGallery";
+import Money from "@/components/Money";
 
 export default async function HotelDetailPage({
   params,
@@ -79,7 +80,7 @@ export default async function HotelDetailPage({
                 <h3 className="font-semibold">{rt.name}</h3>
                 <p className="text-sm text-stone-500">Sleeps {rt.capacity}</p>
                 <p className="mt-1 text-2xl font-bold text-brand-800">
-                  Nu. {Number(rt.pricePerNight).toLocaleString()}
+                  <Money btn={Number(rt.pricePerNight)} />
                 </p>
                 <p className="text-xs text-stone-500">per night</p>
               </div>

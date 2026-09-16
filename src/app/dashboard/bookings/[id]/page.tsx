@@ -7,6 +7,7 @@ import MessageThread from "@/components/MessageThread";
 import ReviewForm from "@/components/ReviewForm";
 import { CancelBookingButton, SetBookingStatusButton } from "@/components/BookingActions";
 import type { Prisma } from "@prisma/client";
+import Money from "@/components/Money";
 
 type BookingDetail = Prisma.BookingGetPayload<{
   include: {
@@ -73,7 +74,7 @@ export default async function BookingDetailPage({
           </div>
 
           <p className="mt-3 font-medium text-brand-800">
-            Total: Nu. {Number(booking.totalPrice).toLocaleString()}
+            Total: <Money btn={Number(booking.totalPrice)} />
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">
