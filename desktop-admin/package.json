@@ -1,0 +1,53 @@
+{
+  "name": "droelma-admin-desktop",
+  "productName": "Droelma Admin",
+  "version": "1.0.0",
+  "description": "Desktop app for the Droelma Tours & Travels admin dashboard",
+  "private": true,
+  "main": "src/main.js",
+  "author": "Droelma Tours & Travels",
+  "scripts": {
+    "start": "electron .",
+    "build:linux": "electron-builder --linux --dir",
+    "build:linux:installer": "electron-builder --linux",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:all": "electron-builder -mwl"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "png2icons": "^2.0.1"
+  },
+  "build": {
+    "appId": "bt.droelma.admindesktop",
+    "productName": "Droelma Admin",
+    "files": [
+      "src/**/*"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "category": "public.app-category.business",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Office",
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
+}
