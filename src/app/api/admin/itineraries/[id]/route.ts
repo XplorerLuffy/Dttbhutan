@@ -54,3 +54,30 @@ export async function PATCH(
     throw err;
   }
 }
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireRole("ADMIN");
+    const { id } = await params;
+
+    const bookingCount = await prisma.itineraryBooking.count({ where: { itineraryId: id } });
+    if (bookingCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Can't delete — ${bookingCount} traveler booking${bookingCount === 1 ? "" : "s"} reference this package. Archive it instead.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    // ItineraryDay rows cascade via the schema's onDelete: Cascade.
+    await prisma.itinerary.delete({ where: { id } });
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: 403 });
+    }
+    throw err;
+  }
+}

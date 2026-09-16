@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { dashboardPathForRole } from "@/lib/roles";
+import DeletePackageButton from "@/components/admin/DeletePackageButton";
 
 const STATUS_BADGE: Record<string, string> = {
   DRAFT: "badge-pending",
@@ -31,8 +32,8 @@ export default async function AdminPackagesPage() {
 
       <div className="space-y-3">
         {itineraries.map((it) => (
-          <div key={it.id} className="card flex items-center justify-between">
-            <div>
+          <div key={it.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <p className="font-medium">
                 {it.title} <span className={STATUS_BADGE[it.status] ?? "badge"}>{it.status}</span>
               </p>
@@ -42,9 +43,16 @@ export default async function AdminPackagesPage() {
                 {it._count.bookings === 1 ? "" : "s"}
               </p>
             </div>
-            <Link href={`/admin/packages/${it.id}/edit`} className="btn-secondary">
-              Edit
-            </Link>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link href={`/admin/packages/${it.id}/edit`} className="btn-secondary">
+                Edit
+              </Link>
+              <DeletePackageButton
+                itineraryId={it.id}
+                title={it.title}
+                bookingCount={it._count.bookings}
+              />
+            </div>
           </div>
         ))}
         {itineraries.length === 0 && <p className="text-sm text-stone-500">No packages yet.</p>}

@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { CurrencyCode } from "@/lib/currency";
 
@@ -19,6 +20,23 @@ export const FALLBACK_BTN_PER_UNIT: Record<Exclude<CurrencyCode, "BTN">, number>
 const LIVE_CURRENCIES = ["USD", "EUR", "GBP", "AUD"] as const;
 
 /**
+ * Rates only ever change once a day (the cron job) or on an admin's
+ * manual "Refresh now" click (which calls revalidateTag below) — so
+ * there's no reason for every single page navigation, including ones
+ * that never display a price, to pay for a DB round trip here. Every
+ * page in the app awaits this from the root layout, so an uncached
+ * query here was adding real latency to every admin page load too.
+ */
+const getStoredRates = unstable_cache(
+  async () => {
+    const rows = await prisma.exchangeRate.findMany();
+    return rows.map((r) => [r.currency, Number(r.btnPerUnit)] as const);
+  },
+  ["exchange-rates"],
+  { revalidate: 300, tags: ["exchange-rates"] }
+);
+
+/**
  * Reads the exchange rates the site currently shows, DB first and falling
  * back to the hardcoded defaults for any currency that's never been
  * fetched. BTN is always 1 (it's the base unit everything else is stored
@@ -26,8 +44,8 @@ const LIVE_CURRENCIES = ["USD", "EUR", "GBP", "AUD"] as const;
  * Monetary Authority) — neither needs a DB row.
  */
 export async function getCurrentRates(): Promise<Record<CurrencyCode, number>> {
-  const rows = await prisma.exchangeRate.findMany();
-  const byCurrency = new Map(rows.map((r) => [r.currency, Number(r.btnPerUnit)]));
+  const rows = await getStoredRates();
+  const byCurrency = new Map(rows);
 
   return {
     BTN: 1,
@@ -85,6 +103,8 @@ export async function refreshRatesFromLiveSource(): Promise<{
     });
     updated.push(currency);
   }
+
+  if (updated.length > 0) revalidateTag("exchange-rates");
 
   return { updated, failed };
 }

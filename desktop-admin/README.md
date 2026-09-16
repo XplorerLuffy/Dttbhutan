@@ -3,7 +3,9 @@
 A native desktop wrapper around the Droelma Tours & Travels **admin
 dashboard** (`https://dttbhutan.vercel.app/admin`). It's a thin Electron
 shell — the dashboard itself is unchanged; this just gives it its own icon,
-window, dock/taskbar presence, and menu instead of living in a browser tab.
+window, and dock/taskbar presence instead of living in a browser tab. There's
+no File/View/Window menu bar — it's a single-purpose window, not a browser
+(reload is Ctrl/Cmd+R, DevTools is Ctrl/Cmd+Shift+I).
 
 Logging in works exactly like it does on the website (same email/password).
 Electron persists the session the same way a browser profile would, so you
@@ -81,19 +83,17 @@ at a staging environment instead.
 
 ## No marketing chrome, anywhere in the app
 
-The admin dashboard itself (`/admin/*`) already has no site NavBar/Footer
-— it uses its own sidebar. But signing in first sends you through
-`/login`, which isn't part of `/admin` and would otherwise show the full
-marketing header/footer. The desktop app hides those on every page via a
-small injected stylesheet (`src/main.js`, on `did-finish-load`), so the
-whole app — login screen included — looks like a native admin tool
-rather than a browser tab on the marketing site. This is done entirely on
-the desktop-app side; the website itself is unchanged.
+The admin dashboard (`/admin/*`) has its own sidebar instead of the site's
+NavBar/Footer, and `/login`/`/register` (where a signed-out visit to
+`/admin` lands first) have their own logo + copyright via `AuthLayout`
+instead of the marketing header/footer. Both are handled on the website
+side (`src/components/SiteChrome.tsx`), so the desktop app just inherits
+a chrome-free look everywhere without needing any app-side workaround.
 
 ## Files
 
-- `src/main.js` — the Electron main process: creates the window, menu,
-  and handles offline/error states.
+- `src/main.js` — the Electron main process: creates the window, and
+  handles offline/error states.
 - `src/preload.js` — intentionally empty; no Node APIs are exposed to the
   page since this is a pure wrapper.
 - `src/offline.html` — shown if the app can't reach the dashboard (no

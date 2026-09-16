@@ -53,18 +53,6 @@ function createWindow() {
     console.error(`Failed to load admin dashboard: ${errorDescription} (${errorCode})`);
   });
 
-  // The website's marketing NavBar/Footer only render as direct <header>/
-  // <footer> children of <body> (the admin dashboard's own sidebar header
-  // is a plain <div>, so this can't touch it). Signed-out visits to /admin
-  // land on /login first, which isn't under /admin and still carries that
-  // marketing chrome — hide it here so the desktop app looks like the
-  // admin dashboard everywhere it can land, without changing the website.
-  win.webContents.on("did-finish-load", () => {
-    win.webContents.insertCSS(
-      "body > header, body > footer { display: none !important; }"
-    );
-  });
-
   // Keep the app pinned to the admin dashboard's own domain; anything
   // else (e.g. a link out to a support site) opens in the OS browser
   // instead of navigating the app window away from the dashboard.
@@ -80,6 +68,15 @@ function createWindow() {
     }
   });
 
+  // Reload (Ctrl/Cmd+R) and DevTools (Ctrl/Cmd+Shift+I) as keyboard
+  // shortcuts, since there's no File/View menu bar to trigger them from.
+  win.webContents.on("before-input-event", (_event, input) => {
+    const cmdOrCtrl = process.platform === "darwin" ? input.meta : input.control;
+    if (!cmdOrCtrl || input.type !== "keyDown") return;
+    if (input.key.toLowerCase() === "r") win.loadURL(ADMIN_URL);
+    if (input.shift && input.key.toLowerCase() === "i") win.webContents.toggleDevTools();
+  });
+
   let saveTimeout;
   const scheduleSave = () => {
     clearTimeout(saveTimeout);
@@ -91,65 +88,16 @@ function createWindow() {
   return win;
 }
 
-function buildMenu(mainWindow) {
-  const isMac = process.platform === "darwin";
-
-  const template = [
-    ...(isMac
-      ? [
-          {
-            label: app.name,
-            submenu: [
-              { role: "about" },
-              { type: "separator" },
-              { role: "hide" },
-              { role: "hideOthers" },
-              { role: "unhide" },
-              { type: "separator" },
-              { role: "quit" },
-            ],
-          },
-        ]
-      : []),
-    {
-      label: "File",
-      submenu: [
-        {
-          label: "Reload",
-          accelerator: "CmdOrCtrl+R",
-          click: () => mainWindow.loadURL(ADMIN_URL),
-        },
-        { role: "toggleDevTools" },
-        { type: "separator" },
-        isMac ? { role: "close" } : { role: "quit" },
-      ],
-    },
-    {
-      label: "View",
-      submenu: [
-        { role: "resetZoom" },
-        { role: "zoomIn" },
-        { role: "zoomOut" },
-        { type: "separator" },
-        { role: "togglefullscreen" },
-      ],
-    },
-    {
-      label: "Window",
-      submenu: [{ role: "minimize" }, ...(isMac ? [{ role: "zoom" }] : [])],
-    },
-  ];
-
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-}
-
 app.whenReady().then(() => {
   // Content-Security-Policy relaxation isn't needed — this window only
   // ever loads the admin dashboard's own origin.
   session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
 
-  const win = createWindow();
-  buildMenu(win);
+  // No File/View/Window menu bar — this is a single-purpose wrapper
+  // around the dashboard, not a browser.
+  Menu.setApplicationMenu(null);
+
+  createWindow();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
