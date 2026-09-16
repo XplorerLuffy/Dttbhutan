@@ -91,7 +91,7 @@ export default function Hero({ destinations }: { destinations: Destination[] }) 
 
       {/* Floating search card — straddles the hero band and the page below it,
           Booking.com's signature homepage element. */}
-      <div className="relative z-10 mx-auto -mt-10 max-w-4xl px-1 sm:-mt-12">
+      <div className="relative z-10 -mt-10 w-full px-1 sm:-mt-12">
         <SearchTabs destinations={destinations} />
       </div>
     </div>

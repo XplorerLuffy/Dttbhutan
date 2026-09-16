@@ -31,7 +31,7 @@ export default function SearchTabs({ destinations }: { destinations: Destination
   const router = useRouter();
 
   return (
-    <div className="mx-auto max-w-3xl rounded-2xl bg-white p-2 shadow-xl">
+    <div className="mx-auto w-full rounded-2xl bg-white p-2 shadow-xl">
       <div className="flex flex-wrap gap-1 border-b border-stone-100 px-2 pt-1">
         {TABS.map((t) => (
           <button
