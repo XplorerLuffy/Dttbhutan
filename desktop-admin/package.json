@@ -16,6 +16,7 @@
     "build:linux:installer": "electron-builder --linux",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
+    "build:mac:dir": "electron-builder --mac --dir",
     "build:all": "electron-builder -mwl"
   },
   "devDependencies": {

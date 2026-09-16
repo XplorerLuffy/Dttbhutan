@@ -30,26 +30,43 @@ npm start
 
 ```bash
 npm run build:linux    # AppImage (or build:linux:installer for the raw --dir build)
-npm run build:win      # Windows installer (.exe via NSIS)
-npm run build:mac      # macOS disk image (.dmg)
+npm run build:win      # Windows installer (.exe via NSIS) — works from Linux/macOS/Windows (uses Wine on non-Windows)
+npm run build:mac      # macOS disk image (.dmg) — must run ON macOS, see below
+npm run build:mac:dir  # macOS .app bundle only, no .dmg wrapper — works from any OS
 npm run build:all      # all three, if your machine can build them
 ```
 
 Output lands in `dist/`.
 
-**Important — build on (or for) the target OS:**
-- Windows and Linux builds can usually be produced from any machine.
-- A signed, notarized macOS build needs to run on a Mac with an Apple
-  Developer account (for code signing/notarization) — `electron-builder`
-  will produce an unsigned `.dmg` without one, which macOS Gatekeeper will
-  warn about on first launch. For real distribution to other Macs, either
-  get an Apple Developer certificate or distribute via TestFlight/an
-  internal method that doesn't require notarization.
-- Similarly, an unsigned Windows `.exe` will trigger a SmartScreen warning
-  on first run. A code-signing certificate removes that.
+**Building the Windows installer from Linux/macOS** needs Wine (for the
+NSIS installer step): `sudo apt install wine wine32:i386 wine64` on
+Debian/Ubuntu (or the equivalent for your distro). Verified working this
+way — a real `.exe` installer builds cleanly with Wine installed.
 
-If you don't have a code-signing certificate yet, that's fine to ship
-without for internal/staff use — just expect that first-run warning.
+**Building for macOS is genuinely different — read this before trying:**
+`npm run build:mac` (the `.dmg` target) **only works when run on an actual
+Mac.** The `.dmg`-building step (`dmg-builder`) depends on `dmg-license`,
+which in turn depends on `iconv-corefoundation` — a native module that
+literally cannot install on Linux or Windows (verified: `npm install
+dmg-license` fails outright with `Unsupported platform` on Linux, since
+that package wraps a macOS-only CoreFoundation API). This isn't a config
+problem to fix; Apple's own DMG format tooling isn't available outside
+macOS.
+
+**Workaround that works from any OS:** `npm run build:mac:dir` skips the
+`.dmg` step entirely and produces a plain `Droelma Admin.app` bundle under
+`dist/mac/`. Zip that folder and send it to a Mac user — they unzip it and
+drag `Droelma Admin.app` into `/Applications` themselves. It's the same
+app, just without the drag-to-install `.dmg` polish. If you later build on
+a real Mac, `npm run build:mac` there will produce a proper `.dmg`.
+
+**Code signing, all platforms:** without a certificate, an unsigned
+Windows `.exe` triggers a SmartScreen warning on first run, and an
+unsigned macOS app is blocked by Gatekeeper on first open (right-click →
+Open → Open gets past it, once). Both are fine for internal/staff use —
+just expect that first-run warning until you have signing set up
+(a Windows code-signing cert, or an Apple Developer account for macOS
+notarization).
 
 ## Changing the target URL
 
