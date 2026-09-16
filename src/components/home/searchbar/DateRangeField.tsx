@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useClickOutside } from "./useClickOutside";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import { getMonthMatrix, isSameDay, monthLabel, toDateInputValue, formatShort } from "@/lib/calendar";
 
 /**

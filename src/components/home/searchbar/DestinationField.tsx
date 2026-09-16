@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useClickOutside } from "./useClickOutside";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 
 type Destination = { id: string; name: string; slug: string };
 

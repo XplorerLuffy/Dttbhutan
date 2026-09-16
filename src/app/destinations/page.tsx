@@ -3,14 +3,9 @@ import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import { prisma } from "@/lib/prisma";
 import type { DzongkhagRegion } from "@prisma/client";
+import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
 
 export const dynamic = "force-dynamic";
-
-const REGION_LABEL: Record<DzongkhagRegion, string> = {
-  WEST: "Western Bhutan",
-  CENTRAL: "Central Bhutan",
-  EAST: "Eastern Bhutan",
-};
 
 export default async function DestinationsPage() {
   const destinations = await prisma.destination.findMany({
@@ -31,7 +26,7 @@ export default async function DestinationsPage() {
         to the far east, visited by only a handful of travelers each year.
       </p>
 
-      {(["WEST", "CENTRAL", "EAST"] as const).map((region) => {
+      {REGION_ORDER.map((region) => {
         const items = byRegion.get(region) ?? [];
         if (items.length === 0) return null;
         return (

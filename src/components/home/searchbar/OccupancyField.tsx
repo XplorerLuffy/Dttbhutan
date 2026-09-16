@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useClickOutside } from "./useClickOutside";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 
 /**
  * Booking.com-style occupancy field: a button showing a one-line summary
