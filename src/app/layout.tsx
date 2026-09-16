@@ -7,6 +7,7 @@ import SmoothScroll from "@/components/SmoothScroll";
 import PageTransition from "@/components/PageTransition";
 import { CurrencyProvider } from "@/components/CurrencyProvider";
 import { getCurrentRates } from "@/lib/fx";
+import SiteChrome from "@/components/SiteChrome";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -41,11 +42,11 @@ export default async function RootLayout({
       >
         <CurrencyProvider rates={rates}>
           <SmoothScroll />
-          <NavBar />
-          <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
+          <SiteChrome nav={<NavBar />} footer={<Footer />}>
+            <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+              <PageTransition>{children}</PageTransition>
+            </main>
+          </SiteChrome>
         </CurrencyProvider>
       </body>
     </html>
