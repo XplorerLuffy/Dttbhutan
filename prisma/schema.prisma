@@ -638,3 +638,41 @@ model ContactMessage {
 
   @@index([status, createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// AI travel assistant — anonymous, session-scoped conversation memory.
+//
+// This is NOT a CRM and NOT tied to User by design: a visitor can open the
+// assistant, chat, browse other pages, and come back to the same
+// conversation purely by holding onto its id (the way /track/[token] holds a
+// share link, not the way a login session works) — no account, no customer
+// profile. `lastMessageAt` exists so a future cleanup job can find and purge
+// conversations nobody has touched in a while without needing a separate
+// expiry table.
+// ---------------------------------------------------------------------------
+
+enum AiMessageRole {
+  USER
+  ASSISTANT
+}
+
+model AiConversation {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  lastMessageAt DateTime @default(now())
+
+  messages AiMessage[]
+
+  @@index([lastMessageAt])
+}
+
+model AiMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           AiMessageRole
+  content        String
+  createdAt      DateTime       @default(now())
+
+  @@index([conversationId, createdAt])
+}
