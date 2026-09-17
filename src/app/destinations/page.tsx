@@ -5,6 +5,15 @@ import { prisma } from "@/lib/prisma";
 import type { DzongkhagRegion } from "@prisma/client";
 import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "All 20 dzongkhags of Bhutan",
+  description:
+    "Explore all 20 dzongkhags (districts) of Bhutan — where to stay, which guides cover each region, and the tours that visit them.",
+  alternates: { canonical: "/destinations" },
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function DestinationsPage() {

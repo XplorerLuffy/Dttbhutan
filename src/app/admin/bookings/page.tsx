@@ -31,13 +31,14 @@ export default async function AdminBookingsPage() {
           <Link
             key={b.id}
             href={`/dashboard/bookings/${b.id}`}
-            className="card flex items-center justify-between hover:shadow-md"
+            className="card flex flex-col gap-3 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
           >
-            <div>
+            <div className="min-w-0">
               <p className="font-medium">
                 {b.traveler.name} · {vendorLabel(b)}
               </p>
               <p className="text-sm text-stone-500">
+                <span className="font-mono text-xs text-stone-600">{b.reference}</span> ·{" "}
                 {b.startDate.toDateString()} → {b.endDate.toDateString()} · Nu.{" "}
                 {Number(b.totalPrice).toLocaleString()}
               </p>

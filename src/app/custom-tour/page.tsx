@@ -1,6 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import CustomTourRequestForm from "./CustomTourRequestForm";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Build a custom Bhutan tour",
+  description:
+    "Design your own Bhutan trip — pick your guide, accommodation and vehicle and see the price per person update as you go.",
+  alternates: { canonical: "/custom-tour" },
+};
+
 export default async function CustomTourPage({
   searchParams,
 }: {

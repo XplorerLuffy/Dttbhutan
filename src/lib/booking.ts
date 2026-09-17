@@ -6,6 +6,7 @@ import {
   isVehicleAvailable,
 } from "@/lib/availability";
 import { bookFlight } from "@/lib/flights/aggregator";
+import { generateBookingReference } from "@/lib/reference";
 import type { z } from "zod";
 import type { bookingSchema } from "@/lib/validation";
 
@@ -26,6 +27,9 @@ export function nightsOrDays(startDate: Date, endDate: Date) {
  * the mileage verification module depends on (via Vehicle -> GpsDevice).
  */
 export async function createBooking(travelerId: string, input: BookingInput) {
+  // One reference for whichever branch below ends up creating the booking.
+  const reference = await generateBookingReference();
+
   if (input.type === "ITINERARY") {
     const itinerary = await prisma.itinerary.findUnique({ where: { id: input.itineraryId } });
     if (!itinerary || itinerary.status !== "PUBLISHED") {
@@ -43,6 +47,7 @@ export async function createBooking(travelerId: string, input: BookingInput) {
       const booking = await tx.booking.create({
         data: {
           travelerId,
+          reference,
           type: "ITINERARY",
           // Package tours need the agency to assign an actual guide, hotel
           // rooms, and vehicle before confirming — not an instant reservation.
@@ -74,6 +79,7 @@ export async function createBooking(travelerId: string, input: BookingInput) {
       const booking = await tx.booking.create({
         data: {
           travelerId,
+          reference,
           type: "FLIGHT",
           // Ticketing already happened synchronously via the aggregator
           // (a real PNR was issued above), unlike guide/hotel/vehicle
@@ -123,6 +129,7 @@ export async function createBooking(travelerId: string, input: BookingInput) {
     return prisma.booking.create({
       data: {
         travelerId,
+        reference,
         type: "GUIDE",
         guideId: input.guideId,
         startDate: input.startDate,
@@ -148,6 +155,7 @@ export async function createBooking(travelerId: string, input: BookingInput) {
     return prisma.booking.create({
       data: {
         travelerId,
+        reference,
         type: "HOTEL",
         roomTypeId: input.roomTypeId,
         startDate: input.startDate,
@@ -177,6 +185,7 @@ export async function createBooking(travelerId: string, input: BookingInput) {
     const booking = await tx.booking.create({
       data: {
         travelerId,
+        reference,
         type: "VEHICLE",
         vehicleId: input.vehicleId,
         startDate: input.startDate,

@@ -94,9 +94,10 @@ function Section({ title, bookings }: { title: string; bookings: BookingRow[] })
               href={`/dashboard/bookings/${b.id}`}
               className="card flex items-center justify-between hover:shadow-md"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="font-medium">{bookingLabel(b)}</p>
                 <p className="text-sm text-stone-500">
+                  <span className="font-mono text-xs">{b.reference}</span> ·{" "}
                   {b.startDate.toDateString()} → {b.endDate.toDateString()}
                 </p>
               </div>

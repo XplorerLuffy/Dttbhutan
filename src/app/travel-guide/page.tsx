@@ -3,6 +3,15 @@ import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import { prisma } from "@/lib/prisma";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Bhutan travel guide",
+  description:
+    "Practical answers about visiting Bhutan — visas, the Sustainable Development Fee, when to go, and what to expect on the ground.",
+  alternates: { canonical: "/travel-guide" },
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function TravelGuidePage() {

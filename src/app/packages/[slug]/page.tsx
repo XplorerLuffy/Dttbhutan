@@ -4,6 +4,31 @@ import { prisma } from "@/lib/prisma";
 import ItineraryBookingForm from "@/components/booking/ItineraryBookingForm";
 import DetailGallery from "@/components/listing/DetailGallery";
 import Money from "@/components/Money";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const itinerary = await prisma.itinerary.findUnique({ where: { slug } });
+  if (!itinerary || itinerary.status !== "PUBLISHED") return { title: "Package not found" };
+
+  const description = `${itinerary.durationDays}-day Bhutan tour. ${itinerary.summary}`.slice(0, 160);
+
+  return {
+    title: itinerary.title,
+    description,
+    alternates: { canonical: `/packages/${itinerary.slug}` },
+    openGraph: {
+      title: itinerary.title,
+      description,
+      url: `/packages/${itinerary.slug}`,
+      ...(itinerary.coverPhotoUrl ? { images: [itinerary.coverPhotoUrl] } : {}),
+    },
+  };
+}
 
 const DIFFICULTY_LABEL: Record<string, string> = {
   EASY: "Easy",

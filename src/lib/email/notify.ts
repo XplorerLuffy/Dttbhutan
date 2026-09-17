@@ -5,6 +5,8 @@ import {
   bookingCancelledToVendor,
   bookingReceivedToTraveler,
   bookingStatusToTraveler,
+  contactReceivedToSender,
+  contactToAgency,
   customTourReceivedToTraveler,
   customTourToAgency,
   formatBTN,
@@ -26,11 +28,6 @@ import {
  * that succeeded must still look like a success to the traveler even if the
  * confirmation email can't go out.
  */
-
-/** A short, human-quotable reference. Full cuids are unreadable over the phone. */
-function reference(id: string): string {
-  return id.slice(-8).toUpperCase();
-}
 
 async function dispatch(messages: (EmailMessage | null)[]): Promise<void> {
   const real = messages.filter((m): m is EmailMessage => m !== null);
@@ -114,7 +111,7 @@ export async function notifyBookingCreated(bookingId: string): Promise<void> {
   const { what, vendorEmail } = describeBooking(booking);
   const dates = formatDateRange(booking.startDate, booking.endDate);
   const total = formatBTN(booking.totalPrice);
-  const ref = reference(booking.id);
+  const ref = booking.reference;
 
   await dispatch([
     to(
@@ -175,7 +172,7 @@ export async function notifyBookingStatusChanged(
 
   const { what, vendorEmail } = describeBooking(booking);
   const dates = formatDateRange(booking.startDate, booking.endDate);
-  const ref = reference(booking.id);
+  const ref = booking.reference;
 
   const cancelledByVendor = status === "CANCELLED" && actorEmail === vendorEmail;
 
@@ -258,6 +255,42 @@ export async function notifyCustomTourRequested(requestId: string): Promise<void
         notes: request.notes,
       }),
       request.traveler.email
+    ),
+  ]);
+}
+
+/** Someone used the public contact form: acknowledge it and alert the agency. */
+export async function notifyContactMessage(messageId: string): Promise<void> {
+  const contact = await prisma.contactMessage.findUnique({
+    where: { id: messageId },
+    include: { traveler: { select: { email: true, role: true } } },
+  });
+  if (!contact) return;
+
+  await dispatch([
+    to(
+      contact.email,
+      contactReceivedToSender({
+        name: contact.name,
+        subject: contact.subject,
+        message: contact.message,
+      }),
+      agencyInbox() ?? undefined
+    ),
+    to(
+      agencyInbox(),
+      contactToAgency({
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        subject: contact.subject,
+        message: contact.message,
+        accountNote: contact.traveler
+          ? `Signed in as ${contact.traveler.email} (${contact.traveler.role})`
+          : "Not signed in — no account",
+      }),
+      // Replying to the alert reaches the person who asked, not our own inbox.
+      contact.email
     ),
   ]);
 }

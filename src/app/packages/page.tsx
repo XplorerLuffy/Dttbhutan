@@ -5,6 +5,15 @@ import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
 import type { TripDifficulty } from "@prisma/client";
 import Money from "@/components/Money";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Bhutan package tours",
+  description:
+    "Ready-made Bhutan tour packages with day-by-day itineraries, licensed guides, hotels and transport included.",
+  alternates: { canonical: "/packages" },
+};
+
 export const dynamic = "force-dynamic";
 
 const DIFFICULTY_LABEL: Record<TripDifficulty, string> = {

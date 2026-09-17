@@ -112,12 +112,11 @@ admin inbox — all without needing to create any of it manually.
   dzongkhag. There's no separate cross-category search index; each
   category still queries its own table (or, for flights, calls the
   aggregator) independently.
-- **Photo uploads** (`src/app/api/uploads/route.ts`) write to local disk
-  under `public/uploads/` — fine for development, but this does not
-  survive a redeploy on most hosting platforms and won't work across
-  multiple server instances. Swap for S3/Cloudinary/R2 before production;
-  the upload API's contract (`POST` multipart form → `{ url }`) wouldn't
-  need to change on the calling side.
+- **Photo uploads** go through `src/lib/storage.ts`, which uses Vercel Blob
+  when `BLOB_READ_WRITE_TOKEN` is set and local disk otherwise. The
+  provider sits behind one function, so moving to S3/Cloudinary/R2 is a
+  single-file change and the upload API's contract (`POST` multipart form →
+  `{ url }`) stays the same. See [Photo storage](#photo-storage).
 
 ## GPS tracking module
 
@@ -273,6 +272,74 @@ performance pass on a real mid-range Android device (only checked with
 desktop Chromium in this environment) — worth doing before launch given
 the brief's connectivity concerns.
 
+## Company details, trust pages & legal
+
+Every real-world fact about the business lives in **`src/lib/company.ts`** —
+registered name, TCB licence number, address, phone, WhatsApp, email. The
+footer, About/Contact pages, Terms and the schema.org markup all read from
+it, so filling in the real values is a one-file change.
+
+Values still set to `TODO` are treated as missing rather than real: they
+render as an amber marker in development (so gaps are visible while
+building) and are **omitted entirely in production**, so a live site never
+shows a traveler a placeholder and never invents a licence number.
+
+Pages: `/about`, `/contact`, `/faq`, `/terms`, `/privacy`, `/cancellation`.
+
+The three legal pages are **drafts written from standard tour-operator
+practice, not legal advice.** They show a "pending legal review" banner and
+highlight every figure that needs confirming (deposit %, refund tiers,
+retention periods). Once a qualified reviewer has signed them off and the
+numbers match how the business actually works, flip `LEGAL_REVIEWED` in
+`src/lib/legal.ts` and both the banner and the highlights disappear.
+
+## Enquiries & booking references
+
+- **`/contact` takes enquiries without an account** — the only write
+  endpoint a stranger can reach, so it has a honeypot field, a per-IP rate
+  limit (5 per 10 minutes) and length caps. A tripped honeypot gets the same
+  201 a real submission does, so a bot learns nothing. Messages land in
+  `/admin/enquiries` and email the agency.
+- **Every booking has a short reference** (`DTT-X7964V`) stored on the row,
+  shown in dashboards and quoted in every email. The alphabet excludes
+  easily-confused characters (no O/0, I/1/L, S/5, B/8) so a reference read
+  down the phone comes back unambiguous. Bookings that predate this got
+  sequential `DTT-000001` style references in the migration.
+
+## Photo storage
+
+Uploads go to **Vercel Blob** when `BLOB_READ_WRITE_TOKEN` is set, and to
+local disk otherwise. Local disk was previously the only option, and it
+silently lost every uploaded photo on each redeploy — which is why nothing
+on the live site has ever had a lasting image.
+
+Set it up: Vercel dashboard → Storage → create a Blob store → connect it to
+this project, which sets the variable automatically. The provider is behind
+one function in `src/lib/storage.ts`, so swapping to Cloudinary or S3 later
+is a single-file change.
+
+Listings with no photo show a branded gradient placeholder
+(`PhotoPlaceholder`) rather than stock imagery — a stock photo of *some*
+Bhutanese hotel next to a specific listing is a small lie, and travelers
+book on the strength of photos.
+
+## SEO
+
+- `src/app/sitemap.ts` — dynamic, covering destinations, published packages
+  and articles, and approved guide/hotel listings. Dashboards, admin, auth
+  and `/track` links are excluded.
+- `src/app/robots.ts` — disallows those same private areas. Live tracking
+  links point at a vehicle's real-time location, so they stay out of search
+  results.
+- Root `metadata` sets `metadataBase`, a title template, canonical URLs and
+  OG/Twitter defaults; detail pages add their own `generateMetadata`.
+- `organizationJsonLd()` in `src/lib/seo.ts` emits schema.org `TravelAgency`
+  markup, omitting any company fact that's still a placeholder rather than
+  asserting a fake one to search engines.
+
+Set `NEXT_PUBLIC_SITE_URL` per environment so canonical URLs and sitemap
+entries don't point at a preview deploy.
+
 ## Transactional email
 
 Notifications go out via [Resend](https://resend.com) (`src/lib/email/`).
@@ -358,8 +425,14 @@ answers only the client can give:
   captured at registration and shown to the admin, but there's no
   automated check against a registry — per the brief, this is likely a
   manual admin step unless TCB exposes a public verification API.
-- **Photo uploads use local disk storage** — see the note under
-  Architecture notes above.
+- **Photo uploads need a Vercel Blob token.** The storage layer is built
+  (see [Photo storage](#photo-storage)); until `BLOB_READ_WRITE_TOKEN` is
+  set it falls back to local disk, which doesn't survive a redeploy.
+- **No real photos yet.** Every photo field in the database is empty, so
+  listings show branded placeholders. Real images have to come from the
+  client — nothing else would be honest.
+- **Legal pages are unreviewed drafts** — see the note above.
+- **Company details are placeholders** in `src/lib/company.ts`.
 - **No Dzongkha localization yet** (English only) — brief lists this under
   the final "polish" phase.
 - **Maps use OpenStreetMap tiles**, not Mapbox/Google Maps — see the Stack

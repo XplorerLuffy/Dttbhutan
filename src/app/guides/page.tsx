@@ -4,6 +4,15 @@ import ListingRow from "@/components/listing/ListingRow";
 import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
 import Money from "@/components/Money";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Licensed tour guides in Bhutan",
+  description:
+    "Browse licensed Bhutanese tour guides by language, speciality and region, with daily rates and real availability.",
+  alternates: { canonical: "/guides" },
+};
+
 export const dynamic = "force-dynamic";
 
 type SearchParams = {

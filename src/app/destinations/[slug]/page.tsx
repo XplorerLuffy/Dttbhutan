@@ -4,6 +4,32 @@ import { prisma } from "@/lib/prisma";
 import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import Money from "@/components/Money";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const destination = await prisma.destination.findUnique({ where: { slug } });
+  if (!destination) return { title: "Destination not found" };
+
+  const description =
+    destination.description?.slice(0, 155) ??
+    `Plan a trip to ${destination.name}, Bhutan — hotels, licensed guides and package tours.`;
+
+  return {
+    title: `${destination.name}, Bhutan`,
+    description,
+    alternates: { canonical: `/destinations/${destination.slug}` },
+    openGraph: {
+      title: `${destination.name}, Bhutan`,
+      description,
+      url: `/destinations/${destination.slug}`,
+    },
+  };
+}
 
 export default async function DestinationDetailPage({
   params,

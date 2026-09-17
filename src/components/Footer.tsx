@@ -1,10 +1,12 @@
 import Link from "next/link";
+import CompanyFact from "@/components/company/CompanyFact";
+import { COMPANY, formattedAddress } from "@/lib/company";
 
 export default function Footer() {
   return (
     <footer className="mt-20 border-t border-stone-200 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <div className="grid gap-8 sm:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <p className="font-display text-lg font-semibold text-brand-800">
               Droelma Tours &amp; Travels
@@ -35,6 +37,15 @@ export default function Footer() {
             ]}
           />
           <FooterColumn
+            title="Company"
+            links={[
+              { href: "/about", label: "About us" },
+              { href: "/contact", label: "Contact" },
+              { href: "/faq", label: "FAQ" },
+              { href: "/travel-guide", label: "Travel guide" },
+            ]}
+          />
+          <FooterColumn
             title="Account"
             links={[
               { href: "/login", label: "Log in" },
@@ -42,9 +53,25 @@ export default function Footer() {
             ]}
           />
         </div>
-        <p className="mt-10 text-xs text-stone-400">
-          © {new Date().getFullYear()} Droelma Tours &amp; Travels.
-        </p>
+
+        <div className="mt-10 flex flex-col gap-3 border-t border-stone-100 pt-6 text-xs text-stone-400 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} {COMPANY.name}
+            {formattedAddress() ? `, ${formattedAddress()}` : ""}.
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <CompanyFact label="TCB licence" value={COMPANY.tcbLicenceNumber} />
+            <Link href="/terms" className="hover:text-stone-600">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-stone-600">
+              Privacy
+            </Link>
+            <Link href="/cancellation" className="hover:text-stone-600">
+              Cancellation &amp; refunds
+            </Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

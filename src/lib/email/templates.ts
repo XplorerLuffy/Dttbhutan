@@ -331,6 +331,50 @@ export function customTourToAgency(input: {
 }
 
 // ---------------------------------------------------------------------------
+// Contact / general enquiries (no account required)
+// ---------------------------------------------------------------------------
+
+export function contactReceivedToSender(input: {
+  name: string;
+  subject: string | null;
+  message: string;
+}): RenderedEmail {
+  return render("We've got your message", {
+    heading: `Thanks, ${input.name.split(" ")[0]} — message received`,
+    intro:
+      "One of our team will get back to you, usually within one working day. Here's a copy of what you sent.",
+    rows: [
+      ...(input.subject ? [{ label: "Subject", value: input.subject }] : []),
+      { label: "Your message", value: input.message },
+    ],
+    outro: "You can reply directly to this email if you'd like to add anything.",
+  });
+}
+
+export function contactToAgency(input: {
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string | null;
+  message: string;
+  accountNote: string;
+}): RenderedEmail {
+  return render(`[Contact] ${input.subject || input.name}`, {
+    heading: "New enquiry from the website",
+    intro: `${input.name} sent a message through the contact form.`,
+    rows: [
+      { label: "From", value: `${input.name} (${input.email})` },
+      ...(input.phone ? [{ label: "Phone", value: input.phone }] : []),
+      ...(input.subject ? [{ label: "Subject", value: input.subject }] : []),
+      { label: "Message", value: input.message },
+      { label: "Account", value: input.accountNote },
+    ],
+    cta: { label: "Open enquiries", href: `${siteUrl()}/admin/enquiries` },
+    outro: "Reply to this email to answer them directly.",
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Vendor approvals
 // ---------------------------------------------------------------------------
 

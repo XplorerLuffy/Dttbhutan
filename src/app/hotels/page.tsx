@@ -4,6 +4,15 @@ import ListingRow from "@/components/listing/ListingRow";
 import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
 import Money from "@/components/Money";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Hotels & homestays in Bhutan",
+  description:
+    "Find hotels and homestays across all 20 dzongkhags of Bhutan, with real room availability and nightly rates.",
+  alternates: { canonical: "/hotels" },
+};
+
 export const dynamic = "force-dynamic";
 
 type SearchParams = {

@@ -2,6 +2,32 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await prisma.article.findUnique({ where: { slug } });
+  if (!article || article.status !== "PUBLISHED") return { title: "Article not found" };
+
+  return {
+    title: article.title,
+    description: article.excerpt.slice(0, 160),
+    alternates: { canonical: `/travel-guide/${article.slug}` },
+    openGraph: {
+      type: "article",
+      title: article.title,
+      description: article.excerpt.slice(0, 160),
+      url: `/travel-guide/${article.slug}`,
+      publishedTime: article.createdAt.toISOString(),
+      modifiedTime: article.updatedAt.toISOString(),
+      ...(article.coverPhotoUrl ? { images: [article.coverPhotoUrl] } : {}),
+    },
+  };
+}
 
 export default async function ArticleDetailPage({
   params,

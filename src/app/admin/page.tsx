@@ -9,7 +9,7 @@ export default async function AdminHomePage() {
   if (!user) redirect("/login");
   if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
 
-  const [pendingGuides, pendingHotels, pendingOperators, pendingBookings, flaggedTrips, newCustomTourRequests] =
+  const [pendingGuides, pendingHotels, pendingOperators, pendingBookings, flaggedTrips, newCustomTourRequests, newEnquiries] =
     await Promise.all([
       prisma.guideProfile.count({ where: { status: "PENDING" } }),
       prisma.hotel.count({ where: { status: "PENDING" } }),
@@ -17,6 +17,7 @@ export default async function AdminHomePage() {
       prisma.booking.count({ where: { status: "PENDING" } }),
       prisma.tripDistanceReport.count({ where: { flagged: true } }),
       prisma.customTourRequest.count({ where: { status: "NEW" } }),
+      prisma.contactMessage.count({ where: { status: "NEW" } }),
     ]);
 
   const cards = [
@@ -49,6 +50,12 @@ export default async function AdminHomePage() {
       title: "Custom tour requests",
       value: newCustomTourRequests,
       hint: "new inquiries",
+    },
+    {
+      href: "/admin/enquiries",
+      title: "Enquiries",
+      value: newEnquiries,
+      hint: "unread messages",
     },
   ];
 

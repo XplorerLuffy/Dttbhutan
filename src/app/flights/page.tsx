@@ -6,6 +6,15 @@ import MotionListItem from "@/components/MotionListItem";
 import type { FlightLeg, FlightOffer } from "@/lib/flights/aggregator";
 import Money from "@/components/Money";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Flights to Bhutan",
+  description:
+    "Search flights to Paro, Bhutan's only international airport, and book them alongside your ground arrangements.",
+  alternates: { canonical: "/flights" },
+};
+
 export const dynamic = "force-dynamic";
 
 type SearchParams = {

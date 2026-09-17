@@ -69,6 +69,12 @@ export default async function BookingDetailPage({
               <p className="text-sm text-stone-500">
                 {booking.startDate.toDateString()} → {booking.endDate.toDateString()}
               </p>
+              <p className="mt-1 text-sm text-stone-500">
+                Booking reference{" "}
+                <span className="select-all font-mono font-medium text-stone-800">
+                  {booking.reference}
+                </span>
+              </p>
             </div>
             <StatusBadge status={booking.status} />
           </div>
