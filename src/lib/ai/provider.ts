@@ -1,5 +1,6 @@
 import "server-only";
 import { OllamaProvider } from "./providers/ollama";
+import { AnthropicProvider } from "./providers/anthropic";
 
 /**
  * LLM provider abstraction.
@@ -87,7 +88,7 @@ export class AiProviderUnavailableError extends Error {}
  * calling it wrong" — both still surface the same safe message to the user. */
 export class AiProviderResponseError extends Error {}
 
-export type AiProviderName = "ollama";
+export type AiProviderName = "ollama" | "anthropic";
 
 /**
  * Selects the provider from AI_PROVIDER (see .env.example). This is the
@@ -100,6 +101,8 @@ export function getAiProvider(): AiProvider {
   switch (name) {
     case "ollama":
       return new OllamaProvider();
+    case "anthropic":
+      return new AnthropicProvider();
     default: {
       const exhaustiveCheck: never = name;
       throw new Error(`Unknown AI_PROVIDER: ${exhaustiveCheck}`);
