@@ -30,6 +30,15 @@ export type AiToolCall = {
   id: string;
   name: string;
   arguments: Record<string, unknown>;
+  /**
+   * Opaque, provider-specific data that must round-trip unchanged when this
+   * call is replayed back to the same provider in a later turn — e.g.
+   * Gemini's `thoughtSignature`, required on a replayed function-call part
+   * or the API rejects the continuation (verified: "Function call is
+   * missing a thought_signature..."). Providers that don't need this
+   * (Ollama, Anthropic) simply never set or read it.
+   */
+  providerMetadata?: unknown;
 };
 
 export type AiMessage =

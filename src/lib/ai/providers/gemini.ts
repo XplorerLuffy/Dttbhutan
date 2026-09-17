@@ -38,7 +38,7 @@ export class GeminiProvider implements AiProvider {
       throw new AiProviderUnavailableError("GEMINI_API_KEY is not set");
     }
     this.apiKey = apiKey;
-    this.model = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
+    this.model = process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash";
   }
 
   async complete(request: AiCompletionRequest): Promise<AiCompletionResult> {
@@ -101,6 +101,10 @@ export class GeminiProvider implements AiProvider {
           id: part.functionCall.id || `gemini_call_${syntheticIdCounter++}`,
           name: part.functionCall.name,
           arguments: part.functionCall.args ?? {},
+          // Must be replayed on this exact call when the turn is fed back
+          // (see toGeminiContent below) — verified: Gemini 400s on a
+          // replayed function-call part with this missing.
+          providerMetadata: part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : undefined,
         });
       }
     }
@@ -117,7 +121,11 @@ function toGeminiContent(message: Exclude<AiMessage, { role: "system" }>): Gemin
       const parts: GeminiPart[] = [];
       if (message.content) parts.push({ text: message.content });
       for (const call of message.toolCalls ?? []) {
-        parts.push({ functionCall: { id: call.id, name: call.name, args: call.arguments } });
+        const meta = call.providerMetadata as { thoughtSignature?: string } | undefined;
+        parts.push({
+          functionCall: { id: call.id, name: call.name, args: call.arguments },
+          ...(meta?.thoughtSignature ? { thoughtSignature: meta.thoughtSignature } : {}),
+        });
       }
       return { role: "model", parts };
     }
@@ -170,6 +178,9 @@ type GeminiPart = {
   text?: string;
   functionCall?: { id?: string; name: string; args?: Record<string, unknown> };
   functionResponse?: { id?: string; name: string; response: Record<string, unknown> };
+  /** Required on replay when a functionCall part carried one — see the
+   * providerMetadata comment in AiToolCall (provider.ts). */
+  thoughtSignature?: string;
 };
 
 type GeminiContent = { role: "user" | "model"; parts: GeminiPart[] };
