@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notifyBookingStatusChanged } from "@/lib/email/notify";
 import { z } from "zod";
 
 const patchSchema = z.object({
@@ -58,6 +59,8 @@ export async function PATCH(
     where: { id },
     data: { status: parsed.data.status },
   });
+
+  await notifyBookingStatusChanged(id, parsed.data.status, user.email);
 
   return NextResponse.json(updated);
 }

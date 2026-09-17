@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { bookingSchema } from "@/lib/validation";
 import { createBooking, BookingConflictError, BookingNotFoundError } from "@/lib/booking";
+import { notifyBookingCreated } from "@/lib/email/notify";
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const booking = await createBooking(user.id, parsed.data);
+    await notifyBookingCreated(booking.id);
     return NextResponse.json(booking, { status: 201 });
   } catch (err) {
     if (err instanceof BookingConflictError) {

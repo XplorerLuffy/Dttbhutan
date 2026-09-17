@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { customTourRequestSchema } from "@/lib/validation";
 import { CustomTourSelectionError, priceCustomTourSelection } from "@/lib/customTour";
+import { notifyCustomTourRequested } from "@/lib/email/notify";
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
       estimatedPricePerPerson: pricing.totalPrice ? pricing.pricePerPerson : undefined,
     },
   });
+
+  await notifyCustomTourRequested(request.id);
 
   return NextResponse.json(request, { status: 201 });
 }

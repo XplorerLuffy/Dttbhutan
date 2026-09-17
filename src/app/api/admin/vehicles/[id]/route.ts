@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireRole, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { vendorStatusUpdateSchema } from "@/lib/adminVendor";
+import { notifyVendorStatusChanged } from "@/lib/email/notify";
 
 export async function PATCH(
   req: NextRequest,
@@ -19,7 +20,16 @@ export async function PATCH(
     const updated = await prisma.vehicle.update({
       where: { id },
       data: parsed.data,
+      include: { operator: { include: { owner: true } } },
     });
+
+    await notifyVendorStatusChanged({
+      email: updated.operator.owner.email,
+      listingName: `${updated.type} (${updated.plateNumber})`,
+      status: parsed.data.status,
+      adminNote: parsed.data.adminNote,
+    });
+
     return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof AuthError) {

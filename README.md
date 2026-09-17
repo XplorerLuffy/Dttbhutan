@@ -273,6 +273,55 @@ performance pass on a real mid-range Android device (only checked with
 desktop Chromium in this environment) — worth doing before launch given
 the brief's connectivity concerns.
 
+## Transactional email
+
+Notifications go out via [Resend](https://resend.com) (`src/lib/email/`).
+Three pieces: `send.ts` is the transport, `templates.ts` is the content,
+and `notify.ts` turns a domain event into the set of emails it produces.
+
+What fires, and to whom:
+
+| Event | Traveler | Vendor | Agency |
+| --- | --- | --- | --- |
+| Booking created | Confirmation | New-booking alert | Ops alert |
+| Booking confirmed | Confirmed | — | — |
+| Booking cancelled | Cancelled | Freed-up-dates alert¹ | Ops alert |
+| Booking completed | Thanks + review nudge | — | — |
+| Custom tour enquiry | Acknowledgement | — | Enquiry alert |
+| Vendor approved/rejected/suspended | — | Status + admin note | — |
+
+¹ Skipped when the vendor is the one who cancelled — no point emailing
+someone about their own action.
+
+Two deliberate properties, both verified:
+
+- **A failed email can never fail a booking.** Every send is wrapped so
+  errors are logged and swallowed. A booking taken while the email
+  provider is down still returns 201 and persists; the failure shows up in
+  the logs, not in the traveler's face.
+- **No API key means no crash.** Without `RESEND_API_KEY` the app logs
+  each message (recipient, subject, full text body) to the server console
+  instead of sending. Local dev needs no Resend account, and a deploy
+  that hasn't been configured yet degrades to logging rather than erroring.
+
+### Going live
+
+1. Create a Resend account and add your sending domain.
+2. Add the SPF and DKIM DNS records Resend gives you to that domain.
+   Without them mail is rejected or lands in spam — this is the step that
+   actually decides deliverability, and it can take a few hours to
+   propagate. Verify the domain shows "Verified" in Resend before relying
+   on it.
+3. Set these env vars (Vercel → Project → Settings → Environment Variables):
+   - `RESEND_API_KEY` — from Resend → API Keys
+   - `EMAIL_FROM` — e.g. `Droelma Tours & Travels <bookings@yourdomain.bt>`;
+     the domain must be the verified one
+   - `AGENCY_NOTIFICATION_EMAIL` — where booking/enquiry alerts land
+   - `NEXT_PUBLIC_SITE_URL` — so links in emails point at the right deploy
+
+Replies go to the agency inbox where that makes sense (a traveler replying
+to their booking confirmation reaches staff, not a no-reply void).
+
 ## Current status & what's stubbed
 
 Working end-to-end: vendor registration + admin approval (guides, hotels,
@@ -297,6 +346,10 @@ answers only the client can give:
   hardware model, stand up Traccar, and point its forwarding config at the
   ingest webhook.
 - **No real flight aggregator.** See [Flights](#flights) above.
+- **Email needs a verified domain.** The notification layer is built and
+  working (see [Transactional email](#transactional-email)), but until a
+  Resend key and a domain with SPF/DKIM are configured it logs instead of
+  sending.
 - **No payment gateway.** `Payment` exists in the schema and commission is
   computed per booking, but there's no bank transfer / mobile wallet
   integration — the brief flagged this as needing confirmation from the
