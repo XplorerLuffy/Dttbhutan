@@ -3,19 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import DestinationField from "./searchbar/DestinationField";
-import DateRangeField from "./searchbar/DateRangeField";
-import OccupancyField from "./searchbar/OccupancyField";
 
-type Tab = "guides" | "hotels" | "transport" | "flights" | "packages" | "destinations";
+type Tab = "packages" | "custom-tour" | "destinations";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "guides", label: "Guides" },
-  { id: "hotels", label: "Hotels" },
-  { id: "transport", label: "Transport" },
-  { id: "flights", label: "Flights" },
-  { id: "packages", label: "Packages" },
-  { id: "destinations", label: "Destinations" },
+  { id: "packages", label: "Tour Package" },
+  { id: "custom-tour", label: "Custom Tour" },
+  { id: "destinations", label: "Destination" },
 ];
 
 type Destination = { id: string; name: string; slug: string };
@@ -27,7 +21,7 @@ type Destination = { id: string; name: string; slug: string };
  * query params, so no separate search backend is needed here.
  */
 export default function SearchTabs({ destinations }: { destinations: Destination[] }) {
-  const [tab, setTab] = useState<Tab>("guides");
+  const [tab, setTab] = useState<Tab>("packages");
   const router = useRouter();
 
   return (
@@ -54,78 +48,6 @@ export default function SearchTabs({ destinations }: { destinations: Destination
       </div>
 
       <div className="p-4">
-        {tab === "guides" && (
-          <form method="get" action="/guides" className="grid gap-2 sm:grid-cols-4">
-            <input
-              name="maxPrice"
-              type="number"
-              min={1}
-              placeholder="Max BTN/day (optional)"
-              className="input sm:col-span-3"
-            />
-            <SearchButton />
-          </form>
-        )}
-
-        {tab === "hotels" && (
-          <form method="get" action="/hotels" className="flex flex-col gap-2 sm:flex-row">
-            <DestinationField destinations={destinations} />
-            <DateRangeField />
-            <OccupancyField />
-            <SearchButton />
-          </form>
-        )}
-
-        {tab === "transport" && (
-          <form method="get" action="/vehicles" className="grid gap-2 sm:grid-cols-4">
-            <select name="type" defaultValue="" className="input sm:col-span-2">
-              <option value="">Any vehicle type</option>
-              <option value="SEDAN">Sedan</option>
-              <option value="SUV">SUV</option>
-              <option value="VAN">Van</option>
-              <option value="BUS">Bus</option>
-            </select>
-            <input
-              name="minCapacity"
-              type="number"
-              min={1}
-              placeholder="Min seats"
-              className="input"
-            />
-            <SearchButton />
-          </form>
-        )}
-
-        {tab === "flights" && (
-          <form method="get" action="/flights" className="grid gap-2 sm:grid-cols-6">
-            <input
-              name="origin"
-              placeholder="From (PBH)"
-              maxLength={3}
-              required
-              className="input uppercase sm:col-span-1"
-            />
-            <input
-              name="destination"
-              placeholder="To (BKK)"
-              maxLength={3}
-              required
-              className="input uppercase sm:col-span-1"
-            />
-            <input name="departureDate" type="date" required className="input sm:col-span-2" />
-            <input
-              name="passengers"
-              type="number"
-              min={1}
-              max={9}
-              defaultValue={1}
-              className="input"
-            />
-            <input type="hidden" name="cabinClass" value="ECONOMY" />
-            <SearchButton />
-          </form>
-        )}
-
         {tab === "packages" && (
           <div className="flex flex-col gap-2 sm:flex-row">
             <p className="flex-1 self-center text-sm text-stone-500">
@@ -138,6 +60,22 @@ export default function SearchTabs({ destinations }: { destinations: Destination
               className="btn-primary text-center"
             >
               Browse packages
+            </motion.a>
+          </div>
+        )}
+
+        {tab === "custom-tour" && (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <p className="flex-1 self-center text-sm text-stone-500">
+              Tell us your dates, interests, and pace — we&apos;ll build a Bhutan itinerary just for you.
+            </p>
+            <motion.a
+              href="/custom-tour"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="btn-primary text-center"
+            >
+              Start custom tour
             </motion.a>
           </div>
         )}
@@ -170,18 +108,5 @@ export default function SearchTabs({ destinations }: { destinations: Destination
         )}
       </div>
     </div>
-  );
-}
-
-function SearchButton() {
-  return (
-    <motion.button
-      type="submit"
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      className="btn-primary px-8 py-3 sm:shrink-0"
-    >
-      Search
-    </motion.button>
   );
 }
