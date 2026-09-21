@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import ScrollReveal from "@/components/ScrollReveal";
 import ListingRow from "@/components/listing/ListingRow";
 import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
-import type { TripDifficulty } from "@prisma/client";
+import type { ItineraryCategory, TripDifficulty } from "@prisma/client";
 import Money from "@/components/Money";
 
 import type { Metadata } from "next";
@@ -22,11 +22,19 @@ const DIFFICULTY_LABEL: Record<TripDifficulty, string> = {
   CHALLENGING: "Challenging",
 };
 
+const CATEGORY_LABEL: Record<ItineraryCategory, string> = {
+  TREKKING: "Trekking",
+  CULTURAL: "Cultural",
+  WILDLIFE: "Wildlife",
+  HONEYMOON: "Honeymoon",
+};
+
 type SearchParams = {
   difficulty?: string;
   maxPrice?: string;
   destination?: string;
   duration?: string;
+  category?: string;
 };
 
 const DURATION_BUCKETS: Record<string, { gte?: number; lte?: number }> = {
@@ -41,7 +49,7 @@ export default async function PackagesPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { difficulty, maxPrice, destination, duration } = await searchParams;
+  const { difficulty, maxPrice, destination, duration, category } = await searchParams;
   const durationRange = duration ? DURATION_BUCKETS[duration] : undefined;
 
   const [itineraries, destinations] = await Promise.all([
@@ -52,6 +60,7 @@ export default async function PackagesPage({
         ...(maxPrice ? { pricePerPerson: { lte: Number(maxPrice) } } : {}),
         ...(destination ? { days: { some: { destination: { slug: destination } } } } : {}),
         ...(durationRange ? { durationDays: durationRange } : {}),
+        ...(category ? { category: category as ItineraryCategory } : {}),
       },
       orderBy: { pricePerPerson: "asc" },
       include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: true } } },
@@ -96,6 +105,16 @@ export default async function PackagesPage({
             <select name="difficulty" defaultValue={difficulty ?? ""} className="input">
               <option value="">Any difficulty</option>
               {Object.entries(DIFFICULTY_LABEL).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </FilterGroup>
+          <FilterGroup title="Category">
+            <select name="category" defaultValue={category ?? ""} className="input">
+              <option value="">Any category</option>
+              {Object.entries(CATEGORY_LABEL).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>

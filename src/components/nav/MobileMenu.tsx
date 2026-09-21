@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
 import type { DzongkhagRegion } from "@prisma/client";
-import CurrencySelector from "@/components/CurrencySelector";
 
 type Destination = { id: string; name: string; slug: string; region: DzongkhagRegion };
 type Package = { id: string; title: string; slug: string; durationDays: number };
@@ -43,18 +41,13 @@ function Accordion({ label, children }: { label: string; children: React.ReactNo
 export default function MobileMenu({
   destinations,
   packages,
-  isLoggedIn,
-  dashboardHref,
   className,
 }: {
   destinations: Destination[];
   packages: Package[];
-  isLoggedIn: boolean;
-  dashboardHref: string | null;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -99,52 +92,7 @@ export default function MobileMenu({
             </div>
 
             <nav className="flex-1 overflow-y-auto px-4">
-              <Accordion label="Destinations">
-                <div className="space-y-4">
-                  {REGION_ORDER.map((region) => (
-                    <div key={region}>
-                      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-400">
-                        {REGION_LABEL[region]}
-                      </p>
-                      <ul className="space-y-2">
-                        {(byRegion.get(region) ?? []).map((d) => (
-                          <li key={d.id}>
-                            <Link
-                              href={`/destinations/${d.slug}`}
-                              onClick={() => setOpen(false)}
-                              className="block text-sm text-stone-600 hover:text-brand-700"
-                            >
-                              {d.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                  <Link
-                    href="/destinations"
-                    onClick={() => setOpen(false)}
-                    className="block text-sm font-medium text-brand-700"
-                  >
-                    Browse all 20 dzongkhags →
-                  </Link>
-                </div>
-              </Accordion>
-
-              <Link href="/guides" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
-                Guides
-              </Link>
-              <Link href="/hotels" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
-                Hotels
-              </Link>
-              <Link href="/vehicles" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
-                Transport
-              </Link>
-              <Link href="/flights" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
-                Flights
-              </Link>
-
-              <Accordion label="Tours & Packages">
+              <Accordion label="Tour Packages">
                 <div className="space-y-4">
                   <ul className="space-y-2">
                     <li>
@@ -186,51 +134,59 @@ export default function MobileMenu({
                 </div>
               </Accordion>
 
+              <Accordion label="Destinations">
+                <div className="space-y-4">
+                  {REGION_ORDER.map((region) => (
+                    <div key={region}>
+                      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-400">
+                        {REGION_LABEL[region]}
+                      </p>
+                      <ul className="space-y-2">
+                        {(byRegion.get(region) ?? []).map((d) => (
+                          <li key={d.id}>
+                            <Link
+                              href={`/destinations/${d.slug}`}
+                              onClick={() => setOpen(false)}
+                              className="block text-sm text-stone-600 hover:text-brand-700"
+                            >
+                              {d.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                  <Link
+                    href="/destinations"
+                    onClick={() => setOpen(false)}
+                    className="block text-sm font-medium text-brand-700"
+                  >
+                    Browse all 20 dzongkhags →
+                  </Link>
+                </div>
+              </Accordion>
+
+              <Link href="/packages?category=TREKKING" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
+                Trekking
+              </Link>
               <Link href="/travel-guide" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
                 Travel Guide
               </Link>
-
-              <div className="flex items-center justify-between py-3">
-                <span className="text-sm text-stone-600">Currency</span>
-                <CurrencySelector />
-              </div>
+              <Link href="/gallery" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
+                Gallery
+              </Link>
+              <Link href="/about" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
+                About Us
+              </Link>
+              <Link href="/contact" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
+                Contact Us
+              </Link>
             </nav>
 
             <div className="shrink-0 border-t border-stone-200 p-4">
-              {isLoggedIn ? (
-                <div className="flex flex-col gap-2">
-                  {dashboardHref && (
-                    <Link
-                      href={dashboardHref}
-                      onClick={() => setOpen(false)}
-                      className="btn-primary w-full text-center"
-                    >
-                      Dashboard
-                    </Link>
-                  )}
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await fetch("/api/auth/logout", { method: "POST" });
-                      setOpen(false);
-                      router.push("/");
-                      router.refresh();
-                    }}
-                    className="btn-secondary w-full text-center"
-                  >
-                    Log out
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <Link href="/register" onClick={() => setOpen(false)} className="btn-primary w-full text-center">
-                    Sign up
-                  </Link>
-                  <Link href="/login" onClick={() => setOpen(false)} className="btn-secondary w-full text-center">
-                    Log in
-                  </Link>
-                </div>
-              )}
+              <Link href="/contact" onClick={() => setOpen(false)} className="btn-primary w-full text-center">
+                Enquire Now
+              </Link>
             </div>
           </div>
         </div>

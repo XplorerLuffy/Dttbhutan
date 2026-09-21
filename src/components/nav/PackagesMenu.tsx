@@ -5,7 +5,7 @@ type Package = { id: string; title: string; slug: string; durationDays: number }
 
 export default function PackagesMenu({ packages }: { packages: Package[] }) {
   return (
-    <NavMenu label="Tours & Packages" panelClassName="sm:max-w-2xl">
+    <NavMenu label="Tour Packages" panelClassName="sm:max-w-2xl">
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-400">Plan your trip</p>
