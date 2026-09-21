@@ -1,28 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-type Tab = "packages" | "custom-tour" | "destinations";
+type Tab = "packages" | "custom-tour";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "packages", label: "Tour Package" },
+  { id: "packages", label: "Tour Packages" },
   { id: "custom-tour", label: "Custom Tour" },
-  { id: "destinations", label: "Destination" },
 ];
 
 type Destination = { id: string; name: string; slug: string };
 
 /**
  * Booking.com-style unified search: one card, category tabs up top, a
- * form tailored to that category underneath. Each form is a plain GET —
- * it navigates to that category's existing search page with the matching
- * query params, so no separate search backend is needed here.
+ * form tailored to that category underneath. The packages form is a plain
+ * GET — it navigates to /packages with the matching query params, so no
+ * separate search backend is needed here.
  */
 export default function SearchTabs({ destinations }: { destinations: Destination[] }) {
   const [tab, setTab] = useState<Tab>("packages");
-  const router = useRouter();
 
   return (
     <div className="mx-auto w-full rounded-2xl bg-white p-2 shadow-xl">
@@ -49,19 +46,30 @@ export default function SearchTabs({ destinations }: { destinations: Destination
 
       <div className="p-4">
         {tab === "packages" && (
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <p className="flex-1 self-center text-sm text-stone-500">
-              Ready-made multi-day tours bundling a guide, hotels, and transport.
-            </p>
-            <motion.a
-              href="/packages"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="btn-primary text-center"
-            >
-              Browse packages
-            </motion.a>
-          </div>
+          <form method="get" action="/packages" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="flex-1 text-sm">
+              <span className="mb-1.5 block font-semibold text-stone-900">Destination</span>
+              <select name="destination" defaultValue="" className="input">
+                <option value="">All Destinations</option>
+                {destinations.map((d) => (
+                  <option key={d.id} value={d.slug}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex-1 text-sm">
+              <span className="mb-1.5 block font-semibold text-stone-900">Duration</span>
+              <select name="duration" defaultValue="" className="input">
+                <option value="">Any Duration</option>
+                <option value="1-3">1-3 days</option>
+                <option value="4-6">4-6 days</option>
+                <option value="7-10">7-10 days</option>
+                <option value="11+">11+ days</option>
+              </select>
+            </label>
+            <SearchButton />
+          </form>
         )}
 
         {tab === "custom-tour" && (
@@ -79,34 +87,24 @@ export default function SearchTabs({ destinations }: { destinations: Destination
             </motion.a>
           </div>
         )}
-
-        {tab === "destinations" && (
-          <div className="grid gap-2 sm:grid-cols-4">
-            <select
-              defaultValue=""
-              onChange={(e) => e.target.value && router.push(`/destinations/${e.target.value}`)}
-              className="input sm:col-span-3"
-            >
-              <option value="" disabled>
-                Jump to a dzongkhag
-              </option>
-              {destinations.map((d) => (
-                <option key={d.id} value={d.slug}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            <motion.a
-              href="/destinations"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="btn-primary text-center"
-            >
-              Browse all
-            </motion.a>
-          </div>
-        )}
       </div>
     </div>
+  );
+}
+
+function SearchButton() {
+  return (
+    <motion.button
+      type="submit"
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      className="btn-primary flex items-center justify-center gap-2 px-8 py-2.5 sm:shrink-0"
+    >
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+        <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+      Search
+    </motion.button>
   );
 }

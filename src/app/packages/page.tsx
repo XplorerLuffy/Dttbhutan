@@ -22,24 +22,42 @@ const DIFFICULTY_LABEL: Record<TripDifficulty, string> = {
   CHALLENGING: "Challenging",
 };
 
-type SearchParams = { difficulty?: string; maxPrice?: string };
+type SearchParams = {
+  difficulty?: string;
+  maxPrice?: string;
+  destination?: string;
+  duration?: string;
+};
+
+const DURATION_BUCKETS: Record<string, { gte?: number; lte?: number }> = {
+  "1-3": { gte: 1, lte: 3 },
+  "4-6": { gte: 4, lte: 6 },
+  "7-10": { gte: 7, lte: 10 },
+  "11+": { gte: 11 },
+};
 
 export default async function PackagesPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { difficulty, maxPrice } = await searchParams;
+  const { difficulty, maxPrice, destination, duration } = await searchParams;
+  const durationRange = duration ? DURATION_BUCKETS[duration] : undefined;
 
-  const itineraries = await prisma.itinerary.findMany({
-    where: {
-      status: "PUBLISHED",
-      ...(difficulty ? { difficulty: difficulty as TripDifficulty } : {}),
-      ...(maxPrice ? { pricePerPerson: { lte: Number(maxPrice) } } : {}),
-    },
-    orderBy: { pricePerPerson: "asc" },
-    include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: true } } },
-  });
+  const [itineraries, destinations] = await Promise.all([
+    prisma.itinerary.findMany({
+      where: {
+        status: "PUBLISHED",
+        ...(difficulty ? { difficulty: difficulty as TripDifficulty } : {}),
+        ...(maxPrice ? { pricePerPerson: { lte: Number(maxPrice) } } : {}),
+        ...(destination ? { days: { some: { destination: { slug: destination } } } } : {}),
+        ...(durationRange ? { durationDays: durationRange } : {}),
+      },
+      orderBy: { pricePerPerson: "asc" },
+      include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: true } } },
+    }),
+    prisma.destination.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } }),
+  ]);
 
   return (
     <div>
@@ -55,6 +73,25 @@ export default async function PackagesPage({
 
       <form method="get" className="flex flex-col gap-6 lg:flex-row">
         <FilterSidebar>
+          <FilterGroup title="Destination">
+            <select name="destination" defaultValue={destination ?? ""} className="input">
+              <option value="">All destinations</option>
+              {destinations.map((d) => (
+                <option key={d.id} value={d.slug}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </FilterGroup>
+          <FilterGroup title="Duration">
+            <select name="duration" defaultValue={duration ?? ""} className="input">
+              <option value="">Any duration</option>
+              <option value="1-3">1-3 days</option>
+              <option value="4-6">4-6 days</option>
+              <option value="7-10">7-10 days</option>
+              <option value="11+">11+ days</option>
+            </select>
+          </FilterGroup>
           <FilterGroup title="Difficulty">
             <select name="difficulty" defaultValue={difficulty ?? ""} className="input">
               <option value="">Any difficulty</option>
