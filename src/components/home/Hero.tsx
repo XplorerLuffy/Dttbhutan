@@ -40,6 +40,7 @@ export default function Hero({ destinations }: { destinations: Destination[] }) 
     // property, not the attribute — so force it directly, then kick off
     // playback ourselves rather than trusting the `autoPlay` attribute.
     video.muted = true;
+    video.loop = true;
     video.play().catch(() => {
       // Autoplay can still be refused (e.g. data-saver mode) — the
       // gradient background underneath is a fine fallback either way.
