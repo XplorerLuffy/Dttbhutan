@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { DzongkhagRegion, VehicleType } from "@prisma/client";
 import Money from "@/components/Money";
+import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
 
 type Destination = { id: string; name: string; region: DzongkhagRegion };
 type Guide = {
@@ -23,12 +24,6 @@ type Vehicle = {
   capacity: number;
   ratePerDay: number;
   operatorName: string;
-};
-
-const REGION_LABEL: Record<DzongkhagRegion, string> = {
-  WEST: "Western Bhutan",
-  CENTRAL: "Central Bhutan",
-  EAST: "Eastern Bhutan",
 };
 
 function nightsOrDays(start: string, end: string) {
@@ -199,7 +194,7 @@ export default function CustomTourRequestForm({
       <div className="space-y-6">
         <div>
           <h2 className="mb-3 text-sm font-semibold">Which destinations interest you?</h2>
-          {(["WEST", "CENTRAL", "EAST"] as const).map((region) => {
+          {REGION_ORDER.map((region) => {
             const items = byRegion.get(region) ?? [];
             if (items.length === 0) return null;
             return (

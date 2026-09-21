@@ -70,6 +70,8 @@ enum DzongkhagRegion {
   WEST
   CENTRAL
   EAST
+  NORTH
+  SOUTH
 }
 
 model Destination {

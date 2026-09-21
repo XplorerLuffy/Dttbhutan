@@ -1,11 +1,7 @@
 import Image from "next/image";
+import type { DzongkhagRegion } from "@prisma/client";
 import MotionCard from "@/components/MotionCard";
-
-const REGION_LABEL: Record<string, string> = {
-  WEST: "Western Bhutan",
-  CENTRAL: "Central Bhutan",
-  EAST: "Eastern Bhutan",
-};
+import { REGION_LABEL } from "@/lib/regions";
 
 export default function DestinationCard({
   href,
@@ -33,7 +29,7 @@ export default function DestinationCard({
           </div>
         )}
         <span className="absolute left-2 top-2 rounded-full bg-gold-400 px-2.5 py-1 text-xs font-semibold text-brand-950">
-          {REGION_LABEL[region] ?? region}
+          {REGION_LABEL[region as DzongkhagRegion] ?? region}
         </span>
       </div>
       <div className="p-4">

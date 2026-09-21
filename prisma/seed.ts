@@ -56,7 +56,7 @@ async function main() {
   for (const d of DZONGKHAGS) {
     destinationsByName[d.name] = await prisma.destination.upsert({
       where: { name: d.name },
-      update: {},
+      update: { region: d.region, description: d.description, highlights: d.highlights },
       create: {
         name: d.name,
         slug: d.slug,

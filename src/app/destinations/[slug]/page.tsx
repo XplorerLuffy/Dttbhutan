@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import Money from "@/components/Money";
+import { REGION_LABEL } from "@/lib/regions";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -58,11 +59,7 @@ export default async function DestinationDetailPage({
   return (
     <div>
       <p className="text-sm font-medium uppercase tracking-wide text-gold-700">
-        {destination.region === "WEST"
-          ? "Western Bhutan"
-          : destination.region === "CENTRAL"
-            ? "Central Bhutan"
-            : "Eastern Bhutan"}
+        {REGION_LABEL[destination.region]}
       </p>
       <h1 className="mt-1 text-3xl font-bold">{destination.name}</h1>
       {destination.description && <p className="mt-3 max-w-2xl text-stone-700">{destination.description}</p>}
