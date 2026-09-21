@@ -321,22 +321,30 @@ enum TripDifficulty {
   CHALLENGING
 }
 
+enum ItineraryCategory {
+  TREKKING
+  CULTURAL
+  WILDLIFE
+  HONEYMOON
+}
+
 model Itinerary {
-  id             String          @id @default(cuid())
+  id             String            @id @default(cuid())
   title          String
-  slug           String          @unique
+  slug           String            @unique
   summary        String
   description    String?
   durationDays   Int
-  pricePerPerson Decimal         @db.Decimal(10, 2)
+  pricePerPerson Decimal           @db.Decimal(10, 2)
   maxGroupSize   Int?
-  difficulty     TripDifficulty  @default(EASY)
-  status         ItineraryStatus @default(DRAFT)
+  difficulty     TripDifficulty    @default(EASY)
+  category       ItineraryCategory @default(CULTURAL)
+  status         ItineraryStatus   @default(DRAFT)
   coverPhotoUrl  String?
   includes       String[] // e.g. "Licensed guide", "All ground transport", "3-star hotels"
   excludes       String[] // e.g. "International flights", "Visa fee", "Personal expenses"
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   days     ItineraryDay[]
   bookings ItineraryBooking[]
@@ -465,6 +473,7 @@ enum ReviewTargetType {
   GUIDE
   HOTEL
   VEHICLE
+  ITINERARY
 }
 
 model Review {
@@ -474,7 +483,7 @@ model Review {
   travelerId String
   traveler   User             @relation(fields: [travelerId], references: [id], onDelete: Cascade)
   targetType ReviewTargetType
-  targetId   String // GuideProfile.id | Hotel.id | Vehicle.id
+  targetId   String // GuideProfile.id | Hotel.id | Vehicle.id | Itinerary.id
   rating     Int // 1-5
   comment    String?
   createdAt  DateTime         @default(now())

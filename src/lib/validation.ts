@@ -172,6 +172,7 @@ export const itineraryAdminSchema = z.object({
   pricePerPerson: z.coerce.number().positive(),
   maxGroupSize: z.coerce.number().int().positive().optional(),
   difficulty: z.enum(["EASY", "MODERATE", "CHALLENGING"]),
+  category: z.enum(["TREKKING", "CULTURAL", "WILDLIFE", "HONEYMOON"]),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
   coverPhotoUrl: z.string().optional(),
   includes: z.array(z.string().min(1)).default([]),

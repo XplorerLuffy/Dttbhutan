@@ -4,9 +4,12 @@ import Hero from "@/components/home/Hero";
 import ScrollReveal from "@/components/ScrollReveal";
 import MotionCard from "@/components/MotionCard";
 import PropertyCard from "@/components/listing/PropertyCard";
+import PackageCard from "@/components/listing/PackageCard";
+import DestinationCard from "@/components/home/DestinationCard";
+import ArticleCard from "@/components/ArticleCard";
 import TestimonialCarousel, { type Testimonial } from "@/components/home/TestimonialCarousel";
-import Image from "next/image";
 import Money from "@/components/Money";
+import type { Itinerary, ItineraryDay, Destination } from "@prisma/client";
 
 const categories = [
   {
@@ -63,12 +66,16 @@ const whyChoose = [
 ];
 
 export default async function HomePage() {
-  const [destinations, trendingPackages, popularHotels, articles] = await Promise.all([
-    prisma.destination.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } }),
+  const [destinations, publishedItineraries, popularHotels, articles] = await Promise.all([
+    prisma.destination.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, slug: true, region: true, description: true, photoUrl: true },
+    }),
+    // Fetched once, in full — only a handful of packages exist — and reused
+    // below both to count packages per destination and to rate/sort them,
+    // rather than running a separate query per section.
     prisma.itinerary.findMany({
       where: { status: "PUBLISHED" },
-      orderBy: { pricePerPerson: "asc" },
-      take: 6,
       include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: true } } },
     }),
     prisma.hotel.findMany({
@@ -83,6 +90,35 @@ export default async function HomePage() {
       take: 3,
     }),
   ]);
+
+  const packageIds = publishedItineraries.map((p) => p.id);
+  const packageRatings = await prisma.review.groupBy({
+    by: ["targetId"],
+    where: { targetType: "ITINERARY", targetId: { in: packageIds } },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+  const packageRatingById = new Map(packageRatings.map((r) => [r.targetId, r]));
+
+  const sortedPackages = [...publishedItineraries].sort((a, b) => {
+    const aRating = packageRatingById.get(a.id);
+    const bRating = packageRatingById.get(b.id);
+    const aScore = (aRating?._avg.rating ?? 0) * 1000 + (aRating?._count.rating ?? 0);
+    const bScore = (bRating?._avg.rating ?? 0) * 1000 + (bRating?._count.rating ?? 0);
+    return bScore - aScore || Number(a.pricePerPerson) - Number(b.pricePerPerson);
+  });
+  const trendingTreks = sortedPackages.filter((p) => p.category === "TREKKING").slice(0, 6);
+  const featured = sortedPackages.slice(0, 6);
+
+  const packageCountByDestination = new Map<string, number>();
+  for (const p of publishedItineraries) {
+    const destinationIds = uniqueOrdered(
+      p.days.map((d) => d.destinationId).filter((id): id is string => Boolean(id))
+    );
+    for (const id of destinationIds) {
+      packageCountByDestination.set(id, (packageCountByDestination.get(id) ?? 0) + 1);
+    }
+  }
   const featuredDestinations = destinations.slice(0, 8);
 
   const hotelRatings = await prisma.review.groupBy({
@@ -149,12 +185,29 @@ export default async function HomePage() {
         </section>
       )}
 
-      {trendingPackages.length > 0 && (
+      {trendingTreks.length > 0 && (
         <section className="mt-20">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl font-semibold text-stone-900">Trending packages</h2>
+            <h2 className="font-display text-2xl font-semibold text-stone-900">Trending Trekking Packages</h2>
             <Link href="/packages" className="text-sm text-brand-700 hover:underline">
-              View all →
+              View All Treks →
+            </Link>
+          </div>
+          <p className="mt-1 text-sm text-stone-600">Multi-day treks, guide and gear included.</p>
+          <ScrollReveal className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {trendingTreks.map((p) => (
+              <PackageItemCard key={p.id} itinerary={p} rating={packageRatingById.get(p.id)} />
+            ))}
+          </ScrollReveal>
+        </section>
+      )}
+
+      {featured.length > 0 && (
+        <section className="mt-20">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-2xl font-semibold text-stone-900">Featured Tour Packages</h2>
+            <Link href="/packages" className="text-sm text-brand-700 hover:underline">
+              View All Packages →
             </Link>
           </div>
           <p className="mt-1 text-sm text-stone-600">
@@ -164,48 +217,35 @@ export default async function HomePage() {
             </Link>{" "}
             built around what you want to see.
           </p>
-          <ScrollReveal className="mt-6 flex gap-4 overflow-x-auto pb-2">
-            {trendingPackages.map((p) => {
-              const locations = uniqueOrdered(
-                p.days.map((d) => d.destination?.name).filter((n): n is string => Boolean(n))
-              );
-              return (
-                <div key={p.id} className="w-64 shrink-0">
-                  <PropertyCard
-                    href={`/packages/${p.slug}`}
-                    imageUrl={p.coverPhotoUrl}
-                    imageFallback={p.title[0]}
-                    title={p.title}
-                    subtitle={locations.join(" • ") || undefined}
-                    ratingAverage={null}
-                    ratingCount={0}
-                    priceLabel={<Money btn={Number(p.pricePerPerson)} />}
-                    priceSubLabel={`per person · ${p.durationDays}d`}
-                  />
-                </div>
-              );
-            })}
+          <ScrollReveal className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((p) => (
+              <PackageItemCard key={p.id} itinerary={p} rating={packageRatingById.get(p.id)} />
+            ))}
           </ScrollReveal>
         </section>
       )}
 
       <section className="mt-20">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl font-semibold text-stone-900">
-            Bhutan&apos;s 20 dzongkhags
-          </h2>
+          <h2 className="font-display text-2xl font-semibold text-stone-900">Popular Destinations</h2>
           <Link href="/destinations" className="text-sm text-brand-700 hover:underline">
-            View all →
+            View All Destinations →
           </Link>
         </div>
         <p className="mt-1 text-sm text-stone-600">
           From the well-trodden west to the far east, visited by only a handful of travelers each year.
         </p>
-        <ScrollReveal className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <ScrollReveal className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {featuredDestinations.map((d) => (
-            <MotionCard key={d.id} href={`/destinations/${d.slug}`} className="card block text-center">
-              <span className="font-medium">{d.name}</span>
-            </MotionCard>
+            <DestinationCard
+              key={d.id}
+              href={`/destinations/${d.slug}`}
+              photoUrl={d.photoUrl}
+              region={d.region}
+              name={d.name}
+              description={d.description}
+              packageCount={packageCountByDestination.get(d.id) ?? 0}
+            />
           ))}
         </ScrollReveal>
       </section>
@@ -215,32 +255,19 @@ export default async function HomePage() {
           <div className="flex items-center justify-between">
             <h2 className="font-display text-2xl font-semibold text-stone-900">From the Travel Guide</h2>
             <Link href="/travel-guide" className="text-sm text-brand-700 hover:underline">
-              View all guides →
+              View All Guides →
             </Link>
           </div>
           <ScrollReveal className="mt-6 grid gap-4 sm:grid-cols-3">
             {articles.map((a) => (
-              <MotionCard key={a.id} href={`/travel-guide/${a.slug}`} className="card block overflow-hidden">
-                {a.coverPhotoUrl ? (
-                  <div className="-mx-4 -mt-4 mb-3 h-36 w-[calc(100%+2rem)] overflow-hidden">
-                    <Image
-                      src={a.coverPhotoUrl}
-                      alt={a.title}
-                      width={400}
-                      height={200}
-                      unoptimized
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="-mx-4 -mt-4 mb-3 flex h-36 w-[calc(100%+2rem)] items-center justify-center bg-gradient-to-br from-brand-600 to-brand-900">
-                    <span className="font-display text-3xl text-white/30">{a.title[0]}</span>
-                  </div>
-                )}
-                <span className="badge bg-stone-100 text-stone-600">{a.category.toUpperCase()}</span>
-                <h3 className="mt-2 font-display text-base font-semibold text-stone-900">{a.title}</h3>
-                <p className="mt-2 text-xs text-stone-400">{a.readMinutes} min read</p>
-              </MotionCard>
+              <ArticleCard
+                key={a.id}
+                href={`/travel-guide/${a.slug}`}
+                coverPhotoUrl={a.coverPhotoUrl}
+                category={a.category}
+                title={a.title}
+                readMinutes={a.readMinutes}
+              />
             ))}
           </ScrollReveal>
         </section>
@@ -279,6 +306,35 @@ export default async function HomePage() {
 
 function uniqueOrdered(values: string[]) {
   return Array.from(new Set(values));
+}
+
+type PackageWithDays = Itinerary & { days: (ItineraryDay & { destination: Destination | null })[] };
+
+function PackageItemCard({
+  itinerary,
+  rating,
+}: {
+  itinerary: PackageWithDays;
+  rating: { _avg: { rating: number | null }; _count: { rating: number } } | undefined;
+}) {
+  const locations = uniqueOrdered(
+    itinerary.days.map((d) => d.destination?.name).filter((n): n is string => Boolean(n))
+  );
+  return (
+    <PackageCard
+      href={`/packages/${itinerary.slug}`}
+      enquireHref={`/contact?subject=${encodeURIComponent(`Enquiry: ${itinerary.title}`)}`}
+      imageUrl={itinerary.coverPhotoUrl}
+      imageFallback={itinerary.title[0]}
+      title={itinerary.title}
+      subtitle={locations.join(" • ") || undefined}
+      durationDays={itinerary.durationDays}
+      ratingAverage={rating?._avg.rating ?? null}
+      ratingCount={rating?._count.rating ?? 0}
+      priceLabel={<Money btn={Number(itinerary.pricePerPerson)} />}
+      priceSubLabel="per person"
+    />
+  );
 }
 
 async function getTestimonials(): Promise<Testimonial[]> {

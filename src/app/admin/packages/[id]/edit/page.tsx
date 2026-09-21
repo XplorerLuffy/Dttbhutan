@@ -38,6 +38,7 @@ export default async function EditPackagePage({
           pricePerPerson: Number(itinerary.pricePerPerson),
           maxGroupSize: itinerary.maxGroupSize ?? "",
           difficulty: itinerary.difficulty,
+          category: itinerary.category,
           status: itinerary.status,
           includes: itinerary.includes.join(", "),
           excludes: itinerary.excludes.join(", "),

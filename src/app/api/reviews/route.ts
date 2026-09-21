@@ -9,6 +9,7 @@ const REVIEW_TARGET_TYPE: Record<string, ReviewTargetType> = {
   GUIDE: "GUIDE",
   HOTEL: "HOTEL",
   VEHICLE: "VEHICLE",
+  ITINERARY: "ITINERARY",
 };
 
 export async function POST(req: NextRequest) {
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
 
   const booking = await prisma.booking.findUnique({
     where: { id: parsed.data.bookingId },
+    include: { itineraryBooking: true },
   });
   if (!booking || booking.travelerId !== user.id) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
@@ -37,7 +39,8 @@ export async function POST(req: NextRequest) {
   }
 
   const targetType = REVIEW_TARGET_TYPE[booking.type];
-  const targetId = booking.guideId ?? booking.roomTypeId ?? booking.vehicleId;
+  const targetId =
+    booking.guideId ?? booking.roomTypeId ?? booking.vehicleId ?? booking.itineraryBooking?.itineraryId;
   if (!targetId) {
     return NextResponse.json({ error: "Booking has no reviewable target" }, { status: 400 });
   }

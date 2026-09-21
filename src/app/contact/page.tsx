@@ -10,7 +10,12 @@ export const metadata: Metadata = {
     "Get in touch with Droelma Tours & Travels about a trip to Bhutan — no account needed. We usually reply within one working day.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ subject?: string }>;
+}) {
+  const { subject } = await searchParams;
   const contactDetails = [
     { label: "Phone", value: COMPANY.phone },
     { label: "WhatsApp", value: COMPANY.whatsapp },
@@ -26,7 +31,7 @@ export default function ContactPage() {
       </p>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <ContactForm />
+        <ContactForm defaultSubject={subject} />
 
         <aside className="space-y-4">
           <div className="card">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function ContactForm() {
+export default function ContactForm({ defaultSubject }: { defaultSubject?: string }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -98,6 +98,7 @@ export default function ContactForm() {
           <input
             id="subject"
             name="subject"
+            defaultValue={defaultSubject}
             className="w-full rounded-md border border-stone-300 px-3 py-2"
           />
         </div>

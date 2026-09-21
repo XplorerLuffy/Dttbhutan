@@ -178,7 +178,7 @@ export default async function BookingDetailPage({
           </div>
         )}
 
-        {booking.type !== "FLIGHT" && booking.type !== "ITINERARY" && booking.status === "COMPLETED" && isTraveler && (
+        {booking.type !== "FLIGHT" && booking.status === "COMPLETED" && isTraveler && (
           booking.review ? (
             <div className="card">
               <h3 className="font-semibold">Your review</h3>

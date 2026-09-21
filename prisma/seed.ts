@@ -4,6 +4,15 @@ import { DZONGKHAGS } from "./data/dzongkhags";
 
 const prisma = new PrismaClient();
 
+// Deliberately duplicated (rather than imported from src/lib/reference.ts,
+// which is marked "server-only") — seed data has a small, fixed set of
+// bookings, so a plain counter is enough; no collision-checking needed.
+let seedReferenceCounter = 0;
+function seedBookingReference(): string {
+  seedReferenceCounter += 1;
+  return `DTT-SEED${String(seedReferenceCounter).padStart(2, "0")}`;
+}
+
 // Deliberately duplicated (rather than imported from src/lib/gps/distance.ts,
 // which is marked "server-only") so this seed script has no dependency on
 // the Next.js app's module graph.
@@ -224,6 +233,7 @@ async function main() {
   // --- Booking 1: completed guide tour, with a review and messages ------
   const guideBooking = await prisma.booking.create({
     data: {
+      reference: seedBookingReference(),
       travelerId: traveler.id,
       type: "GUIDE",
       guideId: guide1.id,
@@ -253,6 +263,7 @@ async function main() {
   // --- Booking 2: upcoming hotel stay ------------------------------------
   await prisma.booking.create({
     data: {
+      reference: seedBookingReference(),
       travelerId: traveler.id,
       type: "HOTEL",
       roomTypeId: hotel1WithRooms.roomTypes[0].id,
@@ -271,6 +282,7 @@ async function main() {
   const tripStart = daysFromNow(-10);
   const disputeBooking = await prisma.booking.create({
     data: {
+      reference: seedBookingReference(),
       travelerId: traveler.id,
       type: "VEHICLE",
       vehicleId: vehicle1.id,
@@ -353,6 +365,7 @@ async function main() {
   // --- Booking 4: active vehicle trip, for the live-tracking demo -------
   const activeBooking = await prisma.booking.create({
     data: {
+      reference: seedBookingReference(),
       travelerId: traveler.id,
       type: "VEHICLE",
       vehicleId: vehicle2.id,
@@ -398,6 +411,7 @@ async function main() {
   // --- Booking 5: confirmed flight (mock aggregator) --------------------
   const flightBooking = await prisma.booking.create({
     data: {
+      reference: seedBookingReference(),
       travelerId: traveler.id,
       type: "FLIGHT",
       status: "CONFIRMED",
@@ -425,10 +439,11 @@ async function main() {
   // --- Itineraries: agency-authored package tours ------------------------
   const westernHighlights = await prisma.itinerary.upsert({
     where: { slug: "cultural-highlights-western-bhutan" },
-    update: {},
+    update: { category: "CULTURAL" },
     create: {
       title: "Cultural Highlights of Western Bhutan",
       slug: "cultural-highlights-western-bhutan",
+      category: "CULTURAL",
       summary:
         "A 5-day introduction to Bhutan's most iconic sights — Tiger's Nest, the capital, and the former winter capital at Punakha.",
       description:
@@ -500,10 +515,11 @@ async function main() {
 
   await prisma.itinerary.upsert({
     where: { slug: "bumthang-spiritual-trail" },
-    update: {},
+    update: { category: "CULTURAL" },
     create: {
       title: "Bumthang Spiritual Trail",
       slug: "bumthang-spiritual-trail",
+      category: "CULTURAL",
       summary: "A 4-day journey into Bhutan's spiritual heartland, via the royal seat at Trongsa.",
       description:
         "Central Bhutan sees far fewer visitors than the west — this package visits some of the country's oldest temples and the ancestral home of the royal family.",
@@ -558,6 +574,7 @@ async function main() {
     data: {
       title: "Eastern Bhutan Discovery",
       slug: "eastern-bhutan-discovery",
+      category: "CULTURAL",
       summary: "An off-the-beaten-path route through Bhutan's least-visited dzongkhags.",
       description:
         "Fewer than a handful of tour groups reach eastern Bhutan in a given year. This route trades the well-worn western circuit for remote monasteries, traditional weaving villages, and some of the country's most dramatic mountain roads.",
@@ -634,10 +651,11 @@ async function main() {
 
   const culturalCircuit = await prisma.itinerary.upsert({
     where: { slug: "grand-bhutan-cultural-circuit" },
-    update: {},
+    update: { category: "CULTURAL" },
     create: {
       title: "Grand Bhutan Cultural Circuit",
       slug: "grand-bhutan-cultural-circuit",
+      category: "CULTURAL",
       summary: "An 8-day loop through Paro, Thimphu, Punakha, and the glacial Phobjikha Valley — the fullest introduction to western Bhutan.",
       description:
         "For travelers who want more than a quick taste of Bhutan, this circuit adds the Phobjikha Valley and a slower pace in each town, with time built in for markets, museums, and unhurried walks alongside the major sights.",
@@ -733,10 +751,11 @@ async function main() {
 
   await prisma.itinerary.upsert({
     where: { slug: "jomolhari-base-camp-trek" },
-    update: {},
+    update: { category: "TREKKING" },
     create: {
       title: "Jomolhari Base Camp Trek",
       slug: "jomolhari-base-camp-trek",
+      category: "TREKKING",
       summary: "A 9-day high-altitude trek to the base of sacred Mount Jomolhari, through yak-herding country and alpine lakes.",
       description:
         "One of Bhutan's classic treks, following the Paro Chhu valley up to the base of Mount Jomolhari (7,326m) before a rest day for acclimatization and optional side trip to the Tshophu lakes.",
@@ -834,10 +853,11 @@ async function main() {
 
   await prisma.itinerary.upsert({
     where: { slug: "bhutan-honeymoon-escape" },
-    update: {},
+    update: { category: "HONEYMOON" },
     create: {
       title: "Bhutan Honeymoon Escape",
       slug: "bhutan-honeymoon-escape",
+      category: "HONEYMOON",
       summary: "A 6-day boutique-hotel itinerary through Paro, Thimphu, and Punakha, paced for couples rather than checklists.",
       description:
         "A gentler version of the classic western circuit — boutique accommodation, private vehicle throughout, and unhurried time built in at each stop, with a few romantic touches arranged along the way.",
@@ -912,10 +932,11 @@ async function main() {
 
   await prisma.itinerary.upsert({
     where: { slug: "central-bhutan-wildlife-heritage-trail" },
-    update: {},
+    update: { category: "WILDLIFE" },
     create: {
       title: "Central Bhutan Wildlife & Heritage Trail",
       slug: "central-bhutan-wildlife-heritage-trail",
+      category: "WILDLIFE",
       summary: "A 6-day route through Trongsa, Bumthang, and Zhemgang — royal history, ancient temples, and Bhutan's richest wildlife habitat.",
       description:
         "Central Bhutan sees a fraction of the visitors the west does. This route combines the royal family's ancestral seat at Trongsa, the temple-dense valleys of Bumthang, and the subtropical forests of Zhemgang near Royal Manas National Park.",
@@ -987,6 +1008,7 @@ async function main() {
   // guide, hotel rooms, and vehicle before confirming.
   const itineraryBookingRecord = await prisma.booking.create({
     data: {
+      reference: seedBookingReference(),
       travelerId: traveler.id,
       type: "ITINERARY",
       status: "PENDING",
@@ -1001,6 +1023,38 @@ async function main() {
       itineraryId: westernHighlights.id,
       travelers: 2,
       notes: "Celebrating our anniversary — a quieter hotel room if possible.",
+    },
+  });
+
+  // --- A second, completed package booking with a review — demonstrates
+  // that packages carry real ratings just like guides/hotels/vehicles do,
+  // rather than the homepage always showing "New listing" for them.
+  const completedPackageBooking = await prisma.booking.create({
+    data: {
+      reference: seedBookingReference(),
+      travelerId: traveler.id,
+      type: "ITINERARY",
+      status: "COMPLETED",
+      startDate: daysFromNow(-30),
+      endDate: daysFromNow(-30 + westernHighlights.durationDays),
+      totalPrice: Number(westernHighlights.pricePerPerson) * 2,
+    },
+  });
+  await prisma.itineraryBooking.create({
+    data: {
+      bookingId: completedPackageBooking.id,
+      itineraryId: westernHighlights.id,
+      travelers: 2,
+    },
+  });
+  await prisma.review.create({
+    data: {
+      bookingId: completedPackageBooking.id,
+      travelerId: traveler.id,
+      targetType: "ITINERARY",
+      targetId: westernHighlights.id,
+      rating: 5,
+      comment: "Tiger's Nest was the highlight — our guide paced the whole trip perfectly.",
     },
   });
 

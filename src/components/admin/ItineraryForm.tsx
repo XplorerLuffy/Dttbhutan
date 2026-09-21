@@ -22,6 +22,7 @@ type InitialValues = {
   pricePerPerson: number;
   maxGroupSize: number | "";
   difficulty: "EASY" | "MODERATE" | "CHALLENGING";
+  category: "TREKKING" | "CULTURAL" | "WILDLIFE" | "HONEYMOON";
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   includes: string; // comma-separated
   excludes: string; // comma-separated
@@ -62,6 +63,7 @@ export default function ItineraryForm({
   const [pricePerPerson, setPricePerPerson] = useState(initial?.pricePerPerson ?? 0);
   const [maxGroupSize, setMaxGroupSize] = useState<number | "">(initial?.maxGroupSize ?? "");
   const [difficulty, setDifficulty] = useState(initial?.difficulty ?? "EASY");
+  const [category, setCategory] = useState(initial?.category ?? "CULTURAL");
   const [status, setStatus] = useState(initial?.status ?? "DRAFT");
   const [includes, setIncludes] = useState(initial?.includes ?? "");
   const [excludes, setExcludes] = useState(initial?.excludes ?? "");
@@ -95,6 +97,7 @@ export default function ItineraryForm({
       pricePerPerson,
       maxGroupSize: maxGroupSize === "" ? undefined : maxGroupSize,
       difficulty,
+      category,
       status,
       includes: splitList(includes),
       excludes: splitList(excludes),
@@ -185,6 +188,15 @@ export default function ItineraryForm({
             </select>
           </Field>
         </div>
+
+        <Field label="Category">
+          <select value={category} onChange={(e) => setCategory(e.target.value as typeof category)} className="input">
+            <option value="TREKKING">Trekking</option>
+            <option value="CULTURAL">Cultural</option>
+            <option value="WILDLIFE">Wildlife</option>
+            <option value="HONEYMOON">Honeymoon</option>
+          </select>
+        </Field>
 
         <Field label="Status">
           <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="input">
