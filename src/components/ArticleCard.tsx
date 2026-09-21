@@ -44,10 +44,13 @@ export default function ArticleCard({
       </span>
       <h3 className="mt-2 font-display text-base font-semibold text-stone-900">{title}</h3>
       {excerpt && <p className="mt-1 line-clamp-2 text-sm text-stone-600">{excerpt}</p>}
-      <p className="mt-2 flex items-center gap-1 text-xs text-stone-400">
-        <IconClock className="h-3.5 w-3.5" />
-        {readMinutes} min read
-      </p>
+      <div className="mt-2 flex items-center justify-between">
+        <p className="flex items-center gap-1 text-xs text-stone-400">
+          <IconClock className="h-3.5 w-3.5" />
+          {readMinutes} min read
+        </p>
+        <span className="text-xs font-semibold text-brand-700">Read Guide →</span>
+      </div>
     </MotionCard>
   );
 }

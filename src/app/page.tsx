@@ -3,70 +3,106 @@ import { prisma } from "@/lib/prisma";
 import Hero from "@/components/home/Hero";
 import ScrollReveal from "@/components/ScrollReveal";
 import MotionCard from "@/components/MotionCard";
-import PropertyCard from "@/components/listing/PropertyCard";
 import PackageCard from "@/components/listing/PackageCard";
 import DestinationCard from "@/components/home/DestinationCard";
+import GuideCard from "@/components/home/GuideCard";
 import ArticleCard from "@/components/ArticleCard";
+import AiPlannerTeaser from "@/components/home/AiPlannerTeaser";
 import TestimonialCarousel, { type Testimonial } from "@/components/home/TestimonialCarousel";
 import Money from "@/components/Money";
 import type { Itinerary, ItineraryDay, Destination } from "@prisma/client";
+import type { Metadata } from "next";
 
-const categories = [
+export const metadata: Metadata = {
+  title: "Bhutan Tours, Local Guides & Custom Trips",
+  description:
+    "Discover Bhutan, your way — explore ready-made tour packages, meet verified local guides, or build a custom trip with Droelma Tours & Travels and book directly online.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Droelma Tours & Travels | Bhutan Tours, Local Guides & Custom Trips",
+    description:
+      "Discover Bhutan, your way — explore ready-made tour packages, meet verified local guides, or build a custom trip and book directly online.",
+    url: "/",
+  },
+};
+
+const quickActions = [
   {
-    href: "/guides",
-    title: "Tour Guides",
-    description: "TCB-licensed guides for trekking, cultural, and adventure tours.",
+    href: "/packages",
+    title: "Tours & Packages",
+    description: "Explore ready-made Bhutan journeys, priced and planned end to end.",
     icon: IconCompass,
   },
   {
-    href: "/hotels",
-    title: "Hotels & Stays",
-    description: "Hotels and homestays across Bhutan, with instant availability.",
-    icon: IconBed,
+    href: "/guides",
+    title: "Tour Guides",
+    description: "Meet verified local Bhutan guides, by language, specialty, and region.",
+    icon: IconUsers,
   },
   {
-    href: "/vehicles",
-    title: "Transport",
-    description: "Vehicles with drivers, GPS-tracked so you know actual trip distance.",
-    icon: IconCar,
-  },
-  {
-    href: "/flights",
-    title: "Flights",
-    description: "Search and book flights, with Drukair and Bhutan Airlines routes first.",
-    icon: IconPlane,
+    href: "/custom-tour",
+    title: "Custom Trip",
+    description: "Build a Bhutan journey around your interests, dates, and pace.",
+    icon: IconSliders,
   },
 ];
 
 const whyChoose = [
   {
-    title: "Licensed & vetted vendors",
+    title: "Local Bhutan Expertise",
     description:
-      "Guides carry a verified TCB license, and every hotel and transport operator is approved by our team before they're bookable.",
-    icon: IconShieldCheck,
-  },
-  {
-    title: "GPS-verified mileage",
-    description:
-      "Every vehicle trip is checked against its GPS trail, not the driver's word — the exact planned-vs-actual distance is on record.",
+      "Every itinerary and guide on Droelma is grounded in local knowledge of Bhutan's dzongkhags, festivals, and trekking routes.",
     icon: IconMapPin,
   },
   {
-    title: "Live trip tracking",
+    title: "Verified Local Guides",
     description:
-      "Follow your vehicle's last known location during your trip, and share the link with family — no account needed.",
-    icon: IconUsers,
+      "Every guide listed carries a TCB licence number and is manually approved by our team before they can take bookings.",
+    icon: IconShieldCheck,
   },
   {
-    title: "Ready-made or fully custom",
+    title: "Flexible Trip Planning",
     description:
-      "Book one of our priced itineraries as-is, or tell us what you want to see and we'll build a bespoke trip and quote it.",
+      "Book a ready-made package as-is, or tell us what you want to see and we'll shape a custom itinerary around it.",
     icon: IconSliders,
+  },
+  {
+    title: "Direct Online Booking",
+    description:
+      "Reserve packages, guides, and transport directly through Droelma — no third-party agent in between.",
+    icon: IconCheckCircle,
+  },
+];
+
+const howItWorks = [
+  {
+    step: "1",
+    title: "Discover",
+    description: "Explore Bhutan's destinations, tours, and local guides.",
+    icon: IconCompass,
+  },
+  {
+    step: "2",
+    title: "Plan",
+    description: "Choose a ready-made package or build your own trip.",
+    icon: IconSliders,
+  },
+  {
+    step: "3",
+    title: "Book",
+    description: "Reserve your trip directly through Droelma.",
+    icon: IconCalendarCheck,
+  },
+  {
+    step: "4",
+    title: "Experience",
+    description: "Enjoy Bhutan with local expertise and support.",
+    icon: IconMountainFlag,
   },
 ];
 
 export default async function HomePage() {
-  const [destinations, publishedItineraries, popularHotels, articles] = await Promise.all([
+  const [destinations, publishedItineraries, approvedGuides, articles] = await Promise.all([
     prisma.destination.findMany({
       orderBy: { name: "asc" },
       select: { id: true, name: true, slug: true, region: true, description: true, photoUrl: true },
@@ -78,11 +114,10 @@ export default async function HomePage() {
       where: { status: "PUBLISHED" },
       include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: true } } },
     }),
-    prisma.hotel.findMany({
+    prisma.guideProfile.findMany({
       where: { status: "APPROVED" },
-      take: 4,
-      orderBy: { createdAt: "desc" },
-      include: { destination: true, roomTypes: { orderBy: { pricePerNight: "asc" }, take: 1 } },
+      include: { user: true, destinations: { select: { name: true } } },
+      orderBy: { yearsExperience: "desc" },
     }),
     prisma.article.findMany({
       where: { status: "PUBLISHED" },
@@ -121,13 +156,22 @@ export default async function HomePage() {
   }
   const featuredDestinations = destinations.slice(0, 8);
 
-  const hotelRatings = await prisma.review.groupBy({
+  const guideRatings = await prisma.review.groupBy({
     by: ["targetId"],
-    where: { targetType: "HOTEL", targetId: { in: popularHotels.map((h) => h.id) } },
+    where: { targetType: "GUIDE", targetId: { in: approvedGuides.map((g) => g.id) } },
     _avg: { rating: true },
     _count: { rating: true },
   });
-  const ratingById = new Map(hotelRatings.map((r) => [r.targetId, r]));
+  const guideRatingById = new Map(guideRatings.map((r) => [r.targetId, r]));
+  const featuredGuides = [...approvedGuides]
+    .sort((a, b) => {
+      const aRating = guideRatingById.get(a.id);
+      const bRating = guideRatingById.get(b.id);
+      const aScore = (aRating?._avg.rating ?? 0) * 1000 + (aRating?._count.rating ?? 0);
+      const bScore = (bRating?._avg.rating ?? 0) * 1000 + (bRating?._count.rating ?? 0);
+      return bScore - aScore || b.yearsExperience - a.yearsExperience;
+    })
+    .slice(0, 4);
 
   const testimonials = await getTestimonials();
 
@@ -137,10 +181,10 @@ export default async function HomePage() {
 
       <section className="mt-14">
         <h2 className="text-center font-display text-2xl font-semibold text-stone-900">
-          Everything for your trip, in one place
+          Start Planning Your Bhutan Trip
         </h2>
-        <ScrollReveal className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {categories.map((c) => (
+        <ScrollReveal className="mt-8 grid gap-6 sm:grid-cols-3">
+          {quickActions.map((c) => (
             <MotionCard key={c.href} href={c.href} className="card block h-full">
               <c.icon className="h-8 w-8 text-brand-600" />
               <h3 className="mt-3 font-display text-lg font-semibold text-brand-800">{c.title}</h3>
@@ -149,41 +193,6 @@ export default async function HomePage() {
           ))}
         </ScrollReveal>
       </section>
-
-      {popularHotels.length > 0 && (
-        <section className="mt-20">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl font-semibold text-stone-900">Popular stays</h2>
-            <Link href="/hotels" className="text-sm text-brand-700 hover:underline">
-              View all →
-            </Link>
-          </div>
-          <p className="mt-1 text-sm text-stone-600">Hand-picked hotels and homestays travelers book most.</p>
-          <ScrollReveal className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {popularHotels.map((h) => {
-              const rating = ratingById.get(h.id);
-              return (
-                <PropertyCard
-                  key={h.id}
-                  href={`/hotels/${h.id}`}
-                  imageUrl={h.photoUrls[0]}
-                  imageFallback={h.name[0]}
-                  title={h.name}
-                  subtitle={h.destination.name}
-                  ratingAverage={rating?._avg.rating ?? null}
-                  ratingCount={rating?._count.rating ?? 0}
-                  priceLabel={
-                    h.roomTypes[0]
-                      ? <Money btn={Number(h.roomTypes[0].pricePerNight)} />
-                      : "Contact for price"
-                  }
-                  priceSubLabel={h.roomTypes[0] ? "per night" : undefined}
-                />
-              );
-            })}
-          </ScrollReveal>
-        </section>
-      )}
 
       {trendingTreks.length > 0 && (
         <section className="mt-20">
@@ -205,9 +214,9 @@ export default async function HomePage() {
       {featured.length > 0 && (
         <section className="mt-20">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl font-semibold text-stone-900">Featured Tour Packages</h2>
+            <h2 className="font-display text-2xl font-semibold text-stone-900">Featured Tours &amp; Packages</h2>
             <Link href="/packages" className="text-sm text-brand-700 hover:underline">
-              View All Packages →
+              View All Tours →
             </Link>
           </div>
           <p className="mt-1 text-sm text-stone-600">
@@ -226,10 +235,25 @@ export default async function HomePage() {
       )}
 
       <section className="mt-20">
+        <h2 className="text-center font-display text-2xl font-semibold text-stone-900">Why Droelma</h2>
+        <ScrollReveal className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {whyChoose.map((t) => (
+            <div key={t.title} className="card text-center">
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-pine-50">
+                <t.icon className="h-6 w-6 text-pine-700" />
+              </span>
+              <h3 className="mt-3 font-display text-base font-semibold text-stone-900">{t.title}</h3>
+              <p className="mt-2 text-sm text-stone-600">{t.description}</p>
+            </div>
+          ))}
+        </ScrollReveal>
+      </section>
+
+      <section className="mt-20">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl font-semibold text-stone-900">Popular Destinations</h2>
+          <h2 className="font-display text-2xl font-semibold text-stone-900">Explore Bhutan</h2>
           <Link href="/destinations" className="text-sm text-brand-700 hover:underline">
-            View All Destinations →
+            Explore All Destinations →
           </Link>
         </div>
         <p className="mt-1 text-sm text-stone-600">
@@ -250,12 +274,89 @@ export default async function HomePage() {
         </ScrollReveal>
       </section>
 
+      <section className="mt-20">
+        <div className="rounded-2xl bg-gradient-to-br from-brand-900 to-brand-950 px-6 py-12 text-center text-white sm:px-12">
+          <h2 className="font-display text-2xl font-semibold sm:text-3xl">
+            Your Bhutan. <em className="text-gold-300 italic">Your Journey.</em>
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-white/80 sm:text-base">
+            Tell us what you want to experience in Bhutan, and we&apos;ll help shape the journey around
+            you.
+          </p>
+          <a
+            href="/custom-tour"
+            className="mt-6 inline-block rounded-full bg-gold-400 px-7 py-3 font-display text-base font-semibold text-brand-950 shadow-lg transition-transform hover:scale-[1.03] hover:bg-gold-300"
+          >
+            Build My Trip →
+          </a>
+        </div>
+      </section>
+
+      {featuredGuides.length > 0 && (
+        <section className="mt-20">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-2xl font-semibold text-stone-900">Local Guides</h2>
+            <Link href="/guides" className="text-sm text-brand-700 hover:underline">
+              Meet Our Guides →
+            </Link>
+          </div>
+          <p className="mt-1 text-sm text-stone-600">
+            TCB-licensed guides, approved by our team before they can take bookings.
+          </p>
+          <ScrollReveal className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {featuredGuides.map((g) => {
+              const rating = guideRatingById.get(g.id);
+              return (
+                <GuideCard
+                  key={g.id}
+                  href={`/guides/${g.id}`}
+                  photoUrl={g.photoUrl}
+                  name={g.user.name}
+                  locations={g.destinations.map((d) => d.name)}
+                  languages={g.languages}
+                  yearsExperience={g.yearsExperience}
+                  ratingAverage={rating?._avg.rating ?? null}
+                  ratingCount={rating?._count.rating ?? 0}
+                />
+              );
+            })}
+          </ScrollReveal>
+        </section>
+      )}
+
+      <section className="mt-20">
+        <h2 className="text-center font-display text-2xl font-semibold text-stone-900">How Droelma Works</h2>
+        <ScrollReveal className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {howItWorks.map((s) => (
+            <div key={s.step} className="card text-center">
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 font-display text-lg font-semibold text-brand-700">
+                {s.step}
+              </span>
+              <s.icon className="mx-auto mt-3 h-6 w-6 text-brand-600" />
+              <h3 className="mt-2 font-display text-base font-semibold text-stone-900">{s.title}</h3>
+              <p className="mt-1 text-sm text-stone-600">{s.description}</p>
+            </div>
+          ))}
+        </ScrollReveal>
+      </section>
+
+      {testimonials.length > 0 && (
+        <section className="mt-20">
+          <h2 className="text-center font-display text-2xl font-semibold text-stone-900">
+            What Our Travelers Say
+          </h2>
+          <div className="mt-8">
+            <TestimonialCarousel testimonials={testimonials} />
+          </div>
+        </section>
+      )}
+
       {articles.length > 0 && (
         <section className="mt-20">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-2xl font-semibold text-stone-900">From the Travel Guide</h2>
             <Link href="/travel-guide" className="text-sm text-brand-700 hover:underline">
-              View All Guides →
+              Browse the Travel Guide →
             </Link>
           </div>
           <ScrollReveal className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -273,32 +374,25 @@ export default async function HomePage() {
         </section>
       )}
 
-      {testimonials.length > 0 && (
-        <section className="mt-20">
-          <h2 className="text-center font-display text-2xl font-semibold text-stone-900">
-            What our travelers say
-          </h2>
-          <div className="mt-8">
-            <TestimonialCarousel testimonials={testimonials} />
-          </div>
-        </section>
-      )}
+      <AiPlannerTeaser />
 
       <section className="mt-20">
-        <h2 className="text-center font-display text-2xl font-semibold text-stone-900">
-          Why choose Droelma
-        </h2>
-        <ScrollReveal className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {whyChoose.map((t) => (
-            <div key={t.title} className="card text-center">
-              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-pine-50">
-                <t.icon className="h-6 w-6 text-pine-700" />
-              </span>
-              <h3 className="mt-3 font-display text-base font-semibold text-stone-900">{t.title}</h3>
-              <p className="mt-2 text-sm text-stone-600">{t.description}</p>
-            </div>
-          ))}
-        </ScrollReveal>
+        <div className="rounded-2xl border border-stone-200 bg-white px-6 py-12 text-center sm:px-12">
+          <h2 className="font-display text-2xl font-semibold text-stone-900 sm:text-3xl">
+            Your Bhutan Journey Starts Here
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-stone-600 sm:text-base">
+            Explore Bhutan, find your experience, and start planning your journey.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link href="/packages" className="btn-primary">
+              Explore Tours
+            </Link>
+            <Link href="/custom-tour" className="btn-secondary">
+              Plan Your Trip
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   );
@@ -349,17 +443,20 @@ async function getTestimonials(): Promise<Testimonial[]> {
   const guideIds = reviews.filter((r) => r.targetType === "GUIDE").map((r) => r.targetId);
   const hotelIds = reviews.filter((r) => r.targetType === "HOTEL").map((r) => r.targetId);
   const vehicleIds = reviews.filter((r) => r.targetType === "VEHICLE").map((r) => r.targetId);
+  const itineraryIds = reviews.filter((r) => r.targetType === "ITINERARY").map((r) => r.targetId);
 
-  const [guides, hotels, vehicles] = await Promise.all([
+  const [guides, hotels, vehicles, itineraries] = await Promise.all([
     prisma.guideProfile.findMany({ where: { id: { in: guideIds } }, include: { user: true } }),
     prisma.hotel.findMany({ where: { id: { in: hotelIds } } }),
     prisma.vehicle.findMany({ where: { id: { in: vehicleIds } }, include: { operator: true } }),
+    prisma.itinerary.findMany({ where: { id: { in: itineraryIds } } }),
   ]);
 
   const labelById = new Map<string, string>();
   for (const g of guides) labelById.set(g.id, `Traveled with guide ${g.user.name}`);
   for (const h of hotels) labelById.set(h.id, `Stayed at ${h.name}`);
   for (const v of vehicles) labelById.set(v.id, `Rode with ${v.operator.businessName}`);
+  for (const it of itineraries) labelById.set(it.id, `Traveled on ${it.title}`);
 
   return reviews
     .filter((r) => r.comment)
@@ -377,46 +474,6 @@ function IconCompass({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" className={className}>
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
       <path d="M15 9l-2 6-6 2 2-6 6-2z" fill="currentColor" />
-    </svg>
-  );
-}
-
-function IconBed({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <path
-        d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7M3 18v2M21 18v2M3 13h18"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <rect x="5" y="9" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function IconCar({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <path
-        d="M4 16v-3l2-5h12l2 5v3M4 16h16M4 16v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2M17 16v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="7.5" cy="16" r="1" fill="currentColor" />
-      <circle cx="16.5" cy="16" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function IconPlane({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <path
-        d="M10.5 20l1.5-4.5L21 12l-1-2-8.5 2L9 6H7l1 6.5L2 15l1 2 4.5-1.5L9 20h1.5z"
-        fill="currentColor"
-      />
     </svg>
   );
 }
@@ -466,6 +523,35 @@ function IconSliders({ className }: { className?: string }) {
       <circle cx="14" cy="6" r="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="8" cy="12" r="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="17" cy="18" r="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function IconCheckCircle({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconCalendarCheck({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M4 9.5h16M8 3v3.5M16 3v3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M8.5 14.5l2 2 4-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconMountainFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M2 19l7-12 4 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M11 19l4.5-8L22 19" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M15.5 11V4M15.5 4l4 1.5-4 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
     </svg>
   );
 }

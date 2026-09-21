@@ -73,7 +73,7 @@ export default function PackageCard({
       </Link>
       <div className="flex gap-2 p-3 pt-2">
         <Link href={href} className="btn-primary flex-1 text-center text-sm">
-          View Details
+          View Trip
         </Link>
         <Link href={enquireHref} className="btn-secondary flex-1 text-center text-sm">
           Enquire Now
