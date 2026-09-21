@@ -72,7 +72,7 @@ export default async function ArticleDetailPage({
       <div className="mt-10 rounded-lg border border-stone-200 bg-stone-50 p-5 text-center">
         <p className="font-display text-lg font-semibold text-stone-900">Planning a trip to Bhutan?</p>
         <p className="mt-1 text-sm text-stone-600">
-          Browse our ready-made packages, or tell us what you have in mind and we&apos;ll build a custom itinerary.
+          Browse our tour packages, or tell us what you have in mind and we&apos;ll build a custom itinerary.
         </p>
         <div className="mt-4 flex justify-center gap-3">
           <Link href="/packages" className="btn-secondary">

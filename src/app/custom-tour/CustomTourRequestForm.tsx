@@ -3,11 +3,10 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { DzongkhagRegion, VehicleType } from "@prisma/client";
+import type { VehicleType } from "@prisma/client";
 import Money from "@/components/Money";
-import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
 
-type Destination = { id: string; name: string; region: DzongkhagRegion };
+type Destination = { id: string; name: string };
 type Guide = {
   id: string;
   name: string;
@@ -186,41 +185,27 @@ export default function CustomTourRequestForm({
     );
   }
 
-  const byRegion = new Map<DzongkhagRegion, Destination[]>();
-  for (const d of destinations) byRegion.set(d.region, [...(byRegion.get(d.region) ?? []), d]);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6 lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-6 lg:space-y-0">
       <div className="space-y-6">
         <div>
           <h2 className="mb-3 text-sm font-semibold">Which destinations interest you?</h2>
-          {REGION_ORDER.map((region) => {
-            const items = byRegion.get(region) ?? [];
-            if (items.length === 0) return null;
-            return (
-              <div key={region} className="mb-4">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">
-                  {REGION_LABEL[region]}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {items.map((d) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onClick={() => toggleDestination(d.id)}
-                      className={
-                        selectedDestinations.has(d.id)
-                          ? "rounded-full bg-brand-700 px-3 py-1 text-sm text-white"
-                          : "rounded-full border border-stone-300 px-3 py-1 text-sm text-stone-600 hover:border-brand-400"
-                      }
-                    >
-                      {d.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          <div className="flex flex-wrap gap-2">
+            {destinations.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => toggleDestination(d.id)}
+                className={
+                  selectedDestinations.has(d.id)
+                    ? "rounded-full bg-brand-700 px-3 py-1 text-sm text-white"
+                    : "rounded-full border border-stone-300 px-3 py-1 text-sm text-stone-600 hover:border-brand-400"
+                }
+              >
+                {d.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="card grid gap-3 sm:grid-cols-2">

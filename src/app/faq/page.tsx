@@ -66,9 +66,9 @@ const FAQS: { category: string; items: { q: string; a: React.ReactNode }[] }[] =
         q: "How do I book?",
         a: (
           <>
-            Three ways: book a ready-made{" "}
+            Three ways: book a{" "}
             <Link href="/packages" className="text-brand-700 hover:underline">
-              package tour
+              tour package
             </Link>
             , build your own trip with our{" "}
             <Link href="/custom-tour" className="text-brand-700 hover:underline">

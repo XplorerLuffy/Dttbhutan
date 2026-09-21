@@ -12,7 +12,7 @@ export default function PackagesMenu({ packages }: { packages: Package[] }) {
           <ul className="space-y-3">
             <li>
               <Link href="/packages" className="block rounded-md p-2 -m-2 hover:bg-stone-50">
-                <span className="block text-sm font-medium text-stone-900">Ready-made packages</span>
+                <span className="block text-sm font-medium text-stone-900">Tour packages</span>
                 <span className="block text-xs text-stone-500">
                   Fixed-itinerary tours we&apos;ve put together and priced already.
                 </span>

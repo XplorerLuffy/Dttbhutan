@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Bhutan package tours",
   description:
-    "Ready-made Bhutan tour packages with day-by-day itineraries, licensed guides, hotels and transport included.",
+    "Bhutan tour packages with day-by-day itineraries, licensed guides, hotels and transport included.",
   alternates: { canonical: "/packages" },
 };
 

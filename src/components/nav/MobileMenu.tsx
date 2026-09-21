@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
-import type { DzongkhagRegion } from "@prisma/client";
 import CurrencySelector from "@/components/CurrencySelector";
 
-type Destination = { id: string; name: string; slug: string; region: DzongkhagRegion };
+type Destination = { id: string; name: string; slug: string };
 type Package = { id: string; title: string; slug: string; durationDays: number };
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -57,9 +55,6 @@ export default function MobileMenu({
     };
   }, [open]);
 
-  const byRegion = new Map<DzongkhagRegion, Destination[]>();
-  for (const d of destinations) byRegion.set(d.region, [...(byRegion.get(d.region) ?? []), d]);
-
   return (
     <div className={className}>
       <button
@@ -98,7 +93,7 @@ export default function MobileMenu({
                   <ul className="space-y-2">
                     <li>
                       <Link href="/packages" onClick={() => setOpen(false)} className="block">
-                        <span className="block text-sm font-medium text-stone-900">Ready-made packages</span>
+                        <span className="block text-sm font-medium text-stone-900">Tour packages</span>
                         <span className="block text-xs text-stone-500">Fixed-itinerary tours, priced already.</span>
                       </Link>
                     </li>
@@ -137,26 +132,19 @@ export default function MobileMenu({
 
               <Accordion label="Destinations">
                 <div className="space-y-4">
-                  {REGION_ORDER.map((region) => (
-                    <div key={region}>
-                      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-400">
-                        {REGION_LABEL[region]}
-                      </p>
-                      <ul className="space-y-2">
-                        {(byRegion.get(region) ?? []).map((d) => (
-                          <li key={d.id}>
-                            <Link
-                              href={`/destinations/${d.slug}`}
-                              onClick={() => setOpen(false)}
-                              className="block text-sm text-stone-600 hover:text-brand-700"
-                            >
-                              {d.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                  <ul className="space-y-2">
+                    {destinations.map((d) => (
+                      <li key={d.id}>
+                        <Link
+                          href={`/destinations/${d.slug}`}
+                          onClick={() => setOpen(false)}
+                          className="block text-sm text-stone-600 hover:text-brand-700"
+                        >
+                          {d.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                   <Link
                     href="/destinations"
                     onClick={() => setOpen(false)}

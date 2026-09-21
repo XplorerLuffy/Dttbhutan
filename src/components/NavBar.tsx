@@ -10,7 +10,7 @@ export default async function NavBar() {
   const [destinations, packages] = await Promise.all([
     prisma.destination.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true, slug: true, region: true },
+      select: { id: true, name: true, slug: true },
     }),
     prisma.itinerary.findMany({
       where: { status: "PUBLISHED" },

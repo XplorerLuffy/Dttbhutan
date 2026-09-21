@@ -16,12 +16,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Bhutan Tours, Local Guides & Custom Trips",
   description:
-    "Discover Bhutan, your way — explore ready-made tour packages, meet verified local guides, or build a custom trip with Droelma Tours & Travels and book directly online.",
+    "Discover Bhutan, your way — explore tour packages, meet verified local guides, or build a custom trip with Droelma Tours & Travels and book directly online.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Droelma Tours & Travels | Bhutan Tours, Local Guides & Custom Trips",
     description:
-      "Discover Bhutan, your way — explore ready-made tour packages, meet verified local guides, or build a custom trip and book directly online.",
+      "Discover Bhutan, your way — explore tour packages, meet verified local guides, or build a custom trip and book directly online.",
     url: "/",
   },
 };
@@ -63,7 +63,7 @@ const whyChoose = [
   {
     title: "Flexible Trip Planning",
     description:
-      "Book a ready-made package as-is, or tell us what you want to see and we'll shape a custom itinerary around it.",
+      "Book a tour package as-is, or tell us what you want to see and we'll shape a custom itinerary around it.",
     icon: IconSliders,
   },
   {
@@ -84,7 +84,7 @@ const howItWorks = [
   {
     step: "2",
     title: "Plan",
-    description: "Choose a ready-made package or build your own trip.",
+    description: "Choose a tour package or build your own trip.",
     icon: IconSliders,
   },
   {
@@ -265,7 +265,6 @@ export default async function HomePage() {
               key={d.id}
               href={`/destinations/${d.slug}`}
               photoUrl={d.photoUrl}
-              region={d.region}
               name={d.name}
               description={d.description}
               packageCount={packageCountByDestination.get(d.id) ?? 0}

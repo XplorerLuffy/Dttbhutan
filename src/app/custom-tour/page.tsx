@@ -19,7 +19,7 @@ export default async function CustomTourPage({
   const [destinations, guides, hotels, vehicles] = await Promise.all([
     prisma.destination.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true, region: true },
+      select: { id: true, name: true },
     }),
     prisma.guideProfile.findMany({
       where: { status: "APPROVED" },
