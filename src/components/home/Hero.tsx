@@ -9,7 +9,7 @@ type Destination = { id: string; name: string; slug: string };
 const TRUST_PILLS = [
   { icon: "🛡️", label: "TCB-licensed guides" },
   { icon: "🗺️", label: "Ready-made & custom itineraries" },
-  { icon: "✓", label: "Book directly, no middleman" },
+  { icon: "✓", label: "Book directly with Droelma" },
 ];
 
 /**
@@ -22,6 +22,7 @@ const TRUST_PILLS = [
  */
 export default function Hero({ destinations }: { destinations: Destination[] }) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -31,10 +32,26 @@ export default function Hero({ destinations }: { destinations: Destination[] }) 
     return () => ctx.revert();
   }, []);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    // React doesn't reliably sync the `muted` JSX attribute to the DOM
+    // property on every render path, and browsers gate autoplay on the
+    // property, not the attribute — so force it directly, then kick off
+    // playback ourselves rather than trusting the `autoPlay` attribute.
+    video.muted = true;
+    video.play().catch(() => {
+      // Autoplay can still be refused (e.g. data-saver mode) — the
+      // gradient background underneath is a fine fallback either way.
+    });
+  }, []);
+
   return (
     <div>
       <div className="relative -mx-4 min-h-[560px] overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-900 px-4 pb-20 pt-14 text-white sm:-mx-6 sm:min-h-[640px] sm:px-6 sm:pb-24 sm:pt-20">
         <video
+          ref={videoRef}
+          src="/uploads/herovideo.mp4"
           autoPlay
           muted
           loop
@@ -42,9 +59,7 @@ export default function Hero({ destinations }: { destinations: Destination[] }) 
           preload="auto"
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
-        >
-          <source src="/uploads/herovideo.mp4" type="video/mp4" />
-        </video>
+        />
 
         {/* Vignette so text stays legible over moving footage. */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/40" />
@@ -60,7 +75,7 @@ export default function Hero({ destinations }: { destinations: Destination[] }) 
           <p className="mt-4 max-w-xl text-base text-white/85 sm:text-lg">
             Droelma Tours &amp; Travels helps you discover, plan, and book
             authentic Bhutan experiences — ready-made journeys, local
-            guides, and custom trips, arranged directly with no middleman.
+            guides, and custom trips, arranged directly with our team.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">

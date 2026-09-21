@@ -8,8 +8,17 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Migrations need a direct (non-pooled) connection: `prisma migrate
+  // deploy` takes a session-level advisory lock, which a PgBouncer
+  // transaction-mode pooler (Supabase's default DATABASE_URL, port 6543)
+  // can silently hang forever on, since each statement may land on a
+  // different backend connection. DATABASE_URL stays pooled for the app's
+  // own serverless queries; DIRECT_URL bypasses the pooler for migrations
+  // only. When both point at the same plain Postgres server (local dev),
+  // they're identical.
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------

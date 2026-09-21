@@ -69,7 +69,7 @@ const whyChoose = [
   {
     title: "Direct Online Booking",
     description:
-      "Reserve packages, guides, and transport directly through Droelma — no third-party agent in between.",
+      "Reserve packages, guides, and transport directly through Droelma, with real availability and confirmation.",
     icon: IconCheckCircle,
   },
 ];
