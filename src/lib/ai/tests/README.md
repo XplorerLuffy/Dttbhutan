@@ -10,8 +10,21 @@ npm run test:ai:assistant     # orchestration loop, via a scripted mock provider
 npm run test:ai:ratelimit     # rate limiter, pure logic
 npm run test:ai:systemprompt  # system prompt contains the required safety rules
 npm run test:ai:route         # POST /api/chat itself: 400/429/503/500/200 paths
-npm run test:ai               # all five
+npm run test:ai:retrieval     # RAG: tenant isolation, PUBLIC/INTERNAL, pgvector, fallback
+npm run test:ai               # all six
 ```
+
+`test:ai:retrieval` needs pgvector on the local database:
+
+```bash
+sudo apt-get install -y postgresql-16-pgvector      # or your platform's package
+sudo -u postgres psql -d template1 -c "CREATE EXTENSION IF NOT EXISTS vector;"
+sudo -u postgres psql -d <your_db> -c "CREATE EXTENSION IF NOT EXISTS vector;"
+```
+
+(`template1` matters because Prisma creates a throwaway shadow database for
+migrations, which inherits from it — without the extension there,
+`prisma migrate dev` fails on the `vector(768)` column.)
 
 `serverOnlyPreload.cjs` exists only so these scripts can `require()` code
 that imports the `server-only` marker package (used throughout `src/lib/`
@@ -30,6 +43,23 @@ intercepts nothing except that one specifier; see the file's own comment.
 - Conversation history is assembled in order, so a follow-up like "I have 7
   days" arrives to the model alongside the earlier "I want to visit Bhutan."
 - The rate limiter allows normal use and blocks rapid-fire requests, per IP.
+
+**RAG-specific, and what the retrieval tests do and don't cover:**
+- *Do prove, against real Postgres + real pgvector:* tenant isolation
+  (agency A can never retrieve agency B's chunks), PUBLIC/INTERNAL
+  separation, DRAFT exclusion, the relevance-distance cutoff, the
+  text-search fallback when no embedding provider is reachable, and that an
+  injection string inside a document comes back as inert text with no
+  special parsing. Fixture vectors are hand-written unit vectors so
+  nearest-neighbour ordering is deterministic without a model.
+- *Cannot prove here:* that **real** `nomic-embed-text` embeddings are
+  semantically useful — i.e. that embedding "what's your cancellation
+  policy" actually lands near the cancellation chunk. That needs a live
+  Ollama with `nomic-embed-text` pulled, which this environment has no
+  route to. **Status: BLOCKED**, not passing and not failing. To run it:
+  start Ollama, `ollama pull nomic-embed-text`, `npm run ai:ingest` (the
+  chunk count embedded should be non-zero), then ask the assistant a policy
+  question and confirm the answer cites retrieved knowledge.
 
 **Cannot prove with an automated test, and why:**
 - *"The assistant never states an invented price."* That's a claim about

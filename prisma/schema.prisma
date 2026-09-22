@@ -696,3 +696,100 @@ model AiMessage {
 
   @@index([conversationId, createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// AI Phase 2 — RAG / knowledge layer.
+//
+// Deliberately separate from the structured booking data above: a Package,
+// Guide, Hotel, etc. already have a canonical home in this schema and the
+// assistant already retrieves them directly (see src/lib/ai/tools.ts) — this
+// section exists only for knowledge that doesn't fit a relational model
+// (FAQs, policies, visa guidance, uploaded documents) plus indexed copies of
+// content that does (published Articles), for semantic search.
+//
+// Multi-tenant only here, not retrofitted onto the models above: this app
+// has only ever served one agency, and adding a tenant column to eight+
+// live production models is a much bigger, riskier change than this phase
+// calls for. `Agency` exists so this new layer is built tenant-aware from
+// day one; the older structured-data tools stay implicitly single-tenant
+// (whatever's in this database) until a future phase actually needs to
+// serve more than one agency from the same deployment.
+// ---------------------------------------------------------------------------
+
+model Agency {
+  id        String   @id @default(cuid())
+  /** Stable machine identifier, e.g. "droelma" — the only tenant that
+   * exists today. Never derived from user/browser input. */
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+
+  documents KnowledgeDocument[]
+}
+
+enum KnowledgeVisibility {
+  PUBLIC
+  INTERNAL
+}
+
+enum KnowledgeSourceType {
+  MANUAL // hand-authored knowledge (e.g. a rewritten FAQ answer)
+  ARTICLE // indexed copy of a published Article's content
+  FAQ
+  POLICY
+  UPLOAD // future: an uploaded document (TXT/MD now; PDF/DOCX not yet — see report)
+}
+
+enum KnowledgeStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model KnowledgeDocument {
+  id         String              @id @default(cuid())
+  agencyId   String
+  agency     Agency              @relation(fields: [agencyId], references: [id])
+  title      String
+  /** Full plain text — the source of truth chunks are derived from. */
+  content    String
+  sourceType KnowledgeSourceType
+  /** Where this came from, if applicable — e.g. the originating Article's
+   * slug, or an uploaded file's original name. Not a foreign key: sources
+   * span different models (or no model at all, for hand-authored text). */
+  sourceRef  String?
+  category   String?
+  visibility KnowledgeVisibility @default(PUBLIC)
+  status     KnowledgeStatus     @default(DRAFT)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  chunks KnowledgeChunk[]
+
+  @@index([agencyId, status, visibility])
+}
+
+model KnowledgeChunk {
+  id         String            @id @default(cuid())
+  documentId String
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  // Denormalized from the parent document on purpose. Retrieval is the
+  // security-critical path here — it must never surface another agency's
+  // knowledge, or INTERNAL knowledge to an anonymous visitor — so the
+  // chunk row itself carries everything a retrieval query needs to filter
+  // on, rather than trusting a join back to KnowledgeDocument to be
+  // written correctly every time.
+  agencyId   String
+  visibility KnowledgeVisibility
+  content    String
+  chunkIndex Int
+  /** pgvector column. Prisma's typed client can't construct or filter an
+   * `Unsupported` type, so every read/write of this column goes through
+   * raw SQL (see src/lib/ai/retrieval.ts) — this field exists mainly so
+   * `prisma db pull`/introspection and migration history stay accurate.
+   * Dimension is tied to the embedding model (nomic-embed-text, 768) —
+   * changing models means re-embedding every row, not just this schema. */
+  embedding  Unsupported("vector(768)")?
+  createdAt  DateTime          @default(now())
+
+  @@index([agencyId, visibility])
+}
