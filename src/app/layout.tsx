@@ -8,6 +8,7 @@ import PageTransition from "@/components/PageTransition";
 import { CurrencyProvider } from "@/components/CurrencyProvider";
 import { getCurrentRates } from "@/lib/fx";
 import SiteChrome from "@/components/SiteChrome";
+import AiChatWidget from "@/components/ai/AiChatWidget";
 import { organizationJsonLd, siteUrl } from "@/lib/seo";
 
 const display = Fraunces({
@@ -70,7 +71,7 @@ export default async function RootLayout({
         />
         <CurrencyProvider rates={rates}>
           <SmoothScroll />
-          <SiteChrome nav={<NavBar />} footer={<Footer />}>
+          <SiteChrome nav={<NavBar />} footer={<Footer />} chat={<AiChatWidget />}>
             <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
               <PageTransition>{children}</PageTransition>
             </main>

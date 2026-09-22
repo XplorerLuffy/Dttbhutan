@@ -9,7 +9,8 @@
  * won't hallucinate — see tests/README.md.
  */
 import { runAssistantTurn } from "@/lib/ai/assistant";
-import { ScriptedMockProvider, InfiniteToolLoopProvider } from "@/lib/ai/tests/mockProvider";
+import { ScriptedMockProvider, InfiniteToolLoopProvider, UnavailableProvider } from "@/lib/ai/tests/mockProvider";
+import { AiProviderUnavailableError } from "@/lib/ai/provider";
 import { prisma } from "@/lib/prisma";
 
 let passed = 0;
@@ -97,6 +98,56 @@ async function main() {
   check(
     "history is sent in chronological order (earlier turn before the new message)",
     userTurns.indexOf("I want to visit Bhutan.") < userTurns.indexOf("I have 7 days.")
+  );
+
+  // --- Test: booking request — a compliant model's refusal text survives
+  // the loop unchanged. This proves the plumbing doesn't corrupt or rewrite
+  // a correct refusal; it does NOT prove a live model will actually produce
+  // this wording — that's a system-prompt/model question, not a code one
+  // (see systemPrompt.test.ts for the rule's presence, and tests/README.md
+  // for why live-model behavior needs a real Ollama server to verify). ---
+  const bookingRefusalText =
+    "I can't complete a booking for you here, but I can help you plan the details — you can book directly on the package or listing page, or send an enquiry and our team will confirm it.";
+  const bookingProvider = new ScriptedMockProvider([{ content: bookingRefusalText, toolCalls: [] }]);
+  const bookingReply = await runAssistantTurn(bookingProvider, [], "Can you book this trip for me?");
+  check(
+    "a compliant 'can't book, here's how to' reply passes through unmodified",
+    bookingReply === bookingRefusalText
+  );
+  check(
+    "the booking-refusal reply never claims the booking is done",
+    !/\b(booked|confirmed|reservation (is )?complete)\b/i.test(bookingReply)
+  );
+
+  // --- Test: unknown information — a compliant "can't confirm" reply also
+  // survives unchanged. Same caveat as above: proves plumbing, not model
+  // compliance. ---
+  const unknownInfoText =
+    "That's not something I can confirm right now — SDF and visa figures change, so please check the site's travel guide or contact our team directly for the current number.";
+  const unknownInfoProvider = new ScriptedMockProvider([{ content: unknownInfoText, toolCalls: [] }]);
+  const unknownInfoReply = await runAssistantTurn(
+    unknownInfoProvider,
+    [],
+    "Exactly how much is the Sustainable Development Fee right now?"
+  );
+  check(
+    "a compliant 'can't confirm that' reply passes through unmodified",
+    unknownInfoReply === unknownInfoText
+  );
+
+  // --- Test: provider unavailable — the orchestration loop must NOT
+  // swallow this error into a generic fallback string. It has to propagate
+  // out so /api/chat can catch it and map it to a safe 503 (see
+  // route.test.ts for that HTTP-level check). ---
+  let unavailableErrorPropagated = false;
+  try {
+    await runAssistantTurn(new UnavailableProvider(), [], "hello");
+  } catch (err) {
+    unavailableErrorPropagated = err instanceof AiProviderUnavailableError;
+  }
+  check(
+    "a provider that's unreachable throws AiProviderUnavailableError out of the loop, not a swallowed fallback",
+    unavailableErrorPropagated
   );
 
   console.log(`\n${passed}/${passed + failed} checks passed`);

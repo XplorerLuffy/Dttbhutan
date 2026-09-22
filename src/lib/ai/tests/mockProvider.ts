@@ -1,3 +1,4 @@
+import { AiProviderUnavailableError } from "@/lib/ai/provider";
 import type { AiCompletionRequest, AiCompletionResult, AiProvider } from "@/lib/ai/provider";
 
 /**
@@ -42,5 +43,16 @@ export class InfiniteToolLoopProvider implements AiProvider {
       content: "",
       toolCalls: [{ id: "call_0", name: "search_destinations", arguments: {} }],
     };
+  }
+}
+
+/** Always throws AiProviderUnavailableError — simulates the backing LLM
+ * service being completely unreachable (connection refused, DNS failure,
+ * timeout), without needing a real Ollama outage to test against. Used to
+ * prove the orchestration loop doesn't swallow this error — it must
+ * propagate up to `/api/chat`, which is what maps it to a safe 503. */
+export class UnavailableProvider implements AiProvider {
+  async complete(): Promise<AiCompletionResult> {
+    throw new AiProviderUnavailableError("Simulated: backing LLM service unreachable");
   }
 }

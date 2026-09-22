@@ -5,10 +5,12 @@ as plain scripts via `tsx` — the same way `prisma/seed.ts` does — rather
 than introducing a new dependency for Phase 1.
 
 ```bash
-npm run test:ai:tools       # grounding tools against the real dev DB
-npm run test:ai:assistant   # orchestration loop, via a scripted mock provider
-npm run test:ai:ratelimit   # rate limiter, pure logic
-npm run test:ai             # all three
+npm run test:ai:tools         # grounding tools against the real dev DB
+npm run test:ai:assistant     # orchestration loop, via a scripted mock provider
+npm run test:ai:ratelimit     # rate limiter, pure logic
+npm run test:ai:systemprompt  # system prompt contains the required safety rules
+npm run test:ai:route         # POST /api/chat itself: 400/429/503/500/200 paths
+npm run test:ai               # all five
 ```
 
 `serverOnlyPreload.cjs` exists only so these scripts can `require()` code

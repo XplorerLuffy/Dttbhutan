@@ -15,7 +15,9 @@
     "test:ai:tools": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/tools.test.ts",
     "test:ai:assistant": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/assistant.test.ts",
     "test:ai:ratelimit": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/rateLimit.test.ts",
-    "test:ai": "npm run test:ai:tools && npm run test:ai:assistant && npm run test:ai:ratelimit"
+    "test:ai:systemprompt": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/systemPrompt.test.ts",
+    "test:ai:route": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/route.test.ts",
+    "test:ai": "npm run test:ai:tools && npm run test:ai:assistant && npm run test:ai:ratelimit && npm run test:ai:systemprompt && npm run test:ai:route"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",
