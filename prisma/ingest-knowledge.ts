@@ -24,7 +24,48 @@ import { KNOWLEDGE_SEED } from "./data/knowledgeSeed";
 
 const prisma = new PrismaClient();
 
+/** Hosts considered a local development database. */
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+
+/**
+ * This script takes no connection argument — it writes wherever DATABASE_URL
+ * happens to point, which on a machine configured for deploys is production.
+ * Ingestion deletes and recreates documents (replace-by-sourceRef), so an
+ * unnoticed production DATABASE_URL is destructive, not just noisy.
+ *
+ * Run against a non-local database with:
+ *   npm run ai:ingest -- --allow-production
+ */
+function assertSafeTarget(): void {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set — nothing to ingest into.");
+
+  let host: string;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    // Refusing on an unparseable URL is the safe direction: better to stop
+    // than to guess at a host and possibly guess "local" for a remote one.
+    throw new Error("DATABASE_URL could not be parsed as a connection string; refusing to ingest.");
+  }
+
+  if (LOCAL_HOSTS.has(host)) return;
+
+  if (process.argv.includes("--allow-production")) {
+    console.warn(`⚠️  --allow-production: ingesting into NON-LOCAL database at ${host}\n`);
+    return;
+  }
+
+  throw new Error(
+    `Refusing to ingest: DATABASE_URL points at "${host}", which is not a local database.\n` +
+      `Ingestion replaces knowledge documents and their chunks at the target.\n` +
+      `If that is genuinely intended, re-run with: npm run ai:ingest -- --allow-production`
+  );
+}
+
 async function main() {
+  assertSafeTarget();
+
   const slug = process.env.AGENCY_SLUG?.trim() || "droelma";
 
   const agency = await prisma.agency.upsert({
