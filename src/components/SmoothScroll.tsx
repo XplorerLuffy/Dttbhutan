@@ -20,6 +20,13 @@ export default function SmoothScroll() {
     const lenis = new Lenis({
       duration: 1.1,
       smoothWheel: true,
+      // In-page anchors (the trip page's section nav) have to go through
+      // Lenis: a native jump moves the scrollbar out from under its rAF loop
+      // and the page snaps back. Lenis honours the target's scroll-margin-top
+      // itself, so the `scroll-mt-24` on those sections clears the sticky
+      // sub-nav on this path and on the native one — passing an offset here
+      // as well would double it.
+      anchors: true,
     });
 
     // Lenis drives scrolling from its own rAF loop, so ScrollTrigger has to

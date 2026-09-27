@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import ItineraryBookingForm from "@/components/booking/ItineraryBookingForm";
 import DepartureList, { type DepartureView } from "@/components/booking/DepartureList";
 import DetailGallery from "@/components/listing/DetailGallery";
+import TripSubNav, { type TripSubNavSection } from "@/components/listing/TripSubNav";
 import Money from "@/components/Money";
 import type { Metadata } from "next";
 
@@ -69,20 +70,74 @@ export default async function PackageDetailPage({
     note: d.note,
   }));
 
+  // Only sections that actually render get a tab — see TripSubNav.
+  const hasIncludes = itinerary.includes.length > 0 || itinerary.excludes.length > 0;
+  const sections: TripSubNavSection[] = [
+    { id: "overview", label: "Overview" },
+    ...(itinerary.days.length > 0 ? [{ id: "itinerary", label: "Itinerary" }] : []),
+    { id: "dates", label: "Dates & Prices" },
+    ...(hasIncludes ? [{ id: "included", label: "What's included" }] : []),
+  ];
+
   return (
     <div>
       <DetailGallery photos={[itinerary.coverPhotoUrl]} label={itinerary.title} />
 
+      <TripSubNav
+        sections={sections}
+        price={<Money btn={Number(itinerary.pricePerPerson)} />}
+        datesId="dates"
+      />
+
       <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{itinerary.title}</h1>
-          <span className="badge bg-stone-100 text-stone-600">{DIFFICULTY_LABEL[itinerary.difficulty]}</span>
-        </div>
-        <p className="mt-1 text-stone-600">{itinerary.summary}</p>
-        <p className="mt-2 text-sm text-stone-500">{itinerary.durationDays} days</p>
+        <section id="overview" className="scroll-mt-24">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold">{itinerary.title}</h1>
+            <span className="badge shrink-0 bg-stone-100 text-stone-600">
+              {DIFFICULTY_LABEL[itinerary.difficulty]}
+            </span>
+          </div>
+          <p className="mt-1 text-stone-600">{itinerary.summary}</p>
+          <p className="mt-2 text-sm text-stone-500">{itinerary.durationDays} days</p>
 
-        {itinerary.description && <p className="mt-4 text-stone-700">{itinerary.description}</p>}
+          {itinerary.description && <p className="mt-4 text-stone-700">{itinerary.description}</p>}
+        </section>
+
+        {itinerary.days.length > 0 && (
+          <section id="itinerary" className="mt-10 scroll-mt-24">
+            <h2 className="mb-4 font-display text-xl font-semibold text-stone-900">Day by day</h2>
+            <ol className="space-y-4 border-l-2 border-stone-200 pl-5">
+              {itinerary.days.map((day) => (
+                <li key={day.id} className="relative">
+                  <span className="absolute -left-[1.65rem] top-1 h-3 w-3 rounded-full bg-brand-700" />
+                  <p className="font-semibold">
+                    Day {day.dayNumber}: {day.title}
+                    {day.destination && (
+                      <Link
+                        href={`/destinations/${day.destination.slug}`}
+                        className="ml-2 text-sm font-normal text-brand-700 hover:underline"
+                      >
+                        {day.destination.name}
+                      </Link>
+                    )}
+                  </p>
+                  {day.description && (
+                    <p className="mt-1 text-sm text-stone-600">{day.description}</p>
+                  )}
+                  {day.activities.length > 0 && (
+                    <p className="mt-1 text-sm text-stone-500">{day.activities.join(" · ")}</p>
+                  )}
+                  {day.mealsIncluded.length > 0 && (
+                    <p className="mt-1 text-xs text-stone-400">
+                      Meals: {day.mealsIncluded.join(", ")}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
 
         <section id="dates" className="mt-10 scroll-mt-24">
           <h2 className="font-display text-xl font-semibold text-stone-900">Departure dates</h2>
@@ -106,8 +161,8 @@ export default async function PackageDetailPage({
           )}
         </section>
 
-        {(itinerary.includes.length > 0 || itinerary.excludes.length > 0) && (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {hasIncludes && (
+          <section id="included" className="mt-10 grid scroll-mt-24 gap-4 sm:grid-cols-2">
             {itinerary.includes.length > 0 && (
               <div>
                 <h3 className="mb-2 text-sm font-semibold text-pine-800">Included</h3>
@@ -128,37 +183,8 @@ export default async function PackageDetailPage({
                 </ul>
               </div>
             )}
-          </div>
+          </section>
         )}
-
-        <div className="mt-8">
-          <h2 className="mb-4 text-lg font-semibold">Day by day</h2>
-          <ol className="space-y-4 border-l-2 border-stone-200 pl-5">
-            {itinerary.days.map((day) => (
-              <li key={day.id} className="relative">
-                <span className="absolute -left-[1.65rem] top-1 h-3 w-3 rounded-full bg-brand-700" />
-                <p className="font-semibold">
-                  Day {day.dayNumber}: {day.title}
-                  {day.destination && (
-                    <Link
-                      href={`/destinations/${day.destination.slug}`}
-                      className="ml-2 text-sm font-normal text-brand-700 hover:underline"
-                    >
-                      {day.destination.name}
-                    </Link>
-                  )}
-                </p>
-                {day.description && <p className="mt-1 text-sm text-stone-600">{day.description}</p>}
-                {day.activities.length > 0 && (
-                  <p className="mt-1 text-sm text-stone-500">{day.activities.join(" · ")}</p>
-                )}
-                {day.mealsIncluded.length > 0 && (
-                  <p className="mt-1 text-xs text-stone-400">Meals: {day.mealsIncluded.join(", ")}</p>
-                )}
-              </li>
-            ))}
-          </ol>
-        </div>
       </div>
 
       <div className="sticky-booking-card">
