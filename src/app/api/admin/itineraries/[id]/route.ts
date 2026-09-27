@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole, AuthError } from "@/lib/auth";
 import { itineraryAdminSchema } from "@/lib/validation";
+import { revalidateHomepage } from "@/lib/revalidate";
 
 export async function PATCH(
   req: NextRequest,
@@ -46,6 +47,7 @@ export async function PATCH(
       });
     });
 
+    revalidateHomepage();
     return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof AuthError) {
@@ -73,6 +75,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     // ItineraryDay rows cascade via the schema's onDelete: Cascade.
     await prisma.itinerary.delete({ where: { id } });
 
+    revalidateHomepage();
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof AuthError) {

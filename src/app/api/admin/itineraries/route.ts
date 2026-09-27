@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole, AuthError } from "@/lib/auth";
 import { itineraryAdminSchema } from "@/lib/validation";
+import { revalidateHomepage } from "@/lib/revalidate";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    revalidateHomepage();
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {

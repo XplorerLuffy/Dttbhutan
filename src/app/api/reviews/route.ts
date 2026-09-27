@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { reviewSchema } from "@/lib/validation";
 import type { ReviewTargetType } from "@prisma/client";
+import { revalidateHomepage } from "@/lib/revalidate";
 
 // BookingType and ReviewTargetType share the same member names by design.
 const REVIEW_TARGET_TYPE: Record<string, ReviewTargetType> = {
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
         comment: parsed.data.comment,
       },
     });
+    revalidateHomepage();
     return NextResponse.json(review, { status: 201 });
   } catch {
     return NextResponse.json(

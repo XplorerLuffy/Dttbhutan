@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireRole, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidateHomepage } from "@/lib/revalidate";
 
 const regionUpdateSchema = z.object({
   region: z.enum(["WEST", "CENTRAL", "EAST", "NORTH", "SOUTH"]),
@@ -25,6 +26,7 @@ export async function PATCH(
       data: { region: parsed.data.region },
     });
 
+    revalidateHomepage();
     return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof AuthError) {

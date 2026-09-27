@@ -3,6 +3,7 @@ import { requireRole, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { vendorStatusUpdateSchema } from "@/lib/adminVendor";
 import { notifyVendorStatusChanged } from "@/lib/email/notify";
+import { revalidateHomepage } from "@/lib/revalidate";
 
 export async function PATCH(
   req: NextRequest,
@@ -30,6 +31,7 @@ export async function PATCH(
       adminNote: parsed.data.adminNote,
     });
 
+    revalidateHomepage();
     return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof AuthError) {

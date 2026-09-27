@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole, AuthError } from "@/lib/auth";
 import { articleAdminSchema } from "@/lib/validation";
+import { revalidateHomepage } from "@/lib/revalidate";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,6 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const created = await prisma.article.create({ data: parsed.data });
+    revalidateHomepage();
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {

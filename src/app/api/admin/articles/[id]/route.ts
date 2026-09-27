@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole, AuthError } from "@/lib/auth";
 import { articleAdminSchema } from "@/lib/validation";
+import { revalidateHomepage } from "@/lib/revalidate";
 
 export async function PATCH(
   req: NextRequest,
@@ -23,6 +24,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.article.update({ where: { id }, data: parsed.data });
+    revalidateHomepage();
     return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof AuthError) {
