@@ -21,6 +21,7 @@ export default function Hero({
   destinations,
   headline,
   searchButton,
+  searchPrompt,
   customPrefix,
   customLink,
   customSuffix,
@@ -28,6 +29,7 @@ export default function Hero({
   destinations: Destination[];
   headline: string;
   searchButton: string;
+  searchPrompt: string;
   customPrefix: string;
   customLink: string;
   customSuffix: string;
@@ -89,7 +91,7 @@ export default function Hero({
         </h1>
 
         <div className="mt-10 sm:mt-12">
-          <HeroSearchBar destinations={destinations} submitLabel={searchButton} />
+          <HeroSearchBar destinations={destinations} submitLabel={searchButton} prompt={searchPrompt} />
         </div>
 
         <p className="mt-6 text-center text-sm text-white/90 [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">

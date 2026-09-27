@@ -62,6 +62,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     fields: [
       { key: "home.hero.headline", label: "Headline", type: "text", default: "Discover Bhutan, Your Way" },
       { key: "home.hero.searchButton", label: "Search button label", type: "text", default: "See All Trips" },
+      { key: "home.hero.searchPrompt", label: "Search prompt (phones)", type: "text", default: "Find My Perfect Trip", help: "Shown on the collapsed search pill on phone screens, before it is tapped open." },
       { key: "home.hero.customPrefix", label: "Custom-trip line, before the link", type: "text", default: "Or" },
       { key: "home.hero.customLink", label: "Custom-trip link text", type: "text", default: "have us build a custom trip" },
       { key: "home.hero.customSuffix", label: "Custom-trip line, after the link", type: "text", default: "around what you want to see." },

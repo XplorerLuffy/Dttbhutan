@@ -152,6 +152,7 @@ export default async function HomePage() {
         destinations={destinations}
         headline={content("home.hero.headline")}
         searchButton={content("home.hero.searchButton")}
+        searchPrompt={content("home.hero.searchPrompt")}
         customPrefix={content("home.hero.customPrefix")}
         customLink={content("home.hero.customLink")}
         customSuffix={content("home.hero.customSuffix")}
