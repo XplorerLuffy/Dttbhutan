@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import ItineraryBookingForm from "@/components/booking/ItineraryBookingForm";
 import DepartureList, { type DepartureView } from "@/components/booking/DepartureList";
 import TripHero from "@/components/listing/TripHero";
 import TripSubNav, { type TripSubNavSection } from "@/components/listing/TripSubNav";
@@ -242,6 +241,13 @@ export default async function PackageDetailPage({
                 <p className="mt-4 leading-relaxed text-stone-700">{itinerary.description}</p>
               )}
 
+              <a
+                href={`/packages/${itinerary.slug}/itinerary.pdf`}
+                className="mt-6 inline-block rounded-full border-2 border-brand-800 px-7 py-3 font-display font-semibold text-brand-900 transition-colors hover:bg-brand-50"
+              >
+                Download Itinerary
+              </a>
+
               {highlights.length > 0 && (
                 <div className="mt-8">
                   <h3 className="font-display text-lg font-semibold text-stone-900">
@@ -330,16 +336,26 @@ export default async function PackageDetailPage({
               <DepartureList departures={departures} packageTitle={itinerary.title} />
             </div>
 
+            {/* No booking form here: every date row already carries its own
+                "Request to Book", and a second form asking for the same
+                thing in different words is how a page ends up with two
+                answers to "how do I book this". */}
             <aside className="space-y-4 lg:sticky lg:top-24">
               <div className="rounded-xl border border-stone-200 bg-white p-6">
-                <p className="font-display text-2xl font-bold text-brand-800">
-                  <Money btn={Number(itinerary.pricePerPerson)} />
+                <h3 className="font-display text-base font-semibold text-stone-900">
+                  Want to learn more about this trip?
+                </h3>
+                <p className="mt-2 text-sm text-stone-600">
+                  Download the full itinerary — every day described, where you stay, what&apos;s
+                  included and the dates it runs. Easy to share with whoever you&apos;re travelling
+                  with.
                 </p>
-                <p className="mb-4 text-sm text-stone-500">per person</p>
-                <ItineraryBookingForm
-                  itineraryId={itinerary.id}
-                  maxGroupSize={itinerary.maxGroupSize}
-                />
+                <a
+                  href={`/packages/${itinerary.slug}/itinerary.pdf`}
+                  className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
+                >
+                  Download &amp; share (PDF)
+                </a>
               </div>
 
               <div className="rounded-xl border border-stone-200 bg-white p-6">

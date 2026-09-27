@@ -24,7 +24,6 @@ export default function TripHero({
   difficulty,
   maxGroupSize,
   price,
-  datesHref = "#dates",
 }: {
   title: string;
   summary: string;
@@ -34,7 +33,6 @@ export default function TripHero({
   difficulty: TripDifficulty;
   maxGroupSize: number | null;
   price: React.ReactNode;
-  datesHref?: string;
 }) {
   return (
     <section className="relative">
@@ -69,7 +67,12 @@ export default function TripHero({
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* The price column sizes to its content (`auto`) rather than taking
             an equal quarter — an equal share wraps "Nu. 30,000" across two
-            lines, and a converted currency is longer still. */}
+            lines, and a converted currency is longer still.
+
+            There is deliberately no call to action here: the sticky sub-nav
+            immediately below carries "View Dates" and follows the reader
+            down the page, so a second button at the top is the same link
+            twice in one eyeful. */}
         <div className="relative -mt-8 grid gap-x-8 gap-y-5 rounded-xl border border-stone-200 bg-white p-6 shadow-lg sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-center">
           <Stat label="Trip length">
             <span className="font-display text-lg font-bold text-stone-900">
@@ -90,23 +93,12 @@ export default function TripHero({
             </span>
           </Stat>
 
-          <div className="flex items-center justify-between gap-4 sm:col-span-2 lg:col-span-1 lg:justify-end">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
-                From
-              </p>
-              <p className="whitespace-nowrap font-display text-xl font-bold text-brand-800">
-                {price}
-              </p>
-              <p className="text-xs text-stone-500">per person</p>
-            </div>
-            <a
-              href={datesHref}
-              className="shrink-0 rounded-full bg-gold-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-gold-600"
-            >
-              View dates
-            </a>
-          </div>
+          <Stat label="From">
+            <span className="whitespace-nowrap font-display text-lg font-bold text-brand-800">
+              {price}
+            </span>
+            <span className="ml-1 text-sm text-stone-500">per person</span>
+          </Stat>
         </div>
       </div>
     </section>
