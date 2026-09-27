@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ScrollReveal from "@/components/ScrollReveal";
 import PhotoPlaceholder from "@/components/PhotoPlaceholder";
 
 /**
@@ -29,7 +30,7 @@ export default function GuideSpotlight({ guides }: { guides: SpotlightGuide[] })
   const columns = guides.length >= 3 ? "lg:grid-cols-3" : "sm:grid-cols-2 lg:max-w-4xl";
 
   return (
-    <div className={`mx-auto grid gap-8 sm:grid-cols-2 ${columns}`}>
+    <ScrollReveal className={`mx-auto grid gap-8 sm:grid-cols-2 ${columns}`}>
       {guides.map((g) => (
         <article
           key={g.id}
@@ -78,6 +79,6 @@ export default function GuideSpotlight({ guides }: { guides: SpotlightGuide[] })
           </div>
         </article>
       ))}
-    </div>
+    </ScrollReveal>
   );
 }

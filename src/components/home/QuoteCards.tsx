@@ -1,3 +1,4 @@
+import ScrollReveal from "@/components/ScrollReveal";
 import type { Testimonial } from "./TestimonialCarousel";
 
 /**
@@ -21,7 +22,7 @@ export default function QuoteCards({ testimonials }: { testimonials: Testimonial
         : "max-w-xl";
 
   return (
-    <div className={`mx-auto grid gap-6 ${columns}`}>
+    <ScrollReveal className={`mx-auto grid gap-6 ${columns}`}>
       {testimonials.map((t) => (
         <figure
           key={t.id}
@@ -39,6 +40,6 @@ export default function QuoteCards({ testimonials }: { testimonials: Testimonial
           </figcaption>
         </figure>
       ))}
-    </div>
+    </ScrollReveal>
   );
 }

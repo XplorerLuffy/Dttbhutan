@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ScrollReveal from "@/components/ScrollReveal";
 
 /**
  * Full-bleed band of the four reasons to book with Droelma.
@@ -59,7 +60,7 @@ export default function ValueBand({
   return (
     <section className="bg-brand-50/70 py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
+        <ScrollReveal className="mx-auto max-w-2xl text-center" stagger={0.08}>
           <h2 className="font-display text-3xl font-semibold leading-tight text-brand-900 sm:text-4xl">
             Bhutan, Arranged Properly
           </h2>
@@ -70,9 +71,9 @@ export default function ValueBand({
               About Droelma
             </Link>
           </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ScrollReveal className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {PILLARS.map((p) => (
             <div key={p.title} className="bg-white px-6 py-10 text-center shadow-sm">
               <p className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-brand-700">
@@ -85,17 +86,17 @@ export default function ValueBand({
               <p className="mt-5 text-sm leading-relaxed text-stone-600">{p.body}</p>
             </div>
           ))}
-        </div>
+        </ScrollReveal>
 
         {stats.length > 0 && (
-          <div className="mt-14 flex flex-wrap items-start justify-center gap-x-16 gap-y-8 border-t border-brand-200/70 pt-10">
+          <ScrollReveal className="mt-14 flex flex-wrap items-start justify-center gap-x-16 gap-y-8 border-t border-brand-200/70 pt-10">
             {stats.map((s) => (
               <div key={s.label} className="text-center">
                 <p className="font-display text-4xl font-semibold text-brand-800">{s.value}</p>
                 <p className="mt-1 text-sm text-stone-600">{s.label}</p>
               </div>
             ))}
-          </div>
+          </ScrollReveal>
         )}
       </div>
     </section>

@@ -35,16 +35,20 @@ export default function ScrollReveal({
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      gsap.set(targets, { opacity: 0, y: 28 });
+      gsap.set(targets, { opacity: 0, y: 40 });
       gsap.to(targets, {
         opacity: 1,
         y: 0,
-        duration: 0.7,
+        duration: 0.8,
         ease: "power2.out",
         stagger,
         scrollTrigger: {
           trigger: el,
-          start: "top 85%",
+          // Deliberately late. At "top 85%" a section is already animating
+          // before it is properly on screen, and with momentum scrolling it
+          // has finished by the time the visitor looks at it — which reads
+          // as nothing having animated at all.
+          start: "top 92%",
           once: true,
         },
       });

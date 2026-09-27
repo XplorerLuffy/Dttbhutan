@@ -170,9 +170,9 @@ export default async function HomePage() {
               title="The People You'll Travel With"
               subtitle="Bhutan requires every visitor to travel with a licensed guide. These are ours."
             />
-            <ScrollReveal className="mt-14">
+            <div className="mt-14">
               <GuideSpotlight guides={featuredGuides} />
-            </ScrollReveal>
+            </div>
             <div className="mt-12 text-center">
               <Link href="/guides" className="font-semibold text-brand-700 hover:underline">
                 Meet all our guides →
@@ -232,9 +232,9 @@ export default async function HomePage() {
             title="Our Travelers Say It Best"
             subtitle="Every review here is tied to a completed booking — we can't write them, and neither can anyone else."
           />
-          <ScrollReveal className="mt-14">
+          <div className="mt-14">
             <QuoteCards testimonials={testimonials} />
-          </ScrollReveal>
+          </div>
         </Container>
       )}
 
