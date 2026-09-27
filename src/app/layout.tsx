@@ -72,9 +72,7 @@ export default async function RootLayout({
         <CurrencyProvider rates={rates}>
           <SmoothScroll />
           <SiteChrome nav={<NavBar />} footer={<Footer />} chat={<AiChatWidget />}>
-            <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-              <PageTransition>{children}</PageTransition>
-            </main>
+            <PageTransition>{children}</PageTransition>
           </SiteChrome>
         </CurrencyProvider>
       </body>

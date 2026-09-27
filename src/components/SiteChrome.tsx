@@ -11,8 +11,17 @@ import { usePathname } from "next/navigation";
  * rendered server-side in the root layout and passed in as already-resolved
  * elements, so this client component only decides whether to show them —
  * it never renders them itself.
+ *
+ * It also owns the <main> wrapper, because the homepage is the one route
+ * that needs full-bleed bands (edge-to-edge colour and media sections). The
+ * shared `max-w-6xl` container would otherwise clip them, and the usual
+ * `100vw` breakout trick overflows by the width of the scrollbar. Every
+ * other route keeps the identical container it had before.
  */
 const NO_CHROME_PREFIXES = ["/admin", "/login", "/register"];
+
+/** Routes that lay out their own width, section by section. */
+const FULL_BLEED_PATHS = ["/"];
 
 export default function SiteChrome({
   nav,
@@ -28,11 +37,12 @@ export default function SiteChrome({
 }) {
   const pathname = usePathname();
   const hideChrome = NO_CHROME_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
+  const fullBleed = FULL_BLEED_PATHS.includes(pathname ?? "");
 
   return (
     <>
       {!hideChrome && nav}
-      {children}
+      <main className={fullBleed ? "pb-6" : "mx-auto max-w-6xl px-4 py-6 sm:px-6"}>{children}</main>
       {!hideChrome && footer}
       {!hideChrome && chat}
     </>
