@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import DepartureList, { type DepartureView } from "@/components/booking/DepartureList";
-import TripHero from "@/components/listing/TripHero";
+import TripPageHeader from "@/components/listing/TripPageHeader";
+import TripRouteMap from "@/components/listing/TripRouteMapClient";
+import type { RouteStop } from "@/components/listing/TripRouteMap";
 import TripSubNav, { type TripSubNavSection } from "@/components/listing/TripSubNav";
-import ActivityLevel from "@/components/listing/ActivityLevel";
 import ItineraryAccordion, {
   type ItineraryDayView,
 } from "@/components/listing/ItineraryAccordion";
@@ -181,14 +182,32 @@ export default async function PackageDetailPage({
   const priceLow = departurePrices.length > 0 ? Math.min(...departurePrices) : basePrice;
   const priceHigh = departurePrices.length > 0 ? Math.max(...departurePrices) : basePrice;
 
-  const places = Array.from(
-    new Set(itinerary.days.map((d) => d.destination?.name).filter((n): n is string => Boolean(n)))
-  );
+  // The route, in the order the trip visits it: consecutive days in the same
+  // place collapse into one stop, so a three-night base reads as one pin with
+  // three days rather than three pins on top of each other.
+  const stops: RouteStop[] = [];
+  for (const d of itinerary.days) {
+    const dest = d.destination;
+    if (!dest || dest.latitude === null || dest.longitude === null) continue;
+    const last = stops[stops.length - 1];
+    if (last && last.name === dest.name) last.days.push(d.dayNumber);
+    else
+      stops.push({
+        name: dest.name,
+        latitude: dest.latitude,
+        longitude: dest.longitude,
+        days: [d.dayNumber],
+      });
+  }
+  const startPlace = stops[0]?.name;
+  const endPlace = stops[stops.length - 1]?.name;
   // Highlights come from the day activities rather than a field of their own:
   // they are already the "what you'll actually do" list, and one authored in
   // a separate box would drift out of step with the itinerary below it.
   const highlights = Array.from(new Set(itinerary.days.flatMap((d) => d.activities))).slice(0, 6);
   const hasIncludes = itinerary.includes.length > 0 || itinerary.excludes.length > 0;
+
+  const departureMonths = summariseDepartureMonths(itinerary.departures.map((d) => d.startDate));
 
   // Only sections that actually render get a tab — see TripSubNav.
   const sections: TripSubNavSection[] = [
@@ -202,15 +221,19 @@ export default async function PackageDetailPage({
 
   return (
     <div>
-      <TripHero
+      <TripPageHeader
         title={itinerary.title}
-        summary={itinerary.summary}
         categoryLabel={CATEGORY_LABEL[itinerary.category]}
+        categoryHref={`/packages?category=${itinerary.category}`}
         imageUrl={itinerary.coverPhotoUrl}
-        durationDays={itinerary.durationDays}
-        difficulty={itinerary.difficulty}
-        maxGroupSize={itinerary.maxGroupSize}
-        price={<Money btn={Number(itinerary.pricePerPerson)} />}
+        stats={{
+          durationDays: itinerary.durationDays,
+          difficulty: itinerary.difficulty,
+          maxGroupSize: itinerary.maxGroupSize,
+          departureMonths,
+        }}
+        ratingAverage={reviewAverage}
+        ratingCount={reviewCount}
       />
 
       {/* The sub-nav shares this container with the sections below it: a
@@ -232,68 +255,71 @@ export default async function PackageDetailPage({
           datesId="dates"
         />
 
-        <section id="overview" className="scroll-mt-24 pt-6">
-          <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
+        <section id="overview" className="scroll-mt-24 pt-8">
+          <h2 className="font-display text-3xl font-bold text-stone-900">{itinerary.title}</h2>
+          <p className="mt-4 max-w-4xl text-lg leading-relaxed text-stone-700">
+            {itinerary.summary}
+          </p>
+          {itinerary.description && (
+            <p className="mt-4 max-w-4xl leading-relaxed text-stone-700">
+              {itinerary.description}
+            </p>
+          )}
+
+          <a
+            href={`/packages/${itinerary.slug}/itinerary.pdf`}
+            className="mt-8 inline-block rounded-full border-2 border-brand-800 px-7 py-3 font-display font-semibold text-brand-900 transition-colors hover:bg-brand-50"
+          >
+            Download Itinerary
+          </a>
+
+          {/* Without highlights the map takes the whole width rather than
+              sitting in a column with nothing beside it. */}
+          <div
+            className={`mt-10 grid gap-10 border-t border-stone-200 pt-10 ${
+              highlights.length > 0 ? "lg:grid-cols-[1fr_1.4fr]" : ""
+            }`}
+          >
+            {highlights.length > 0 && (
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-stone-900">
+                  Highlights
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  {highlights.map((h) => (
+                    <li key={h} className="flex gap-3 text-stone-700">
+                      <span
+                        aria-hidden
+                        className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold-500"
+                      />
+                      {h}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div>
-              <h2 className="font-display text-2xl font-bold text-stone-900">Trip overview</h2>
-              <p className="mt-3 text-lg leading-relaxed text-stone-700">{itinerary.summary}</p>
-              {itinerary.description && (
-                <p className="mt-4 leading-relaxed text-stone-700">{itinerary.description}</p>
-              )}
-
-              <a
-                href={`/packages/${itinerary.slug}/itinerary.pdf`}
-                className="mt-6 inline-block rounded-full border-2 border-brand-800 px-7 py-3 font-display font-semibold text-brand-900 transition-colors hover:bg-brand-50"
-              >
-                Download Itinerary
-              </a>
-
-              {highlights.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="font-display text-lg font-semibold text-stone-900">
-                    Trip highlights
-                  </h3>
-                  <ul className="mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
-                    {highlights.map((h) => (
-                      <li key={h} className="flex gap-2.5 text-stone-700">
-                        <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold-500" />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              <div className="mb-4 space-y-1.5 text-stone-800">
+                <p className="flex items-center gap-2 font-display text-lg font-semibold">
+                  <PinIcon />
+                  Bhutan
+                </p>
+                {startPlace && (
+                  <p className="text-sm">
+                    <span className="font-semibold">Start / end </span>
+                    {startPlace === endPlace ? startPlace : `${startPlace} to ${endPlace}`}
+                  </p>
+                )}
+              </div>
+              {stops.length > 0 ? (
+                <TripRouteMap stops={stops} />
+              ) : (
+                <p className="text-sm text-stone-500">
+                  The route map appears once this trip&apos;s days are linked to destinations.
+                </p>
               )}
             </div>
-
-            <aside className="h-fit rounded-xl border border-stone-200 bg-white p-6">
-              <h3 className="mb-4 font-display text-lg font-semibold text-stone-900">
-                At a glance
-              </h3>
-              <dl className="space-y-4 text-sm">
-                <Detail label="Trip length">
-                  {itinerary.durationDays} days
-                  {itinerary.durationDays > 1 && ` / ${itinerary.durationDays - 1} nights`}
-                </Detail>
-                <Detail label="Activity level">
-                  <ActivityLevel difficulty={itinerary.difficulty} showBlurb />
-                </Detail>
-                <Detail label="Group size">
-                  {itinerary.maxGroupSize ? `Up to ${itinerary.maxGroupSize} travellers` : "Small group"}
-                </Detail>
-                {places.length > 0 && <Detail label="Where you go">{places.join(" • ")}</Detail>}
-                <Detail label="Departures">
-                  {departures.length > 0
-                    ? `${departures.length} scheduled date${departures.length === 1 ? "" : "s"}`
-                    : "Private dates on request"}
-                </Detail>
-              </dl>
-              <a
-                href="#dates"
-                className="mt-6 block rounded-full bg-brand-700 px-5 py-3 text-center font-semibold text-white transition-colors hover:bg-brand-800"
-              >
-                See dates &amp; prices
-              </a>
-            </aside>
           </div>
         </section>
 
@@ -326,7 +352,7 @@ export default async function PackageDetailPage({
         )}
 
         <section id="dates" className="mt-14 scroll-mt-24">
-          <h2 className="font-display text-2xl font-bold text-stone-900">Dates &amp; prices</h2>
+          <h2 className="font-display text-2xl font-bold text-stone-900">Dates &amp; Prices</h2>
           <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
             {/* DepartureList owns the empty case too: a trip with no
                 scheduled dates still runs privately, and that tab is the
@@ -342,7 +368,8 @@ export default async function PackageDetailPage({
                 answers to "how do I book this". */}
             <aside className="space-y-4 lg:sticky lg:top-24">
               <div className="rounded-xl border border-stone-200 bg-white p-6">
-                <h3 className="font-display text-base font-semibold text-stone-900">
+                <MapCardIcon />
+                <h3 className="mt-3 font-display text-base font-semibold text-stone-900">
                   Want to learn more about this trip?
                 </h3>
                 <p className="mt-2 text-sm text-stone-600">
@@ -359,7 +386,8 @@ export default async function PackageDetailPage({
               </div>
 
               <div className="rounded-xl border border-stone-200 bg-white p-6">
-                <h3 className="font-display text-base font-semibold text-stone-900">
+                <ShieldIcon />
+                <h3 className="mt-3 font-display text-base font-semibold text-stone-900">
                   Book with confidence
                 </h3>
                 <p className="mt-2 text-sm text-stone-600">
@@ -461,11 +489,99 @@ function Container({ children, className = "" }: { children: React.ReactNode; cl
   return <div className={`mx-auto max-w-6xl px-4 sm:px-6 ${className}`}>{children}</div>;
 }
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+function PinIcon() {
   return (
-    <div>
-      <dt className="text-[11px] font-bold uppercase tracking-wider text-stone-500">{label}</dt>
-      <dd className="mt-1 text-stone-800">{children}</dd>
-    </div>
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      className="h-5 w-5 text-brand-700"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" />
+      <circle cx="12" cy="10" r="2.6" />
+    </svg>
   );
+}
+
+const CARD_ICON = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.6,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+
+function MapCardIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className="h-8 w-8 text-brand-800" {...CARD_ICON}>
+      <path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20Z" />
+      <path d="M9 4v13.5M15 6.5V20" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className="h-8 w-8 text-brand-800" {...CARD_ICON}>
+      <path d="M12 3.5 20 6v6c0 4.6-3.3 7.8-8 9.5-4.7-1.7-8-4.9-8-9.5V6Z" />
+      <path d="m8.8 12 2.3 2.3 4.1-4.6" />
+    </svg>
+  );
+}
+
+const MONTH_ABBR = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/**
+ * "2026: Oct · 2027: Feb–Apr, Oct" — the season at a glance, for the page
+ * header.
+ *
+ * Runs of consecutive months collapse into a range, which is how a season
+ * actually reads: a trip running February, March and April is a spring trip,
+ * not three separate facts. Dates are read in UTC because the column is a
+ * DATE, so a 1 March departure can't slip back into February for a visitor
+ * west of Greenwich.
+ */
+function summariseDepartureMonths(dates: Date[]): string {
+  if (dates.length === 0) return "";
+
+  const byYear = new Map<string, Set<number>>();
+  for (const date of dates) {
+    const iso = date.toISOString();
+    const year = iso.slice(0, 4);
+    const month = Number(iso.slice(5, 7)) - 1;
+    if (!byYear.has(year)) byYear.set(year, new Set());
+    byYear.get(year)!.add(month);
+  }
+
+  return Array.from(byYear.keys())
+    .sort()
+    .map((year) => {
+      const months = Array.from(byYear.get(year)!).sort((a, b) => a - b);
+      const runs: string[] = [];
+      let runStart = months[0];
+      let previous = months[0];
+      for (const month of months.slice(1)) {
+        if (month === previous + 1) {
+          previous = month;
+          continue;
+        }
+        runs.push(formatRun(runStart, previous));
+        runStart = month;
+        previous = month;
+      }
+      runs.push(formatRun(runStart, previous));
+      return `${year}: ${runs.join(", ")}`;
+    })
+    .join(" · ");
+}
+
+function formatRun(from: number, to: number) {
+  return from === to ? MONTH_ABBR[from] : `${MONTH_ABBR[from]}\u2013${MONTH_ABBR[to]}`;
 }

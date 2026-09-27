@@ -342,10 +342,12 @@ function GuestSelector({
         <p className="text-[11px] font-bold uppercase tracking-wider text-brand-900">
           Your guest &amp; room selections
         </p>
-        <p className="text-stone-800">
+        <p className="flex items-center gap-2 text-stone-800">
+          <PersonIcon />
           {adults} adult{adults === 1 ? "" : "s"}
         </p>
-        <p className="text-stone-800">
+        <p className="flex items-center gap-2 text-stone-800">
+          <BedIcon />
           {rooms} room{rooms === 1 ? "" : "s"}
         </p>
         <button
@@ -365,6 +367,33 @@ function GuestSelector({
         </div>
       )}
     </div>
+  );
+}
+
+const ICON = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.7,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+
+function PersonIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 text-brand-700" {...ICON}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="10" r="2.6" />
+      <path d="M6.8 18.6a5.6 5.6 0 0 1 10.4 0" />
+    </svg>
+  );
+}
+
+function BedIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 text-brand-700" {...ICON}>
+      <path d="M3 18v-7M3 14h18v4M21 18v-4" />
+      <path d="M6.5 11V8.5h11V11" />
+    </svg>
   );
 }
 
