@@ -23,7 +23,7 @@ export default async function NavBar() {
     <header className="border-b border-stone-200 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <LogoMark className="h-9 w-auto shrink-0" />
+          <LogoMark className="h-11 w-auto shrink-0" />
           <span className="font-display text-base font-semibold text-brand-800 sm:text-lg lg:hidden xl:inline">
             Droelma Tours &amp; Travels
           </span>
