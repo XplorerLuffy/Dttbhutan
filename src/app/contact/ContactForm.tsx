@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 
-export default function ContactForm({ defaultSubject }: { defaultSubject?: string }) {
+export default function ContactForm({
+  defaultSubject,
+  departureId,
+}: {
+  defaultSubject?: string;
+  departureId?: string;
+}) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +28,7 @@ export default function ContactForm({ defaultSubject }: { defaultSubject?: strin
         subject: form.get("subject"),
         message: form.get("message"),
         website: form.get("website"),
+        departureId,
       }),
     });
 

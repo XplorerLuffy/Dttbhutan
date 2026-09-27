@@ -13,11 +13,11 @@ export const metadata: Metadata = {
 export default async function ContactPage({
   searchParams,
 }: {
-  searchParams: Promise<{ subject?: string }>;
+  searchParams: Promise<{ subject?: string; departure?: string }>;
 }) {
   const company = await getCompany();
   const address = formatAddress(company);
-  const { subject } = await searchParams;
+  const { subject, departure } = await searchParams;
   const contactDetails = [
     { label: "Phone", value: company.phone },
     { label: "WhatsApp", value: company.whatsapp },
@@ -33,7 +33,7 @@ export default async function ContactPage({
       </p>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <ContactForm defaultSubject={subject} />
+        <ContactForm defaultSubject={subject} departureId={departure} />
 
         <aside className="space-y-4">
           <div className="card">

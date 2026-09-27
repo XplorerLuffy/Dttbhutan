@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import ItineraryBookingForm from "@/components/booking/ItineraryBookingForm";
+import DepartureList, { type DepartureView } from "@/components/booking/DepartureList";
 import DetailGallery from "@/components/listing/DetailGallery";
 import Money from "@/components/Money";
 import type { Metadata } from "next";
@@ -45,9 +47,27 @@ export default async function PackageDetailPage({
 
   const itinerary = await prisma.itinerary.findUnique({
     where: { slug },
-    include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: true } } },
+    include: {
+      days: { orderBy: { dayNumber: "asc" }, include: { destination: true } },
+      // Past departures are dropped here rather than in the component: a
+      // date that has already gone is not a choice, and showing it only
+      // invites "why can't I book this".
+      departures: {
+        where: { startDate: { gte: startOfToday() }, status: { not: "CANCELLED" } },
+        orderBy: { startDate: "asc" },
+      },
+    },
   });
   if (!itinerary || itinerary.status !== "PUBLISHED") notFound();
+
+  const departures: DepartureView[] = itinerary.departures.map((d) => ({
+    id: d.id,
+    startDate: d.startDate.toISOString().slice(0, 10),
+    endDate: d.endDate.toISOString().slice(0, 10),
+    price: Number(d.priceOverride ?? itinerary.pricePerPerson),
+    status: d.status,
+    note: d.note,
+  }));
 
   return (
     <div>
@@ -63,6 +83,28 @@ export default async function PackageDetailPage({
         <p className="mt-2 text-sm text-stone-500">{itinerary.durationDays} days</p>
 
         {itinerary.description && <p className="mt-4 text-stone-700">{itinerary.description}</p>}
+
+        <section id="dates" className="mt-10 scroll-mt-24">
+          <h2 className="font-display text-xl font-semibold text-stone-900">Departure dates</h2>
+          {departures.length > 0 ? (
+            <>
+              <p className="mt-1 text-sm text-stone-600">
+                Pick a departure to request a place on it. Prices are per person.
+              </p>
+              <div className="mt-5">
+                <DepartureList departures={departures} packageTitle={itinerary.title} />
+              </div>
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-stone-600">
+              No scheduled departures are published for this tour yet.{" "}
+              <Link href="/custom-tour" className="text-brand-700 hover:underline">
+                Tell us when you&apos;d like to travel
+              </Link>{" "}
+              and we&apos;ll arrange it around your dates.
+            </p>
+          )}
+        </section>
 
         {(itinerary.includes.length > 0 || itinerary.excludes.length > 0) && (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">

@@ -19,7 +19,10 @@ export default async function AdminEnquiriesPage() {
 
   const messages = await prisma.contactMessage.findMany({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-    include: { traveler: { select: { email: true, role: true } } },
+    include: {
+      traveler: { select: { email: true, role: true } },
+      departure: { include: { itinerary: { select: { title: true, slug: true } } } },
+    },
   });
 
   const newCount = messages.filter((m) => m.status === "NEW").length;
@@ -65,6 +68,16 @@ export default async function AdminEnquiriesPage() {
               </div>
               <EnquiryStatusControls id={m.id} status={m.status} />
             </div>
+
+            {m.departure && (
+              <p className="mt-3 rounded-md bg-brand-50 px-3 py-2 text-sm text-brand-900">
+                <span className="font-semibold">Departure requested:</span>{" "}
+                {m.departure.itinerary.title} ·{" "}
+                {m.departure.startDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                {" → "}
+                {m.departure.endDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+              </p>
+            )}
 
             <p className="mt-3 whitespace-pre-wrap border-t border-stone-100 pt-3 text-sm text-stone-700">
               {m.message}

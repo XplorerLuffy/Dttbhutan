@@ -44,6 +44,9 @@ export default async function AdminPackagesPage() {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <Link href={`/admin/packages/${it.id}/departures`} className="btn-secondary">
+                Dates
+              </Link>
               <Link href={`/admin/packages/${it.id}/edit`} className="btn-secondary">
                 Edit
               </Link>

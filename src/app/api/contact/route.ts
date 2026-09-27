@@ -28,6 +28,8 @@ const contactSchema = z.object({
    * real submission does.
    */
   website: z.string().max(200).optional(),
+  /** Set when the enquiry came from "Request to book" on a departure. */
+  departureId: z.string().trim().max(40).optional().or(z.literal("")),
 });
 
 /**
@@ -92,6 +94,13 @@ export async function POST(req: NextRequest) {
   // staff, but never required.
   const user = await getCurrentUser().catch(() => null);
 
+  const departure = parsed.data.departureId
+    ? await prisma.departure.findUnique({
+        where: { id: parsed.data.departureId },
+        select: { id: true },
+      })
+    : null;
+
   const contact = await prisma.contactMessage.create({
     data: {
       name,
@@ -100,6 +109,10 @@ export async function POST(req: NextRequest) {
       subject: subject || null,
       message,
       travelerId: user?.id ?? null,
+      // Verified against the database rather than trusted: the id arrives in
+      // a query string a visitor can edit, and a bad one would otherwise
+      // fail the whole submission on a foreign key.
+      departureId: departure?.id ?? null,
     },
   });
 

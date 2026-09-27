@@ -359,6 +359,7 @@ model Itinerary {
 
   days     ItineraryDay[]
   bookings ItineraryBooking[]
+  departures Departure[]
 }
 
 enum ArticleStatus {
@@ -653,6 +654,11 @@ model ContactMessage {
   adminNote  String?
   travelerId String?
   traveler   User?                @relation(fields: [travelerId], references: [id], onDelete: SetNull)
+  /// Set when the enquiry came from "Request to book" on a specific
+  /// departure. Kept as a relation rather than parsed out of `subject`, so
+  /// staff see the real departure even if the subject line is edited.
+  departureId String?
+  departure   Departure?          @relation(fields: [departureId], references: [id], onDelete: SetNull)
   createdAt  DateTime             @default(now())
   updatedAt  DateTime             @updatedAt
 
@@ -832,4 +838,43 @@ model ContentSection {
   updatedAt DateTime @updatedAt
 
   @@index([page, position])
+}
+
+/// A scheduled departure of a package tour — one set of dates travellers can
+/// ask to join.
+///
+/// Availability is a status the agency sets rather than a seat count derived
+/// from enquiries. An enquiry is an expression of interest, not a held seat,
+/// so counting them would overstate how full a trip is; staff know what is
+/// actually committed and say so here.
+///
+/// `endDate` is stored rather than computed from the itinerary's duration so
+/// a one-off departure can run long or short (a festival date, a shortened
+/// shoulder-season run) without editing the package itself.
+model Departure {
+  id          String          @id @default(cuid())
+  itineraryId String
+  itinerary   Itinerary       @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  startDate   DateTime        @db.Date
+  endDate     DateTime        @db.Date
+  /// Per-person price for this departure when it differs from the package's
+  /// standard price — peak festival weeks, for instance. Null means the
+  /// package price applies.
+  priceOverride Decimal?      @db.Decimal(10, 2)
+  status      DepartureStatus @default(OPEN)
+  /// Short public label, e.g. "Thimphu Tshechu" — shown beside the dates.
+  note        String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  enquiries ContactMessage[]
+
+  @@index([itineraryId, startDate])
+}
+
+enum DepartureStatus {
+  OPEN
+  LIMITED
+  SOLD_OUT
+  CANCELLED
 }
