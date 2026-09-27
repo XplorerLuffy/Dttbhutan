@@ -4,9 +4,12 @@ import { useState } from "react";
 
 export default function ContactForm({
   defaultSubject,
+  defaultMessage,
   departureId,
 }: {
   defaultSubject?: string;
+  /** Prefilled body — the trip page sends the party size this way. */
+  defaultMessage?: string;
   departureId?: string;
 }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
@@ -118,6 +121,7 @@ export default function ContactForm({
         <textarea
           id="message"
           name="message"
+          defaultValue={defaultMessage}
           required
           minLength={10}
           rows={6}

@@ -34,12 +34,24 @@ export type DepartureView = {
   note: string | null;
 };
 
-const STATUS_LABEL: Record<DepartureView["status"], string | null> = {
-  OPEN: null,
+const STATUS_LABEL: Record<DepartureView["status"], string> = {
+  OPEN: "Available",
   LIMITED: "Limited space",
   SOLD_OUT: "Sold out",
   CANCELLED: "Cancelled",
 };
+
+const STATUS_CLASS: Record<DepartureView["status"], string> = {
+  OPEN: "text-pine-600",
+  LIMITED: "text-amber-700",
+  SOLD_OUT: "text-stone-400",
+  CANCELLED: "text-stone-400",
+};
+
+/** What a party of this size reads as in a subject line or a summary bar. */
+function partyLabel(adults: number, rooms: number) {
+  return `${adults} adult${adults === 1 ? "" : "s"}, ${rooms} room${rooms === 1 ? "" : "s"}`;
+}
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -53,6 +65,8 @@ export default function DepartureList({
   packageTitle: string;
 }) {
   const [tab, setTab] = useState<Tab>("scheduled");
+  const [adults, setAdults] = useState(2);
+  const [rooms, setRooms] = useState(1);
 
   const years = useMemo(
     () => Array.from(new Set(departures.map((d) => d.startDate.slice(0, 4)))).sort(),
@@ -144,9 +158,27 @@ export default function DepartureList({
             </div>
           </div>
 
-          <ul className="mt-6 space-y-3">
+          <GuestSelector
+            adults={adults}
+            rooms={rooms}
+            // Dropping the party below the number of rooms would leave an
+            // empty room in the enquiry, so the rooms follow it down.
+            onAdults={(n) => {
+              setAdults(n);
+              setRooms((r) => Math.min(r, n));
+            }}
+            onRooms={setRooms}
+          />
+
+          <ul className="mt-5 space-y-3">
             {shown.map((d) => (
-              <DepartureRow key={d.id} departure={d} packageTitle={packageTitle} />
+              <DepartureRow
+                key={d.id}
+                departure={d}
+                packageTitle={packageTitle}
+                adults={adults}
+                rooms={rooms}
+              />
             ))}
           </ul>
 
@@ -172,14 +204,22 @@ export default function DepartureList({
 function DepartureRow({
   departure: d,
   packageTitle,
+  adults,
+  rooms,
 }: {
   departure: DepartureView;
   packageTitle: string;
+  adults: number;
+  rooms: number;
 }) {
   const [open, setOpen] = useState(false);
   const bookable = d.status === "OPEN" || d.status === "LIMITED";
   const statusLabel = STATUS_LABEL[d.status];
   const subject = `Booking request: ${packageTitle} — ${fmtLong(d.startDate)} to ${fmtLong(d.endDate)}`;
+  // The party rides in the message rather than the subject: a subject long
+  // enough to carry both gets truncated in every mail client.
+  const message = `I'd like to request places on the ${fmtLong(d.startDate)} departure for ${partyLabel(adults, rooms)}.`;
+  const bookHref = `/contact?subject=${encodeURIComponent(subject)}&departure=${d.id}&message=${encodeURIComponent(message)}`;
   const panelId = `departure-${d.id}`;
 
   return (
@@ -193,26 +233,7 @@ function DepartureRow({
           <DateBlock iso={d.endDate} />
         </div>
 
-        {statusLabel && (
-          <span
-            className={`hidden shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold sm:inline ${
-              d.status === "LIMITED" ? "bg-amber-100 text-amber-900" : "bg-stone-200 text-stone-600"
-            }`}
-          >
-            {statusLabel}
-          </span>
-        )}
-
-        {bookable ? (
-          <Link
-            href={`/contact?subject=${encodeURIComponent(subject)}&departure=${d.id}`}
-            className="shrink-0 font-semibold text-brand-700 hover:underline"
-          >
-            Request to Book
-          </Link>
-        ) : (
-          <span className="shrink-0 text-sm text-stone-400">Not available</span>
-        )}
+        <span className={`shrink-0 font-semibold ${STATUS_CLASS[d.status]}`}>{statusLabel}</span>
 
         <button
           type="button"
@@ -268,9 +289,147 @@ function DepartureRow({
               </div>
             )}
           </dl>
+
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            {bookable ? (
+              <Link
+                href={bookHref}
+                className="rounded-full bg-brand-800 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-brand-900"
+              >
+                Request to Book
+              </Link>
+            ) : (
+              <span className="text-sm text-stone-500">
+                This departure is closed — try another date, or ask us about private dates.
+              </span>
+            )}
+            {bookable && (
+              <p className="text-sm text-stone-500">
+                For {partyLabel(adults, rooms)}. Nothing is charged at this stage.
+              </p>
+            )}
+          </div>
         </div>
       )}
     </li>
+  );
+}
+
+/**
+ * Party size for the whole date list, the way an outfitter's dates page
+ * carries it: set once above the dates rather than asked again on every
+ * row. It rides into the enquiry so the reply can quote the right price,
+ * and is shown as a summary until someone opens it — the common case is
+ * two adults in one room, and making everyone step through a form to
+ * confirm that is a tax on the majority.
+ */
+function GuestSelector({
+  adults,
+  rooms,
+  onAdults,
+  onRooms,
+}: {
+  adults: number;
+  rooms: number;
+  onAdults: (n: number) => void;
+  onRooms: (n: number) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <div className="mt-5 rounded-lg border border-brand-100 bg-brand-50 px-5 py-4">
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-brand-900">
+          Your guest &amp; room selections
+        </p>
+        <p className="text-stone-800">
+          {adults} adult{adults === 1 ? "" : "s"}
+        </p>
+        <p className="text-stone-800">
+          {rooms} room{rooms === 1 ? "" : "s"}
+        </p>
+        <button
+          type="button"
+          onClick={() => setEditing((e) => !e)}
+          aria-expanded={editing}
+          className="ml-auto font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-900"
+        >
+          {editing ? "Done" : "Edit"}
+        </button>
+      </div>
+
+      {editing && (
+        <div className="mt-4 flex flex-wrap gap-8 border-t border-brand-100 pt-4">
+          <Stepper label="Adults" value={adults} min={1} max={30} onChange={onAdults} />
+          <Stepper label="Rooms" value={rooms} min={1} max={adults} onChange={onRooms} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stepper({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <div>
+      <p id={`stepper-${label}`} className="mb-1 text-sm font-medium text-stone-700">
+        {label}
+      </p>
+      <div className="flex items-center gap-3">
+        <StepButton
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          label={`One fewer ${label.toLowerCase().replace(/s$/, "")}`}
+        >
+          −
+        </StepButton>
+        <span aria-labelledby={`stepper-${label}`} className="w-6 text-center font-semibold">
+          {value}
+        </span>
+        <StepButton
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={value >= max}
+          label={`One more ${label.toLowerCase().replace(/s$/, "")}`}
+        >
+          +
+        </StepButton>
+      </div>
+    </div>
+  );
+}
+
+function StepButton({
+  onClick,
+  disabled,
+  label,
+  children,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className="h-8 w-8 rounded-full border border-stone-300 bg-white text-lg leading-none text-stone-700 transition-colors hover:border-brand-700 hover:text-brand-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-stone-300 disabled:hover:text-stone-700"
+    >
+      {children}
+    </button>
   );
 }
 
