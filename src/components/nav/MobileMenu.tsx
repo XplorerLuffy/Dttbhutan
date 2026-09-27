@@ -62,7 +62,7 @@ export default function MobileMenu({
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
-        className="flex h-10 w-10 items-center justify-center rounded-md text-stone-700 hover:bg-stone-100"
+        className="flex h-10 w-10 items-center justify-center rounded-md text-white hover:bg-white/10"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-6 w-6">
           <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />

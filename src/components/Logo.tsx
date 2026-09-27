@@ -14,10 +14,14 @@ import Image from "next/image";
  * name beside it. `LogoLockup` is the emblem over the wordmark, in the
  * brand's own typography.
  *
- * Both sit on light backgrounds. The cutout keeps a faint light fringe from
- * the original JPEG's anti-aliasing, which is invisible on white but shows
- * on a dark panel — a vector (SVG) master from the designer would be worth
- * asking for before using either over dark imagery.
+ * The `Reverse` variants are for dark backgrounds. Measured against the
+ * navy header, the artwork's dominant blue sits at 1.46:1 contrast — the
+ * glyph and the Bhutan map effectively vanish. Those elements are recoloured
+ * to white (11.5:1) while the gold and orange petals keep their own colour,
+ * since they already read clearly at 6.5:1 and 4.0:1. That is a standard
+ * reversed lockup, but it is a variant of the client's artwork rather than
+ * something they supplied; an official reversed or vector master from their
+ * designer should replace it when available.
  */
 
 export default function LogoMark({ className }: { className?: string }) {
@@ -41,6 +45,31 @@ export function LogoLockup({ className }: { className?: string }) {
       width={714}
       height={607}
       priority
+      className={className}
+    />
+  );
+}
+
+export function LogoMarkReverse({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logo/droelma-mark-reverse.png"
+      alt="Droelma Tours &amp; Travels"
+      width={535}
+      height={533}
+      priority
+      className={className}
+    />
+  );
+}
+
+export function LogoLockupReverse({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logo/droelma-logo-reverse.png"
+      alt="Droelma Tours &amp; Travels"
+      width={714}
+      height={607}
       className={className}
     />
   );

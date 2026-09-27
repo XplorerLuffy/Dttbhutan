@@ -3,9 +3,9 @@ import NavMenu from "./NavMenu";
 
 type Destination = { id: string; name: string; slug: string };
 
-export default function DestinationsMenu({ destinations }: { destinations: Destination[] }) {
+export default function DestinationsMenu({ destinations, triggerClassName }: { destinations: Destination[]; triggerClassName?: string }) {
   return (
-    <NavMenu label="Destinations" panelClassName="sm:max-w-2xl">
+    <NavMenu label="Destinations" triggerClassName={triggerClassName} panelClassName="sm:max-w-2xl">
       <ul className="grid grid-cols-2 gap-x-6 gap-y-1.5 sm:grid-cols-3">
         {destinations.map((d) => (
           <li key={d.id}>

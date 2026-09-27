@@ -11,22 +11,29 @@ import { useClickOutside } from "@/lib/hooks/useClickOutside";
 export default function NavMenu({
   label,
   panelClassName,
+  triggerClassName,
   children,
 }: {
   label: string;
   panelClassName?: string;
+  /** The header is dark, so the trigger needs different colours there. The
+   * panel itself stays light in both cases. */
+  triggerClassName?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   useClickOutside(wrapRef, () => setOpen(false));
 
+  // The panel aligns to the trigger's left edge rather than centring on it.
+  // Centred, a 672px panel under a trigger ~105px from the window edge hung
+  // a third of its width off-screen with no way to reach it.
   return (
     <div ref={wrapRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-stone-600 hover:text-stone-900"
+        className={`flex items-center gap-1 ${triggerClassName ?? "text-stone-600 hover:text-stone-900"}`}
         aria-expanded={open}
       >
         {label}
@@ -38,7 +45,7 @@ export default function NavMenu({
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className={`fixed inset-x-4 top-[4.5rem] z-30 rounded-lg border border-stone-200 bg-white p-5 shadow-xl sm:absolute sm:inset-x-auto sm:left-1/2 sm:top-full sm:mt-3 sm:w-screen sm:max-w-md sm:-translate-x-1/2 sm:max-h-none sm:overflow-visible max-h-[70vh] overflow-y-auto ${panelClassName ?? ""}`}
+          className={`fixed inset-x-4 top-[4.5rem] z-30 rounded-lg border border-stone-200 bg-white p-5 shadow-xl sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-3 sm:w-screen sm:max-w-md sm:max-h-none sm:overflow-visible max-h-[70vh] overflow-y-auto ${panelClassName ?? ""}`}
         >
           {children}
         </div>
