@@ -130,11 +130,9 @@ export default async function HomePage() {
 
   return (
     <div>
-      <Container>
-        <Hero destinations={destinations} />
-      </Container>
+      <Hero destinations={destinations} />
 
-      <div className="mt-20 sm:mt-24">
+      <div>
         <ValueBand
           packageCount={publishedItineraries.length}
           destinationCount={destinations.length}
