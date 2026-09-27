@@ -1,5 +1,6 @@
 import "server-only";
 import { buildSystemPrompt } from "@/lib/ai/systemPrompt";
+import { getCompany } from "@/lib/content";
 import { executeTool, getToolDefinitions } from "@/lib/ai/tools";
 import type { AiMessage, AiProvider } from "@/lib/ai/provider";
 
@@ -34,8 +35,13 @@ export async function runAssistantTurn(
   history: ConversationTurn[],
   userMessage: string
 ): Promise<string> {
+  // The agency name is editable in admin, so the prompt reads it rather than
+  // hardcoding it — otherwise the assistant would introduce itself under a
+  // name the rest of the site no longer uses.
+  const { name: companyName } = await getCompany();
+
   const messages: AiMessage[] = [
-    { role: "system", content: buildSystemPrompt() },
+    { role: "system", content: buildSystemPrompt(companyName) },
     ...history.map((turn): AiMessage => ({
       role: turn.role === "USER" ? "user" : "assistant",
       content: turn.content,

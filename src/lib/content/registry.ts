@@ -151,6 +151,26 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "footer.copyrightNote", label: "Extra line under the copyright", type: "text", default: "" },
     ],
   },
+
+  {
+    id: "legal",
+    label: "Legal & cancellation",
+    description:
+      "Shown on the Terms, Privacy and Cancellation pages. Refund tiers are drafted from common Bhutan operator practice — confirm them against how the business actually operates before launch, and have the pages reviewed by someone qualified.",
+    fields: [
+      { key: "legal.lastUpdated", label: "Last updated", type: "text", default: "17 September 2026", help: "Printed at the top of each legal page. Update it whenever the wording changes." },
+      { key: "legal.tier1.window", label: "Tier 1 — when", type: "text", default: "More than 45 days before departure" },
+      { key: "legal.tier1.refund", label: "Tier 1 — refund", type: "text", default: "90% of the trip cost" },
+      { key: "legal.tier2.window", label: "Tier 2 — when", type: "text", default: "30–45 days before departure" },
+      { key: "legal.tier2.refund", label: "Tier 2 — refund", type: "text", default: "75% of the trip cost" },
+      { key: "legal.tier3.window", label: "Tier 3 — when", type: "text", default: "15–29 days before departure" },
+      { key: "legal.tier3.refund", label: "Tier 3 — refund", type: "text", default: "50% of the trip cost" },
+      { key: "legal.tier4.window", label: "Tier 4 — when", type: "text", default: "7–14 days before departure" },
+      { key: "legal.tier4.refund", label: "Tier 4 — refund", type: "text", default: "25% of the trip cost" },
+      { key: "legal.tier5.window", label: "Tier 5 — when", type: "text", default: "Less than 7 days before departure, or no-show" },
+      { key: "legal.tier5.refund", label: "Tier 5 — refund", type: "text", default: "No refund" },
+    ],
+  },
 ];
 
 /** Flat key → default, built once from the registry. */

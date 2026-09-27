@@ -10,6 +10,7 @@ import { getCurrentRates } from "@/lib/fx";
 import SiteChrome from "@/components/SiteChrome";
 import AiChatWidget from "@/components/ai/AiChatWidget";
 import { organizationJsonLd, siteUrl } from "@/lib/seo";
+import { getCompany } from "@/lib/content";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -58,7 +59,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const rates = await getCurrentRates();
+  const [rates, company] = await Promise.all([getCurrentRates(), getCompany()]);
 
   return (
     <html lang="en">
@@ -67,7 +68,7 @@ export default async function RootLayout({
       >
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd(company)) }}
         />
         <CurrencyProvider rates={rates}>
           <SmoothScroll />

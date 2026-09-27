@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPageShell, { Clause, Confirm } from "@/components/legal/LegalPageShell";
-import { CANCELLATION_TIERS } from "@/lib/legal";
-import { COMPANY } from "@/lib/company";
+
+import { getCompany, getSiteContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Cancellation & refund policy",
@@ -10,11 +10,18 @@ export const metadata: Metadata = {
     "How cancellations and refunds work for Droelma Tours & Travels bookings, including refund tiers by days before departure.",
 };
 
-export default function CancellationPage() {
+export default async function CancellationPage() {
+  const company = await getCompany();
+  const content = await getSiteContent();
+  const tiers = [1, 2, 3, 4, 5].map((n) => ({
+    window: content(`legal.tier${n}.window`),
+    refund: content(`legal.tier${n}.refund`),
+  }));
+
   return (
     <LegalPageShell
       title="Cancellation & refund policy"
-      intro={`How cancellations, changes and refunds work for bookings made with ${COMPANY.name}.`}
+      intro={`How cancellations, changes and refunds work for bookings made with ${company.name}.`}
     >
       <Clause heading="1. Cancelling a booking">
         <p>
@@ -31,7 +38,7 @@ export default function CancellationPage() {
               </tr>
             </thead>
             <tbody>
-              {CANCELLATION_TIERS.map((tier) => (
+              {tiers.map((tier) => (
                 <tr key={tier.window} className="border-b border-stone-100">
                   <td className="py-2 pr-4">{tier.window}</td>
                   <td className="py-2">

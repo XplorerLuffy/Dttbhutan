@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPageShell, { Clause, Confirm } from "@/components/legal/LegalPageShell";
-import { COMPANY } from "@/lib/company";
+import { getCompany } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -9,11 +9,13 @@ export const metadata: Metadata = {
     "What personal data Droelma Tours & Travels collects, why, who it's shared with, and the rights you have over it.",
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const company = await getCompany();
+
   return (
     <LegalPageShell
       title="Privacy policy"
-      intro={`What personal data ${COMPANY.name} collects, why we need it, and what we do with it.`}
+      intro={`What personal data ${company.name} collects, why we need it, and what we do with it.`}
     >
       <Clause heading="1. What we collect">
         <p>We collect only what we need to arrange and run your trip:</p>

@@ -93,3 +93,11 @@ export function companyFrom(content: SiteContent): CompanyDetails {
 export async function getCompany(): Promise<CompanyDetails> {
   return companyFrom(await getSiteContent());
 }
+
+/** Street, city, country — skipping whichever parts aren't filled in. */
+export function formatAddress(company: CompanyDetails): string {
+  return [company.address.street, company.address.city, company.address.country]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ");
+}

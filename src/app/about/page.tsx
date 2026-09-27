@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LogoMark from "@/components/Logo";
 import CompanyFact from "@/components/company/CompanyFact";
-import { COMPANY, formattedAddress, isPlaceholder } from "@/lib/company";
+import { getCompany, formatAddress } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "About us",
@@ -29,12 +29,15 @@ const WHAT_WE_DO = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const company = await getCompany();
+  const address = formatAddress(company);
+
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-10 flex flex-col items-center text-center">
         <LogoMark className="mb-4 h-16 w-auto" />
-        <h1 className="font-display text-3xl font-bold text-stone-900">About {COMPANY.name}</h1>
+        <h1 className="font-display text-3xl font-bold text-stone-900">About {company.name}</h1>
         <p className="mt-3 text-stone-600">
           A Bhutan-based tour operator arranging guides, accommodation, transport and
           complete itineraries for travellers visiting the kingdom.
@@ -89,15 +92,15 @@ export default function AboutPage() {
           <dl className="space-y-2 text-sm">
             <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
               <dt className="w-48 shrink-0 text-stone-500">Trading name</dt>
-              <dd className="text-stone-900">{COMPANY.name}</dd>
+              <dd className="text-stone-900">{company.name}</dd>
             </div>
             {[
-              { label: "Registered name", value: COMPANY.legalName },
-              { label: "TCB licence", value: COMPANY.tcbLicenceNumber },
-              { label: "Registration no.", value: COMPANY.registrationNumber },
-              { label: "Operating since", value: COMPANY.foundedYear },
+              { label: "Registered name", value: company.legalName },
+              { label: "TCB licence", value: company.tcbLicenceNumber },
+              { label: "Registration no.", value: company.registrationNumber },
+              { label: "Operating since", value: company.foundedYear },
             ].map(({ label, value }) =>
-              isPlaceholder(value) && process.env.NODE_ENV === "production" ? null : (
+              !value.trim() && process.env.NODE_ENV === "production" ? null : (
                 <div key={label} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
                   <dt className="w-48 shrink-0 text-stone-500">{label}</dt>
                   <dd className="text-stone-900">
@@ -106,10 +109,10 @@ export default function AboutPage() {
                 </div>
               )
             )}
-            {formattedAddress() && (
+            {address && (
               <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
                 <dt className="w-48 shrink-0 text-stone-500">Address</dt>
-                <dd className="text-stone-900">{formattedAddress()}</dd>
+                <dd className="text-stone-900">{address}</dd>
               </div>
             )}
           </dl>

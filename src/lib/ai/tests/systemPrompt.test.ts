@@ -24,7 +24,7 @@ function check(name: string, condition: boolean, detail?: string) {
 }
 
 function main() {
-  const prompt = buildSystemPrompt();
+  const prompt = buildSystemPrompt("Droelma Tours & Travels");
 
   check(
     "instructs the model to never state an un-tool-verified price",

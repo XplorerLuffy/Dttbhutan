@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { COMPANY } from "@/lib/company";
+import { getCompany } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Frequently asked questions",
@@ -127,7 +127,9 @@ const FAQS: { category: string; items: { q: string; a: React.ReactNode }[] }[] =
   },
 ];
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const company = await getCompany();
+
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="mb-1 font-display text-3xl font-bold text-stone-900">
@@ -169,7 +171,7 @@ export default function FaqPage() {
           Still have a question? We usually reply within one working day.
         </p>
         <Link href="/contact" className="btn-primary mt-3 inline-block">
-          Contact {COMPANY.name}
+          Contact {company.name}
         </Link>
       </div>
     </div>

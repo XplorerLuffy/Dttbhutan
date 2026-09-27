@@ -1,15 +1,18 @@
-import { LEGAL_REVIEWED, LEGAL_LAST_UPDATED } from "@/lib/legal";
+import { LEGAL_REVIEWED } from "@/lib/legal";
+import { getSiteContent } from "@/lib/content";
 
 /**
  * Shared frame for Terms / Privacy / Cancellation.
  *
- * The banner is driven by LEGAL_REVIEWED in src/lib/legal.ts. These pages
+ * The banner is driven by LEGAL_REVIEWED in src/lib/legal.ts, which stays
+ * in code on purpose: it is a sign-off gate, not copy, and an admin should
+ * not be able to clear the draft warning by editing a text field. These pages
  * ship as drafts written from standard tour-operator practice, not as
  * vetted legal advice — showing that plainly is more honest than passing
  * an unreviewed draft off as binding terms. Flip the flag once a
  * qualified reviewer has signed them off and the banner disappears.
  */
-export default function LegalPageShell({
+export default async function LegalPageShell({
   title,
   intro,
   children,
@@ -18,11 +21,14 @@ export default function LegalPageShell({
   intro: string;
   children: React.ReactNode;
 }) {
+  const content = await getSiteContent();
+  const lastUpdated = content("legal.lastUpdated");
+
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="mb-1 font-display text-3xl font-bold text-stone-900">{title}</h1>
       <p className="mb-2 text-stone-600">{intro}</p>
-      <p className="mb-6 text-xs text-stone-500">Last updated: {LEGAL_LAST_UPDATED}</p>
+      <p className="mb-6 text-xs text-stone-500">Last updated: {lastUpdated}</p>
 
       {!LEGAL_REVIEWED && (
         <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPageShell, { Clause, Confirm } from "@/components/legal/LegalPageShell";
 import CompanyFact from "@/components/company/CompanyFact";
-import { COMPANY } from "@/lib/company";
+import { getCompany } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Terms & conditions",
@@ -10,23 +10,25 @@ export const metadata: Metadata = {
     "The terms that apply when you book travel arrangements in Bhutan through Droelma Tours & Travels.",
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const company = await getCompany();
+
   return (
     <LegalPageShell
       title="Terms & conditions"
-      intro={`The terms that apply when you book travel arrangements through ${COMPANY.name}.`}
+      intro={`The terms that apply when you book travel arrangements through ${company.name}.`}
     >
       <Clause heading="1. Who we are">
         <p>
-          {COMPANY.name} is a tour operator based in Bhutan, arranging guides, accommodation,
+          {company.name} is a tour operator based in Bhutan, arranging guides, accommodation,
           transport, flights and complete itineraries for visitors.
         </p>
         <p className="space-x-2">
-          <CompanyFact label="Registered name" value={COMPANY.legalName} />{" "}
-          <CompanyFact label="TCB licence" value={COMPANY.tcbLicenceNumber} />
+          <CompanyFact label="Registered name" value={company.legalName} />{" "}
+          <CompanyFact label="TCB licence" value={company.tcbLicenceNumber} />
         </p>
         <p>
-          In these terms, &quot;we&quot; and &quot;us&quot; means {COMPANY.name}, and
+          In these terms, &quot;we&quot; and &quot;us&quot; means {company.name}, and
           &quot;you&quot; means the person making the booking and everyone travelling on it.
         </p>
       </Clause>

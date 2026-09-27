@@ -1,4 +1,4 @@
-import { COMPANY, formattedAddress, isPlaceholder } from "@/lib/company";
+import { formatAddress, type CompanyDetails } from "@/lib/content";
 
 /** Absolute base URL for canonical links, sitemap entries and OG tags. */
 export function siteUrl(): string {
@@ -14,26 +14,27 @@ export function absoluteUrl(path: string): string {
 /**
  * schema.org markup describing the business.
  *
- * Only emits fields that hold real values — an unfilled placeholder is
- * omitted rather than published, because structured data asserting a fake
- * licence number or address to search engines is worse than saying nothing.
+ * Only emits fields that hold real values — an unset field is omitted
+ * rather than published, because structured data asserting a fake licence
+ * number or address to search engines is worse than saying nothing. Values
+ * come from /admin/content → Company details.
  */
-export function organizationJsonLd() {
-  const { street, city, country } = COMPANY.address;
+export function organizationJsonLd(company: CompanyDetails) {
+  const { street, city, country } = company.address;
 
   return {
     "@context": "https://schema.org",
     "@type": "TravelAgency",
-    name: COMPANY.name,
+    name: company.name,
     url: siteUrl(),
-    ...(isPlaceholder(COMPANY.legalName) ? {} : { legalName: COMPANY.legalName }),
-    ...(isPlaceholder(COMPANY.phone) ? {} : { telephone: COMPANY.phone }),
-    ...(isPlaceholder(COMPANY.email) ? {} : { email: COMPANY.email }),
-    ...(formattedAddress()
+    ...(company.legalName ? { legalName: company.legalName } : {}),
+    ...(company.phone ? { telephone: company.phone } : {}),
+    ...(company.email ? { email: company.email } : {}),
+    ...(formatAddress(company)
       ? {
           address: {
             "@type": "PostalAddress",
-            ...(isPlaceholder(street) ? {} : { streetAddress: street }),
+            ...(street ? { streetAddress: street } : {}),
             addressLocality: city,
             addressCountry: country,
           },

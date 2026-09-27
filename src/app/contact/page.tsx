@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ContactForm from "./ContactForm";
 import CompanyFact from "@/components/company/CompanyFact";
-import { COMPANY, formattedAddress, isPlaceholder } from "@/lib/company";
+import { getCompany, formatAddress } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Contact us",
@@ -15,12 +15,14 @@ export default async function ContactPage({
 }: {
   searchParams: Promise<{ subject?: string }>;
 }) {
+  const company = await getCompany();
+  const address = formatAddress(company);
   const { subject } = await searchParams;
   const contactDetails = [
-    { label: "Phone", value: COMPANY.phone },
-    { label: "WhatsApp", value: COMPANY.whatsapp },
-    { label: "Email", value: COMPANY.email },
-  ].filter((d) => !isPlaceholder(d.value) || process.env.NODE_ENV !== "production");
+    { label: "Phone", value: company.phone },
+    { label: "WhatsApp", value: company.whatsapp },
+    { label: "Email", value: company.email },
+  ].filter((d) => d.value.trim() || process.env.NODE_ENV !== "production");
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -47,15 +49,15 @@ export default async function ContactPage({
                   </dd>
                 </div>
               ))}
-              {formattedAddress() && (
+              {address && (
                 <div>
                   <dt className="text-stone-500">Office</dt>
-                  <dd className="text-stone-900">{formattedAddress()}</dd>
+                  <dd className="text-stone-900">{address}</dd>
                 </div>
               )}
               <div>
                 <dt className="text-stone-500">Hours</dt>
-                <dd className="text-stone-900">{COMPANY.officeHours}</dd>
+                <dd className="text-stone-900">{company.officeHours}</dd>
               </div>
             </dl>
           </div>
