@@ -72,6 +72,22 @@ export type RetrieveKnowledgeArgs = {
   limit?: number;
 };
 
+/**
+ * True when the knowledge tables aren't in the database yet (Postgres
+ * `undefined_table`, 42P01).
+ *
+ * This is a real deployment state, not a hypothetical: application code can
+ * ship ahead of its migration, and when it does, the assistant should lose
+ * the knowledge base and keep working rather than 500 the whole chat turn —
+ * executeTool in assistant.ts doesn't contain a throwing tool.
+ */
+function isMissingKnowledgeTable(err: unknown): boolean {
+  const code = (err as { code?: string })?.code;
+  if (code === "P2021") return true; // Prisma: table does not exist
+  const pgCode = (err as { meta?: { code?: string } })?.meta?.code;
+  return pgCode === "42P01";
+}
+
 export async function retrieveKnowledge({
   agencyId,
   query,
@@ -88,6 +104,10 @@ export async function retrieveKnowledge({
     const chunks = await vectorSearch({ agencyId, embedding, visibility, limit });
     return { chunks, mode: "vector" };
   } catch (err) {
+    if (isMissingKnowledgeTable(err)) {
+      return { chunks: [], mode: "vector", degradedReason: "knowledge base not provisioned" };
+    }
+
     if (
       err instanceof EmbeddingProviderUnavailableError ||
       err instanceof EmbeddingProviderResponseError
@@ -96,8 +116,15 @@ export async function retrieveKnowledge({
       // than semantic search but far better than the assistant silently
       // losing access to policies and FAQs whenever Ollama is restarting.
       console.warn("[ai] embedding provider unavailable, falling back to text search:", err.message);
-      const chunks = await textSearch({ agencyId, query: trimmed, visibility, limit });
-      return { chunks, mode: "text-fallback", degradedReason: err.message };
+      try {
+        const chunks = await textSearch({ agencyId, query: trimmed, visibility, limit });
+        return { chunks, mode: "text-fallback", degradedReason: err.message };
+      } catch (fallbackErr) {
+        if (isMissingKnowledgeTable(fallbackErr)) {
+          return { chunks: [], mode: "text-fallback", degradedReason: "knowledge base not provisioned" };
+        }
+        throw fallbackErr;
+      }
     }
     throw err;
   }
