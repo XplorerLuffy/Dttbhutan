@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import AutoReveal from "@/components/AutoReveal";
 
 /**
  * Hides the public NavBar/Footer (and the AI chat widget — see `chat`
@@ -41,6 +42,7 @@ export default function SiteChrome({
 
   return (
     <>
+      {!hideChrome && <AutoReveal />}
       {!hideChrome && nav}
       <main className={fullBleed ? "pb-6" : "mx-auto max-w-6xl px-4 py-6 sm:px-6"}>{children}</main>
       {!hideChrome && footer}
