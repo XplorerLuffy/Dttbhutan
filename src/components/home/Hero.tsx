@@ -7,15 +7,21 @@ import HeroSearchBar from "./HeroSearchBar";
 
 type Destination = { id: string; name: string; slug: string };
 
+// Under /media, not /public/uploads: that directory is gitignored as
+// dev-only user-upload scratch space, so anything left there never reaches
+// a deployment. These two are site assets and ship with the code.
+const HERO_VIDEO = "/media/hero.mp4";
+const HERO_POSTER = "/media/hero-poster.jpg";
+
 /**
  * Full-bleed video hero: the clip fills the section edge to edge, with a
  * single headline and the search bar centred over it.
  *
- * The clip (public/uploads/herovideo.mp4) loops silently —
- * autoplay/mute/playsInline together are what let it actually autoplay on
- * iOS Safari, not just Chrome. The gradient beneath the <video> is a
- * fallback background (shown before the video paints, and if playback is
- * ever blocked) rather than decoration competing with the footage.
+ * The clip loops silently — muted/loop/playsInline together are what let it
+ * autoplay on iOS Safari, not just Chrome. It is attached after load rather
+ * than fetched with the page (see the effect below), so the poster is what
+ * the hero actually shows first; the gradient behind both is the last-resort
+ * background if neither has painted.
  */
 export default function Hero({
   destinations,
@@ -48,34 +54,73 @@ export default function Hero({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    // React doesn't reliably sync the `muted` JSX attribute to the DOM
-    // property on every render path, and browsers gate autoplay on the
-    // property, not the attribute — so force it directly, then kick off
-    // playback ourselves rather than trusting the `autoPlay` attribute.
-    video.muted = true;
-    video.loop = true;
-    video.play().catch(() => {
-      // Autoplay can still be refused (e.g. data-saver mode) — the
-      // gradient background underneath is a fine fallback either way.
-    });
+
+    // The clip is several megabytes. Letting the browser fetch it as part of
+    // the initial page load put it in direct competition with everything
+    // else on the connection — including the payload for whatever the
+    // visitor clicked next, which is why navigation away from the homepage
+    // felt so slow. So the <video> ships with no `src` at all: the poster
+    // paints the hero immediately, and the clip is only attached once the
+    // page has finished loading and the browser is otherwise idle.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // Metered or slow connections keep the poster: a 6 MB autoplaying
+    // background is not worth someone's data plan.
+    const connection = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      }
+    ).connection;
+    if (connection?.saveData) return;
+    if (connection?.effectiveType && /(^|-)2g$/.test(connection.effectiveType)) return;
+
+    let cancelled = false;
+
+    function start() {
+      if (cancelled || !video || video.src) return;
+      // React doesn't reliably sync the `muted` JSX attribute to the DOM
+      // property on every render path, and browsers gate autoplay on the
+      // property, not the attribute — so force it directly, then kick off
+      // playback ourselves rather than trusting the `autoPlay` attribute.
+      video.muted = true;
+      video.loop = true;
+      video.src = HERO_VIDEO;
+      video.load();
+      video.play().catch(() => {
+        // Autoplay can still be refused (e.g. data-saver mode) — the poster
+        // underneath is a fine fallback either way.
+      });
+    }
+
+    function schedule() {
+      const idle = (window as Window & { requestIdleCallback?: typeof requestIdleCallback })
+        .requestIdleCallback;
+      if (idle) idle(() => start(), { timeout: 2500 });
+      else window.setTimeout(start, 600);
+    }
+
+    if (document.readyState === "complete") schedule();
+    else window.addEventListener("load", schedule, { once: true });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("load", schedule);
+    };
   }, []);
 
   return (
     <section className="relative isolate flex min-h-[600px] flex-col justify-center overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-900 sm:min-h-[720px]">
-      {/* `poster` paints a still immediately, so the hero looks finished
-          while the clip downloads instead of showing bare gradient. The file
-          is not in the repo yet — see docs/hero-video.md for how to produce
-          it along with a web-sized encode of the clip itself. A missing
-          poster is inert: the browser falls back to the gradient below. */}
+      {/* No `src` and no `autoPlay`: the effect above attaches the clip once
+          the page is idle. `poster` is what the visitor actually sees first,
+          so the hero looks finished immediately, and it stays put for anyone
+          on reduced motion or a metered connection. */}
       <video
         ref={videoRef}
-        src="/uploads/herovideo.mp4"
-        poster="/uploads/hero-poster.jpg"
-        autoPlay
+        poster={HERO_POSTER}
         muted
         loop
         playsInline
-        preload="auto"
+        preload="none"
         aria-hidden="true"
         className="absolute inset-0 -z-10 h-full w-full object-cover"
       />

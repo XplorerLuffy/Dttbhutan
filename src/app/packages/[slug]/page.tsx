@@ -12,6 +12,7 @@ import ItineraryAccordion, {
 } from "@/components/listing/ItineraryAccordion";
 import TripReviews, { type TripReview } from "@/components/listing/TripReviews";
 import TripCard, { CATEGORY_LABEL } from "@/components/listing/TripCard";
+import TripLodging, { type LodgingView } from "@/components/listing/TripLodging";
 import Money from "@/components/Money";
 import type { DepartureStatus } from "@prisma/client";
 import type { Metadata } from "next";
@@ -59,7 +60,11 @@ export default async function PackageDetailPage({
   const itinerary = await prisma.itinerary.findUnique({
     where: { slug },
     include: {
-      days: { orderBy: { dayNumber: "asc" }, include: { destination: true } },
+      days: {
+        orderBy: { dayNumber: "asc" },
+        include: { destination: true, lodging: true },
+      },
+      lodgings: { orderBy: { position: "asc" } },
       // Past departures are dropped here rather than in the component: a
       // date that has already gone is not a choice, and showing it only
       // invites "why can't I book this".
@@ -107,14 +112,55 @@ export default async function PackageDetailPage({
     note: d.note,
   }));
 
-  const days: ItineraryDayView[] = itinerary.days.map((d) => ({
-    id: d.id,
-    dayNumber: d.dayNumber,
-    title: d.title,
-    description: d.description,
-    destination: d.destination ? { name: d.destination.name, slug: d.destination.slug } : null,
-    activities: d.activities,
-    mealsIncluded: d.mealsIncluded,
+  const days: ItineraryDayView[] = itinerary.days.map((d) => {
+    const hasHike =
+      d.hikeDistanceKm !== null ||
+      d.hikeAscentM !== null ||
+      d.hikeDescentM !== null ||
+      d.hikeHours !== null ||
+      d.hikeNote !== null;
+
+    return {
+      id: d.id,
+      dayNumber: d.dayNumber,
+      title: d.title,
+      description: d.description,
+      destination: d.destination ? { name: d.destination.name, slug: d.destination.slug } : null,
+      activities: d.activities,
+      mealsIncluded: d.mealsIncluded,
+      lodgingName: d.lodging?.name ?? null,
+      hike: hasHike
+        ? {
+            distanceKm: d.hikeDistanceKm === null ? null : Number(d.hikeDistanceKm),
+            ascentM: d.hikeAscentM,
+            descentM: d.hikeDescentM,
+            hours: d.hikeHours === null ? null : Number(d.hikeHours),
+            // Only worth showing when the day differs from the trip's own
+            // rating — repeating "Moderate" on every day of a moderate trip
+            // is noise.
+            difficulty:
+              d.hikeDifficulty && d.hikeDifficulty !== itinerary.difficulty
+                ? d.hikeDifficulty
+                : null,
+            note: d.hikeNote,
+          }
+        : null,
+    };
+  });
+
+  // Nights per property are counted from the days that use it, so the two
+  // can never disagree — see the ItineraryLodging model.
+  const nightsByLodging = new Map<string, number>();
+  for (const d of itinerary.days) {
+    if (d.lodgingId) nightsByLodging.set(d.lodgingId, (nightsByLodging.get(d.lodgingId) ?? 0) + 1);
+  }
+  const lodgings: LodgingView[] = itinerary.lodgings.map((l) => ({
+    id: l.id,
+    name: l.name,
+    location: l.location,
+    description: l.description,
+    photoUrl: l.photoUrl,
+    nights: nightsByLodging.get(l.id) ?? 0,
   }));
 
   const reviews: TripReview[] = reviewRows.map((r) => ({
@@ -127,6 +173,14 @@ export default async function PackageDetailPage({
   const reviewAverage = reviewStats._avg.rating;
   const reviewCount = reviewStats._count.rating;
   const hasReviews = reviews.length > 0 && reviewAverage !== null;
+
+  // The sub-nav shows a range when departures are priced differently, the
+  // way an outfitter's does — a single "from" price is a half-truth once a
+  // festival departure costs more.
+  const departurePrices = departures.map((d) => d.price);
+  const basePrice = Number(itinerary.pricePerPerson);
+  const priceLow = departurePrices.length > 0 ? Math.min(...departurePrices) : basePrice;
+  const priceHigh = departurePrices.length > 0 ? Math.max(...departurePrices) : basePrice;
 
   const places = Array.from(
     new Set(itinerary.days.map((d) => d.destination?.name).filter((n): n is string => Boolean(n)))
@@ -141,6 +195,7 @@ export default async function PackageDetailPage({
   const sections: TripSubNavSection[] = [
     { id: "overview", label: "Overview" },
     ...(days.length > 0 ? [{ id: "itinerary", label: "Itinerary" }] : []),
+    ...(lodgings.length > 0 ? [{ id: "hotels", label: "Hotels" }] : []),
     { id: "dates", label: "Dates & Prices" },
     ...(hasIncludes ? [{ id: "included", label: "What's included" }] : []),
     ...(hasReviews ? [{ id: "reviews", label: "Reviews" }] : []),
@@ -165,7 +220,16 @@ export default async function PackageDetailPage({
       <Container className={`mt-10 ${moreTrips.length > 0 ? "" : "pb-16"}`}>
         <TripSubNav
           sections={sections}
-          price={<Money btn={Number(itinerary.pricePerPerson)} />}
+          price={
+            priceHigh > priceLow ? (
+              <>
+                <Money btn={priceLow} /> – <Money btn={priceHigh} />
+              </>
+            ) : (
+              <Money btn={priceLow} />
+            )
+          }
+          priceNote="Includes guide, transport, hotels and the daily SDF"
           datesId="dates"
         />
 
@@ -240,39 +304,59 @@ export default async function PackageDetailPage({
           </section>
         )}
 
+        {lodgings.length > 0 && (
+          <section id="hotels" className="mt-14 scroll-mt-24">
+            <h2 className="font-display text-2xl font-bold text-stone-900">
+              Where you&apos;ll stay
+            </h2>
+            <p className="mt-2 max-w-2xl text-stone-600">
+              The properties booked for this trip. Occasionally one is swapped for an equivalent
+              when a departure fills — your confirmation lists the final list.
+            </p>
+            <div className="mt-6">
+              <TripLodging lodgings={lodgings} />
+            </div>
+          </section>
+        )}
+
         <section id="dates" className="mt-14 scroll-mt-24">
           <h2 className="font-display text-2xl font-bold text-stone-900">Dates &amp; prices</h2>
           <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
+            {/* DepartureList owns the empty case too: a trip with no
+                scheduled dates still runs privately, and that tab is the
+                answer to "when can I go" — hiding it behind a paragraph
+                loses the enquiry. */}
             <div>
-              {departures.length > 0 ? (
-                <>
-                  <p className="text-stone-600">
-                    Pick a departure to request a place on it. Prices are per person.
-                  </p>
-                  <div className="mt-5">
-                    <DepartureList departures={departures} packageTitle={itinerary.title} />
-                  </div>
-                </>
-              ) : (
-                <p className="text-stone-600">
-                  No scheduled departures are published for this tour yet.{" "}
-                  <Link href="/custom-tour" className="text-brand-700 hover:underline">
-                    Tell us when you&apos;d like to travel
-                  </Link>{" "}
-                  and we&apos;ll arrange it around your dates.
-                </p>
-              )}
+              <DepartureList departures={departures} packageTitle={itinerary.title} />
             </div>
 
-            <aside className="rounded-xl border border-stone-200 bg-white p-6 lg:sticky lg:top-24">
-              <p className="font-display text-2xl font-bold text-brand-800">
-                <Money btn={Number(itinerary.pricePerPerson)} />
-              </p>
-              <p className="mb-4 text-sm text-stone-500">per person</p>
-              <ItineraryBookingForm
-                itineraryId={itinerary.id}
-                maxGroupSize={itinerary.maxGroupSize}
-              />
+            <aside className="space-y-4 lg:sticky lg:top-24">
+              <div className="rounded-xl border border-stone-200 bg-white p-6">
+                <p className="font-display text-2xl font-bold text-brand-800">
+                  <Money btn={Number(itinerary.pricePerPerson)} />
+                </p>
+                <p className="mb-4 text-sm text-stone-500">per person</p>
+                <ItineraryBookingForm
+                  itineraryId={itinerary.id}
+                  maxGroupSize={itinerary.maxGroupSize}
+                />
+              </div>
+
+              <div className="rounded-xl border border-stone-200 bg-white p-6">
+                <h3 className="font-display text-base font-semibold text-stone-900">
+                  Book with confidence
+                </h3>
+                <p className="mt-2 text-sm text-stone-600">
+                  Requesting a place costs nothing and commits you to nothing. We confirm the
+                  departure, the hotels and the final price in writing before you pay anything.
+                </p>
+                <Link
+                  href="/cancellation"
+                  className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
+                >
+                  Cancellation &amp; refunds
+                </Link>
+              </div>
             </aside>
           </div>
         </section>

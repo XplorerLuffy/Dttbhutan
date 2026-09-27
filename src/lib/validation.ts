@@ -150,6 +150,19 @@ export const bookingSchema = z
     path: ["endDate"],
   });
 
+/** Blank number inputs arrive as "" — treat those as "not recorded". */
+const optionalNumber = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? undefined : v),
+  z.coerce.number().optional()
+);
+
+export const itineraryLodgingInputSchema = z.object({
+  name: z.string().min(1).max(150),
+  location: z.string().max(150).optional(),
+  description: z.string().max(2000).optional(),
+  photoUrl: z.string().max(500).optional(),
+});
+
 export const itineraryDayInputSchema = z.object({
   dayNumber: z.coerce.number().int().min(1),
   title: z.string().min(1).max(150),
@@ -157,6 +170,18 @@ export const itineraryDayInputSchema = z.object({
   destinationId: z.string().min(1).optional().or(z.literal("")),
   activities: z.array(z.string().min(1)).default([]),
   mealsIncluded: z.array(z.string().min(1)).default([]),
+  /**
+   * Which lodging this night uses, as an index into the itinerary's
+   * `lodgings` array rather than an id: the edit route replaces days and
+   * lodgings together, so no id exists yet at the time the form is sent.
+   */
+  lodgingIndex: optionalNumber.pipe(z.number().int().min(0).optional()),
+  hikeDistanceKm: optionalNumber.pipe(z.number().min(0).max(999).optional()),
+  hikeAscentM: optionalNumber.pipe(z.number().int().min(0).max(9999).optional()),
+  hikeDescentM: optionalNumber.pipe(z.number().int().min(0).max(9999).optional()),
+  hikeHours: optionalNumber.pipe(z.number().min(0).max(24).optional()),
+  hikeDifficulty: z.enum(["EASY", "MODERATE", "CHALLENGING"]).optional().or(z.literal("")),
+  hikeNote: z.string().max(200).optional(),
 });
 
 export const itineraryAdminSchema = z.object({
@@ -178,6 +203,7 @@ export const itineraryAdminSchema = z.object({
   includes: z.array(z.string().min(1)).default([]),
   excludes: z.array(z.string().min(1)).default([]),
   days: z.array(itineraryDayInputSchema).min(1),
+  lodgings: z.array(itineraryLodgingInputSchema).max(60).default([]),
 });
 
 export const articleAdminSchema = z.object({

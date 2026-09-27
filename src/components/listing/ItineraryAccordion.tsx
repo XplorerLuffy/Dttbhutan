@@ -11,6 +11,24 @@ export type ItineraryDayView = {
   destination: { name: string; slug: string } | null;
   activities: string[];
   mealsIncluded: string[];
+  lodgingName: string | null;
+  hike: DayHike | null;
+};
+
+/** Present only on days with walking recorded; every field is optional. */
+export type DayHike = {
+  distanceKm: number | null;
+  ascentM: number | null;
+  descentM: number | null;
+  hours: number | null;
+  difficulty: "EASY" | "MODERATE" | "CHALLENGING" | null;
+  note: string | null;
+};
+
+const HIKE_LEVEL: Record<NonNullable<DayHike["difficulty"]>, string> = {
+  EASY: "Easy",
+  MODERATE: "Moderate",
+  CHALLENGING: "Challenging",
 };
 
 /**
@@ -69,11 +87,9 @@ export default function ItineraryAccordion({ days }: { days: ItineraryDayView[] 
                 <span className="block font-display text-base font-semibold text-stone-900">
                   {day.title}
                 </span>
-                {day.destination && (
-                  <span className="mt-0.5 block text-sm text-stone-500">
-                    {day.destination.name}
-                  </span>
-                )}
+                <span className="mt-0.5 block text-sm text-stone-500">
+                  {[day.destination?.name, hikeSummary(day.hike)].filter(Boolean).join(" · ")}
+                </span>
               </span>
 
               <svg
@@ -113,10 +129,42 @@ export default function ItineraryAccordion({ days }: { days: ItineraryDayView[] 
                 </div>
               )}
 
+              {day.hike && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                    Hiking options
+                  </p>
+                  <dl className="flex flex-wrap gap-x-8 gap-y-2">
+                    {day.hike.distanceKm !== null && (
+                      <HikeStat label="Distance" value={`${day.hike.distanceKm} km`} />
+                    )}
+                    {day.hike.ascentM !== null && (
+                      <HikeStat label="Ascent" value={`${day.hike.ascentM} m`} />
+                    )}
+                    {day.hike.descentM !== null && (
+                      <HikeStat label="Descent" value={`${day.hike.descentM} m`} />
+                    )}
+                    {day.hike.hours !== null && (
+                      <HikeStat label="On foot" value={formatHours(day.hike.hours)} />
+                    )}
+                    {day.hike.difficulty && (
+                      <HikeStat label="Level" value={HIKE_LEVEL[day.hike.difficulty]} />
+                    )}
+                  </dl>
+                  {day.hike.note && (
+                    <p className="mt-2 text-sm text-stone-600">{day.hike.note}</p>
+                  )}
+                </div>
+              )}
+
               <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
                 <p className="text-stone-600">
                   <span className="font-semibold text-stone-800">Meals: </span>
                   {day.mealsIncluded.length > 0 ? day.mealsIncluded.join(", ") : "None included"}
+                </p>
+                <p className="text-stone-600">
+                  <span className="font-semibold text-stone-800">Stay: </span>
+                  {day.lodgingName ?? "No overnight stay"}
                 </p>
                 {day.destination && (
                   <Link
@@ -133,4 +181,35 @@ export default function ItineraryAccordion({ days }: { days: ItineraryDayView[] 
       </div>
     </div>
   );
+}
+
+function HikeStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[11px] font-bold uppercase tracking-wider text-stone-500">{label}</dt>
+      <dd className="font-display text-base font-semibold text-stone-900">{value}</dd>
+    </div>
+  );
+}
+
+/**
+ * The one-line version shown on the closed row. Distance is the number
+ * people scan for, so it leads; the level only earns its place when the day
+ * differs from the trip's own rating, which the caller decides by leaving
+ * `difficulty` null when it matches.
+ */
+function hikeSummary(hike: DayHike | null): string | null {
+  if (!hike) return null;
+  const parts: string[] = [];
+  if (hike.distanceKm !== null) parts.push(`${hike.distanceKm} km walk`);
+  else if (hike.hours !== null) parts.push(`${formatHours(hike.hours)} on foot`);
+  if (hike.difficulty) parts.push(HIKE_LEVEL[hike.difficulty].toLowerCase());
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+function formatHours(hours: number): string {
+  const whole = Math.floor(hours);
+  const half = hours - whole >= 0.5;
+  if (whole === 0) return "30 min";
+  return `${whole}${half ? "\u00bd" : ""} hr${whole === 1 && !half ? "" : "s"}`;
 }

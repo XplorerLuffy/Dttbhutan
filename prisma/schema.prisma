@@ -360,6 +360,30 @@ model Itinerary {
   days     ItineraryDay[]
   bookings ItineraryBooking[]
   departures Departure[]
+  lodgings   ItineraryLodging[]
+}
+
+// Where a package's travellers sleep. Held per itinerary rather than per
+// day so a property used for three nights is described once and the public
+// page can say "3 nights" — the nights are derived from the days pointing
+// at it, so the two can never disagree.
+//
+// Deliberately not the vendor `Hotel` model: these are the properties the
+// agency books for its own tours, which may be guesthouses or tented camps
+// that will never be listed on the marketplace.
+model ItineraryLodging {
+  id          String    @id @default(cuid())
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  position    Int // display order within the trip
+  name        String
+  location    String?
+  description String?
+  photoUrl    String?
+
+  days ItineraryDay[]
+
+  @@index([itineraryId, position])
 }
 
 enum ArticleStatus {
@@ -392,6 +416,20 @@ model ItineraryDay {
   destination   Destination? @relation(fields: [destinationId], references: [id])
   activities    String[]
   mealsIncluded String[] // e.g. ["Breakfast", "Dinner"]
+
+  lodgingId String?
+  lodging   ItineraryLodging? @relation(fields: [lodgingId], references: [id], onDelete: SetNull)
+
+  // Walking/hiking on this day. All optional: a transfer day has none, and
+  // a trekking day may know its distance but not its elevation profile.
+  // Distances are kilometres and ascent/descent metres — the site's other
+  // measurements are metric, and converting for display is the UI's job.
+  hikeDistanceKm Decimal?        @db.Decimal(5, 1)
+  hikeAscentM    Int?
+  hikeDescentM   Int?
+  hikeHours      Decimal?        @db.Decimal(3, 1)
+  hikeDifficulty TripDifficulty? // the day's own level, which can differ from the trip's
+  hikeNote       String? // e.g. "shorter valley option available"
 
   @@unique([itineraryId, dayNumber])
 }

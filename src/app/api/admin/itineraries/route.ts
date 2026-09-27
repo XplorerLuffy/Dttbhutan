@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole, AuthError } from "@/lib/auth";
 import { itineraryAdminSchema } from "@/lib/validation";
 import { revalidateHomepage } from "@/lib/revalidate";
+import { writeItineraryDaysAndLodgings } from "@/lib/itinerary-write";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,27 +14,17 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
-    const { days, ...itinerary } = parsed.data;
+    const { days, lodgings, ...itinerary } = parsed.data;
 
     const existing = await prisma.itinerary.findUnique({ where: { slug: itinerary.slug } });
     if (existing) {
       return NextResponse.json({ error: "That slug is already in use" }, { status: 409 });
     }
 
-    const created = await prisma.itinerary.create({
-      data: {
-        ...itinerary,
-        days: {
-          create: days.map((d) => ({
-            dayNumber: d.dayNumber,
-            title: d.title,
-            description: d.description,
-            destinationId: d.destinationId || null,
-            activities: d.activities,
-            mealsIncluded: d.mealsIncluded,
-          })),
-        },
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const row = await tx.itinerary.create({ data: itinerary });
+      await writeItineraryDaysAndLodgings(tx, row.id, days, lodgings);
+      return row;
     });
 
     revalidateHomepage();

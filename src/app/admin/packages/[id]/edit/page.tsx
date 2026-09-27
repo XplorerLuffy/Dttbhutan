@@ -17,11 +17,16 @@ export default async function EditPackagePage({
   const [itinerary, destinations] = await Promise.all([
     prisma.itinerary.findUnique({
       where: { id },
-      include: { days: { orderBy: { dayNumber: "asc" } } },
+      include: {
+        days: { orderBy: { dayNumber: "asc" } },
+        lodgings: { orderBy: { position: "asc" } },
+      },
     }),
     prisma.destination.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
   if (!itinerary) notFound();
+
+  const lodgingIndexById = new Map(itinerary.lodgings.map((l, i) => [l.id, i]));
 
   return (
     <div>
@@ -49,6 +54,21 @@ export default async function EditPackagePage({
             destinationId: d.destinationId ?? "",
             activities: d.activities.join(", "),
             mealsIncluded: d.mealsIncluded.join(", "),
+            // The form addresses lodgings by position, not id — see
+            // itineraryDayInputSchema.
+            lodgingIndex: d.lodgingId ? lodgingIndexById.get(d.lodgingId) ?? "" : "",
+            hikeDistanceKm: d.hikeDistanceKm === null ? "" : Number(d.hikeDistanceKm),
+            hikeAscentM: d.hikeAscentM ?? "",
+            hikeDescentM: d.hikeDescentM ?? "",
+            hikeHours: d.hikeHours === null ? "" : Number(d.hikeHours),
+            hikeDifficulty: d.hikeDifficulty ?? "",
+            hikeNote: d.hikeNote ?? "",
+          })),
+          lodgings: itinerary.lodgings.map((l) => ({
+            name: l.name,
+            location: l.location ?? "",
+            description: l.description ?? "",
+            photoUrl: l.photoUrl ?? "",
           })),
         }}
       />

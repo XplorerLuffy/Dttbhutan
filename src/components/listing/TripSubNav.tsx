@@ -25,10 +25,17 @@ export type TripSubNavSection = {
 export default function TripSubNav({
   sections,
   price,
+  priceNote,
   datesId,
 }: {
   sections: TripSubNavSection[];
+  /**
+   * "From <price>", or a range when departures are priced differently — the
+   * caller formats it, because only it knows the viewer's currency.
+   */
   price: React.ReactNode;
+  /** Small print under the price, e.g. what the fare does and doesn't cover. */
+  priceNote?: string;
   /** Section to point the call-to-action at; omitted when there are no dates. */
   datesId?: string;
 }) {
@@ -100,10 +107,10 @@ export default function TripSubNav({
               href={`#${section.id}`}
               data-tab={section.id}
               aria-current={active === section.id ? "true" : undefined}
-              className={`shrink-0 whitespace-nowrap border-b-2 py-4 text-xs font-bold uppercase tracking-wider transition-colors ${
+              className={`shrink-0 whitespace-nowrap border-b-[3px] py-4 font-display text-sm font-bold transition-colors ${
                 active === section.id
-                  ? "border-gold-500 text-brand-900"
-                  : "border-transparent text-stone-500 hover:text-stone-900"
+                  ? "border-brand-800 text-brand-900"
+                  : "border-transparent text-stone-600 hover:text-stone-900"
               }`}
             >
               {section.label}
@@ -112,16 +119,20 @@ export default function TripSubNav({
         </div>
 
         <div className="hidden shrink-0 items-center gap-4 py-2.5 md:flex">
-          <p className="text-right text-sm leading-tight text-stone-500">
-            <span className="block text-[11px] font-semibold uppercase tracking-wide">From</span>
-            <span className="font-display text-base font-bold text-brand-800">{price}</span>
-          </p>
+          <div className="text-right leading-tight">
+            <p className="font-display text-base font-bold text-brand-900">
+              <span className="font-sans text-sm font-semibold text-stone-600">From </span>
+              {price}
+              <span className="font-sans text-sm font-medium text-stone-500">/person</span>
+            </p>
+            {priceNote && <p className="mt-0.5 text-xs text-stone-500">{priceNote}</p>}
+          </div>
           {datesId && (
             <a
               href={`#${datesId}`}
-              className="rounded-full bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+              className="rounded-full bg-brand-800 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-900"
             >
-              View dates
+              View Dates
             </a>
           )}
         </div>

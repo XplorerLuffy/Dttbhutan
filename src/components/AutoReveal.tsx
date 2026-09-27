@@ -24,6 +24,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
  * 3. It skips an element whose ancestor is already being revealed, so a
  *    card inside a revealed section animates once, with its parent, rather
  *    than twice at different times.
+ * 4. It never translates an element that an in-page link points at. Lenis
+ *    measures a jump target's position at click time; if the target is
+ *    sitting 40px low waiting to be revealed, the scroll lands 40px short
+ *    and the heading ends up under the sticky sub-nav. Those elements fade
+ *    in without moving, which looks the same and stays where it is.
  */
 
 /** Structural blocks worth revealing — not every element on the page. */
@@ -65,9 +70,16 @@ export default function AutoReveal() {
       );
       if (targets.length === 0) return;
 
+      const anchored = new Set(
+        Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'))
+          .map((a) => a.getAttribute("href")?.slice(1))
+          .filter((id): id is string => Boolean(id))
+      );
+
       ctx = gsap.context(() => {
         for (const el of targets) {
-          gsap.set(el, { opacity: 0, y: reduced ? 0 : 40 });
+          const shift = reduced || (el.id && anchored.has(el.id)) ? 0 : 40;
+          gsap.set(el, { opacity: 0, y: shift });
           gsap.to(el, {
             opacity: 1,
             y: 0,

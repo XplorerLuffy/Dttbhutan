@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole, AuthError } from "@/lib/auth";
 import { itineraryAdminSchema } from "@/lib/validation";
 import { revalidateHomepage } from "@/lib/revalidate";
+import { writeItineraryDaysAndLodgings } from "@/lib/itinerary-write";
 
 export async function PATCH(
   req: NextRequest,
@@ -17,7 +18,7 @@ export async function PATCH(
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
-    const { days, ...itinerary } = parsed.data;
+    const { days, lodgings, ...itinerary } = parsed.data;
 
     const existing = await prisma.itinerary.findUnique({ where: { slug: itinerary.slug } });
     if (existing && existing.id !== id) {
@@ -26,25 +27,14 @@ export async function PATCH(
 
     // Simplest correct way to sync days on edit: replace the set entirely
     // rather than diffing by id (the admin form doesn't track per-day ids
-    // across edits).
+    // across edits). Lodgings go the same way and in the same transaction,
+    // because days reference them by position in the submitted list.
     const updated = await prisma.$transaction(async (tx) => {
       await tx.itineraryDay.deleteMany({ where: { itineraryId: id } });
-      return tx.itinerary.update({
-        where: { id },
-        data: {
-          ...itinerary,
-          days: {
-            create: days.map((d) => ({
-              dayNumber: d.dayNumber,
-              title: d.title,
-              description: d.description,
-              destinationId: d.destinationId || null,
-              activities: d.activities,
-              mealsIncluded: d.mealsIncluded,
-            })),
-          },
-        },
-      });
+      await tx.itineraryLodging.deleteMany({ where: { itineraryId: id } });
+      const row = await tx.itinerary.update({ where: { id }, data: itinerary });
+      await writeItineraryDaysAndLodgings(tx, id, days, lodgings);
+      return row;
     });
 
     revalidateHomepage();

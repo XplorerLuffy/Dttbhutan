@@ -10,6 +10,21 @@ type Day = {
   destinationId: string;
   activities: string; // comma-separated in the UI
   mealsIncluded: string; // comma-separated in the UI
+  /** Index into `lodgings`, or "" for a day with no overnight stay. */
+  lodgingIndex: number | "";
+  hikeDistanceKm: number | "";
+  hikeAscentM: number | "";
+  hikeDescentM: number | "";
+  hikeHours: number | "";
+  hikeDifficulty: "" | "EASY" | "MODERATE" | "CHALLENGING";
+  hikeNote: string;
+};
+
+export type Lodging = {
+  name: string;
+  location: string;
+  description: string;
+  photoUrl: string;
 };
 
 type InitialValues = {
@@ -27,6 +42,7 @@ type InitialValues = {
   includes: string; // comma-separated
   excludes: string; // comma-separated
   days: Day[];
+  lodgings: Lodging[];
 };
 
 const EMPTY_DAY: Day = {
@@ -36,7 +52,21 @@ const EMPTY_DAY: Day = {
   destinationId: "",
   activities: "",
   mealsIncluded: "",
+  lodgingIndex: "",
+  hikeDistanceKm: "",
+  hikeAscentM: "",
+  hikeDescentM: "",
+  hikeHours: "",
+  hikeDifficulty: "",
+  hikeNote: "",
 };
+
+const EMPTY_LODGING: Lodging = { name: "", location: "", description: "", photoUrl: "" };
+
+/** Blank number inputs stay blank rather than becoming 0. */
+function num(value: string): number | "" {
+  return value === "" ? "" : Number(value);
+}
 
 function splitList(value: string) {
   return value
@@ -68,6 +98,7 @@ export default function ItineraryForm({
   const [includes, setIncludes] = useState(initial?.includes ?? "");
   const [excludes, setExcludes] = useState(initial?.excludes ?? "");
   const [days, setDays] = useState<Day[]>(initial?.days?.length ? initial.days : [{ ...EMPTY_DAY }]);
+  const [lodgings, setLodgings] = useState<Lodging[]>(initial?.lodgings ?? []);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -81,6 +112,33 @@ export default function ItineraryForm({
 
   function removeDay(index: number) {
     setDays((prev) => prev.filter((_, i) => i !== index).map((d, i) => ({ ...d, dayNumber: i + 1 })));
+  }
+
+  function addLodging() {
+    setLodgings((prev) => [...prev, { ...EMPTY_LODGING }]);
+  }
+
+  function updateLodging(index: number, patch: Partial<Lodging>) {
+    setLodgings((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+  }
+
+  /**
+   * Removing a property has to fix up the days that pointed at it, since a
+   * day stores its lodging as a position in this list: everything after the
+   * removed entry shifts down by one, and the days that used the removed
+   * one are left with no stay rather than silently pointing at its
+   * neighbour.
+   */
+  function removeLodging(index: number) {
+    setLodgings((prev) => prev.filter((_, i) => i !== index));
+    setDays((prev) =>
+      prev.map((d) => {
+        if (d.lodgingIndex === "") return d;
+        if (d.lodgingIndex === index) return { ...d, lodgingIndex: "" };
+        if (d.lodgingIndex > index) return { ...d, lodgingIndex: d.lodgingIndex - 1 };
+        return d;
+      })
+    );
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -108,7 +166,22 @@ export default function ItineraryForm({
         destinationId: d.destinationId || undefined,
         activities: splitList(d.activities),
         mealsIncluded: splitList(d.mealsIncluded),
+        lodgingIndex: d.lodgingIndex === "" ? undefined : d.lodgingIndex,
+        hikeDistanceKm: d.hikeDistanceKm === "" ? undefined : d.hikeDistanceKm,
+        hikeAscentM: d.hikeAscentM === "" ? undefined : d.hikeAscentM,
+        hikeDescentM: d.hikeDescentM === "" ? undefined : d.hikeDescentM,
+        hikeHours: d.hikeHours === "" ? undefined : d.hikeHours,
+        hikeDifficulty: d.hikeDifficulty || undefined,
+        hikeNote: d.hikeNote || undefined,
       })),
+      lodgings: lodgings
+        .filter((l) => l.name.trim())
+        .map((l) => ({
+          name: l.name.trim(),
+          location: l.location || undefined,
+          description: l.description || undefined,
+          photoUrl: l.photoUrl || undefined,
+        })),
     };
 
     const res = await fetch(isEdit ? `/api/admin/itineraries/${initial!.id}` : "/api/admin/itineraries", {
@@ -217,6 +290,76 @@ export default function ItineraryForm({
       </div>
 
       <div>
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Where they stay</h2>
+          <button type="button" onClick={addLodging} className="btn-secondary">
+            + Add property
+          </button>
+        </div>
+        <p className="mb-3 text-sm text-stone-600">
+          List each hotel, guesthouse or camp once, then pick it per night below. The public page
+          works out how many nights each one is from the days that use it.
+        </p>
+
+        <div className="space-y-3">
+          {lodgings.map((lodging, i) => (
+            <div key={i} className="card space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Property {i + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => removeLodging(i)}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Name">
+                  <input
+                    value={lodging.name}
+                    onChange={(e) => updateLodging(i, { name: e.target.value })}
+                    placeholder="Zhiwa Ling Heritage"
+                    className="input"
+                  />
+                </Field>
+                <Field label="Location (optional)">
+                  <input
+                    value={lodging.location}
+                    onChange={(e) => updateLodging(i, { location: e.target.value })}
+                    placeholder="Paro"
+                    className="input"
+                  />
+                </Field>
+              </div>
+              <Field label="Description (optional)">
+                <textarea
+                  value={lodging.description}
+                  onChange={(e) => updateLodging(i, { description: e.target.value })}
+                  rows={2}
+                  className="input"
+                />
+              </Field>
+              <Field label="Photo URL (optional)">
+                <input
+                  value={lodging.photoUrl}
+                  onChange={(e) => updateLodging(i, { photoUrl: e.target.value })}
+                  placeholder="https://…"
+                  className="input"
+                />
+              </Field>
+            </div>
+          ))}
+          {lodgings.length === 0 && (
+            <p className="text-sm text-stone-500">
+              No properties yet. The trip page simply leaves out the &ldquo;Where you&rsquo;ll
+              stay&rdquo; section.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Day-by-day itinerary</h2>
           <button type="button" onClick={addDay} className="btn-secondary">
@@ -287,6 +430,94 @@ export default function ItineraryForm({
                   />
                 </Field>
               </div>
+
+              <Field label="Where they stay tonight">
+                <select
+                  value={day.lodgingIndex}
+                  onChange={(e) =>
+                    updateDay(i, { lodgingIndex: e.target.value === "" ? "" : Number(e.target.value) })
+                  }
+                  className="input"
+                >
+                  <option value="">No overnight stay (departure day)</option>
+                  {lodgings.map((l, li) => (
+                    <option key={li} value={li}>
+                      {l.name.trim() || `Property ${li + 1}`}
+                      {l.location ? ` — ${l.location}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <fieldset className="rounded-md border border-stone-200 p-3">
+                <legend className="px-1 text-sm font-medium text-stone-700">
+                  Hiking / walking this day (all optional)
+                </legend>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <Field label="Distance (km)">
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.1"
+                      value={day.hikeDistanceKm}
+                      onChange={(e) => updateDay(i, { hikeDistanceKm: num(e.target.value) })}
+                      className="input"
+                    />
+                  </Field>
+                  <Field label="Ascent (m)">
+                    <input
+                      type="number"
+                      min={0}
+                      value={day.hikeAscentM}
+                      onChange={(e) => updateDay(i, { hikeAscentM: num(e.target.value) })}
+                      className="input"
+                    />
+                  </Field>
+                  <Field label="Descent (m)">
+                    <input
+                      type="number"
+                      min={0}
+                      value={day.hikeDescentM}
+                      onChange={(e) => updateDay(i, { hikeDescentM: num(e.target.value) })}
+                      className="input"
+                    />
+                  </Field>
+                  <Field label="Hours on foot">
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.5"
+                      value={day.hikeHours}
+                      onChange={(e) => updateDay(i, { hikeHours: num(e.target.value) })}
+                      className="input"
+                    />
+                  </Field>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <Field label="This day's level">
+                    <select
+                      value={day.hikeDifficulty}
+                      onChange={(e) =>
+                        updateDay(i, { hikeDifficulty: e.target.value as Day["hikeDifficulty"] })
+                      }
+                      className="input"
+                    >
+                      <option value="">Same as the trip</option>
+                      <option value="EASY">Easy</option>
+                      <option value="MODERATE">Moderate</option>
+                      <option value="CHALLENGING">Challenging</option>
+                    </select>
+                  </Field>
+                  <Field label="Note (optional)">
+                    <input
+                      value={day.hikeNote}
+                      onChange={(e) => updateDay(i, { hikeNote: e.target.value })}
+                      placeholder="Shorter valley option available"
+                      className="input"
+                    />
+                  </Field>
+                </div>
+              </fieldset>
             </div>
           ))}
         </div>

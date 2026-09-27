@@ -1,72 +1,65 @@
 # Hero video
 
-`public/uploads/herovideo.mp4` is the clip behind the homepage hero and the
-closing banner.
+`public/media/hero.mp4` is the clip behind the homepage hero and the
+closing banner, with `public/media/hero-poster.jpg` as its still frame.
 
-## Why it renders late
+They live under `public/media/` on purpose. `public/uploads/` is
+gitignored as dev-only scratch space for local file uploads, so an asset
+left there is never committed and never reaches a deployment — which is
+exactly how the poster went missing the first time.
 
-The current file is **19.7 MB**. That is the whole problem — it is roughly
-20–60× larger than a background loop needs to be, and the hero cannot show
-a frame until enough of it has arrived.
+## What was wrong, and what was done
 
-Two things it is *not*:
+The original was **18.8 MB**: a 73-second 720p clip at ~2 Mbps, carrying an
+audio track the muted hero never plays. Two consequences, and the second
+was the worse one:
 
-- **Not a streaming-order problem.** The file is already "faststart": its
-  `moov` atom sits before `mdat` (`ftyp`, `moov`, `moof`, `mdat`), so the
-  browser can begin playback without downloading the whole file.
-- **Not a caching problem.** Vercel serves `public/` from its CDN with
-  long-lived caching. It is the *first* visit that hurts, and that is the
-  visit that matters.
+1. The hero showed bare gradient until enough of the clip had arrived.
+2. The download competed with everything else on the connection —
+   including the payload for whatever the visitor clicked next. That is
+   why navigating away from the homepage felt slow.
 
-## Fixing it
+Fixes, both in place:
 
-Both commands need `ffmpeg` on a machine that has the file. They could not
-be run in the environment this was written in: no ffmpeg, and the headless
-browser there has no H.264 decoder, so a re-encode could not have been
-verified even if it had been produced.
+- **Re-encoded to 6.2 MB** (`-crf 33`, `preset slower`, capped at 800 kbps,
+  `-an` to drop the audio, `+faststart`). Compared frame by frame against
+  the original at full width: slightly softer snow detail, invisible
+  behind the gradient and the headline.
+- **The page no longer fetches it with everything else.** `Hero.tsx` ships
+  the `<video>` with `preload="none"` and *no* `src`; the poster paints the
+  hero immediately, and the clip is attached only once the page has loaded
+  and the browser is idle. Measured on a production build: poster
+  requested at 30 ms, video at 274 ms, after load. It is skipped entirely
+  under `prefers-reduced-motion`, on `saveData`, and on 2G.
 
-**1. Re-encode the loop** (expect roughly 1.5–3 MB):
-
-```bash
-ffmpeg -i herovideo.mp4 \
-  -vf "scale=1920:-2,fps=25" \
-  -c:v libx264 -profile:v high -crf 30 -preset slow \
-  -pix_fmt yuv420p -an \
-  -movflags +faststart \
-  herovideo-web.mp4
-```
-
-- `-an` drops the audio track — the hero is muted, so those bytes are pure waste.
-- `-crf 30` is deliberately high. Behind a dark overlay and moving, the
-  artefacts are invisible; check it at full width before accepting. Lower to
-  26 if it looks soft, which roughly doubles the size.
-- `scale=1920:-2` is plenty. If the clip is 4K, this alone is most of the win.
-- `+faststart` keeps the moov atom at the front.
-
-Then replace the file:
+## Replacing the clip
 
 ```bash
-mv herovideo-web.mp4 public/uploads/herovideo.mp4
+# 1. Re-encode (aim for under ~6 MB; below 3 MB is better still)
+ffmpeg -i source.mp4 \
+  -an -c:v libx264 -profile:v high -preset slower -crf 33 \
+  -vf "scale=1280:-2:flags=lanczos" -pix_fmt yuv420p \
+  -maxrate 800k -bufsize 1600k -g 48 -movflags +faststart \
+  public/media/hero.mp4
+
+# 2. Poster frame — pick a -ss on a shot that holds still well
+ffmpeg -i public/media/hero.mp4 -ss 12 -frames:v 1 \
+  -vf "scale=1280:-2" -q:v 6 public/media/hero-poster.jpg
 ```
 
-**2. Extract a poster frame.** `Hero.tsx` already points at
-`/uploads/hero-poster.jpg`; creating the file is all that is needed.
+Notes:
 
-```bash
-ffmpeg -i herovideo.mp4 -ss 00:00:01 -frames:v 1 -q:v 4 \
-  public/uploads/hero-poster.jpg
-```
-
-Pick a `-ss` timestamp on a frame that looks good held still — it is what
-visitors see for the first moment of every cold load, and on any device that
-refuses to autoplay.
+- `-an` drops audio; the hero is muted, so those bytes are pure waste.
+- `-crf 33` is deliberately high. Check it at full width before accepting;
+  lower to 30 if it looks soft, which roughly doubles the size.
+- `+faststart` keeps the `moov` atom at the front so playback can begin
+  before the file finishes downloading.
+- The poster is what visitors see on the first frame of every cold load,
+  under reduced motion, and on any device that refuses to autoplay — so
+  choose it as carefully as a hero photograph.
 
 ## Budget
 
-Aim for **under 3 MB**. Above about 5 MB the late-render returns no matter
-what else is tuned.
-
-If the clip has to stay large, the alternative is to stop shipping it from
-`public/` and serve it from Vercel Blob (already configured for photos via
-`BLOB_READ_WRITE_TOKEN`) with an explicitly short hero cut as the poster
-loop — but compressing is simpler and almost always enough.
+Under **3 MB** is the target, **6 MB** the ceiling. Above that, serve it
+from Vercel Blob (already configured for photos via
+`BLOB_READ_WRITE_TOKEN`) rather than from `public/`.

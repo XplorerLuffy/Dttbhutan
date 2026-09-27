@@ -48,7 +48,8 @@ export default function FeatureBanner({
     <section className="relative isolate overflow-hidden bg-brand-950">
       <video
         ref={videoRef}
-        src="/uploads/herovideo.mp4"
+        src="/media/hero.mp4"
+        poster="/media/hero-poster.jpg"
         muted
         loop
         playsInline
