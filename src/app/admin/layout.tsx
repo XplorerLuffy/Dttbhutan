@@ -3,6 +3,7 @@ import DashboardShell from "@/components/dashboard/DashboardShell";
 const NAV = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/content", label: "Site content" },
+  { href: "/admin/content/pages", label: "Page content" },
   { href: "/admin/vendors", label: "Vendor approvals" },
   { href: "/admin/destinations", label: "Destinations" },
   { href: "/admin/bookings", label: "Bookings" },

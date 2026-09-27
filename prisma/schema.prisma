@@ -810,3 +810,26 @@ model SiteContent {
   updatedAt DateTime @updatedAt
   updatedBy String?
 }
+
+/// A numbered clause or Q&A pair on an editable long-form page.
+///
+/// Separate from SiteContent because these are lists the client adds to and
+/// reorders, not a fixed set of named fields — a registry key per clause
+/// would mean a code change every time a lawyer adds one. `group` carries
+/// the FAQ's category heading and is null for legal pages.
+///
+/// `body` is the small markup understood by src/components/RichText.tsx
+/// (paragraphs, bullets, bold, links, and ==pending confirmation== marks).
+/// It is never rendered as HTML, so there is nothing to sanitise.
+model ContentSection {
+  id        String   @id @default(cuid())
+  page      String
+  group     String?
+  heading   String
+  body      String
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([page, position])
+}
