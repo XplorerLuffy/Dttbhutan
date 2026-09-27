@@ -46,9 +46,15 @@ export default function Hero({ destinations }: { destinations: Destination[] }) 
 
   return (
     <section className="relative isolate flex min-h-[600px] flex-col justify-center overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-900 sm:min-h-[720px]">
+      {/* `poster` paints a still immediately, so the hero looks finished
+          while the clip downloads instead of showing bare gradient. The file
+          is not in the repo yet — see docs/hero-video.md for how to produce
+          it along with a web-sized encode of the clip itself. A missing
+          poster is inert: the browser falls back to the gradient below. */}
       <video
         ref={videoRef}
         src="/uploads/herovideo.mp4"
+        poster="/uploads/hero-poster.jpg"
         autoPlay
         muted
         loop
