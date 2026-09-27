@@ -1,0 +1,162 @@
+/**
+ * Every editable piece of site copy, in one list.
+ *
+ * This registry is the single source of truth for three things at once: the
+ * admin form (rendered from it, so a new field needs no UI work), the
+ * fallback value when nothing has been saved (so a missing row renders the
+ * designed copy rather than a blank), and the whitelist of keys the API
+ * will accept (so a crafted request can't write arbitrary rows).
+ *
+ * Defaults are the copy that shipped with the design. Editing a field in
+ * admin stores an override; clearing it falls back here again.
+ */
+
+export type FieldType = "text" | "textarea" | "url" | "email" | "tel";
+
+export type ContentField = {
+  key: string;
+  label: string;
+  type: FieldType;
+  default: string;
+  /** Shown under the input — use it for anything non-obvious about where
+   * the value appears or what format it needs. */
+  help?: string;
+};
+
+export type ContentGroup = {
+  id: string;
+  label: string;
+  description?: string;
+  fields: ContentField[];
+};
+
+export const CONTENT_GROUPS: ContentGroup[] = [
+  {
+    id: "company",
+    label: "Company details",
+    description:
+      "Real-world facts about the business. These appear in the footer, the About and Contact pages, legal pages, emails, and the structured data search engines read. Leave a field blank and the site hides it rather than printing a placeholder.",
+    fields: [
+      { key: "company.name", label: "Trading name", type: "text", default: "Droelma Tours & Travels" },
+      { key: "company.legalName", label: "Registered legal name", type: "text", default: "", help: "Only if it differs from the trading name." },
+      { key: "company.tcbLicenceNumber", label: "TCB licence number", type: "text", default: "", help: "Tourism Council of Bhutan operator licence. Shown as a trust signal — leave blank rather than guessing." },
+      { key: "company.registrationNumber", label: "Company registration number", type: "text", default: "" },
+      { key: "company.foundedYear", label: "Year founded", type: "text", default: "", help: "Used for \"since YYYY\" copy." },
+      { key: "company.address.street", label: "Street address", type: "text", default: "" },
+      { key: "company.address.city", label: "City", type: "text", default: "Thimphu" },
+      { key: "company.address.country", label: "Country", type: "text", default: "Bhutan" },
+      { key: "company.phone", label: "Phone", type: "tel", default: "" },
+      { key: "company.whatsapp", label: "WhatsApp number", type: "tel", default: "" },
+      { key: "company.email", label: "Public enquiries email", type: "email", default: "" },
+      { key: "company.officeHours", label: "Office hours", type: "text", default: "Monday – Friday, 9:00 – 17:00 (BST, UTC+6)" },
+      { key: "company.social.facebook", label: "Facebook URL", type: "url", default: "" },
+      { key: "company.social.instagram", label: "Instagram URL", type: "url", default: "" },
+      { key: "company.social.tripadvisor", label: "TripAdvisor URL", type: "url", default: "" },
+    ],
+  },
+
+  {
+    id: "home.hero",
+    label: "Homepage — hero",
+    description: "The headline over the video, and the line beneath the search bar.",
+    fields: [
+      { key: "home.hero.headline", label: "Headline", type: "text", default: "Discover Bhutan, Your Way" },
+      { key: "home.hero.searchButton", label: "Search button label", type: "text", default: "See All Trips" },
+      { key: "home.hero.customPrefix", label: "Custom-trip line, before the link", type: "text", default: "Or" },
+      { key: "home.hero.customLink", label: "Custom-trip link text", type: "text", default: "have us build a custom trip" },
+      { key: "home.hero.customSuffix", label: "Custom-trip line, after the link", type: "text", default: "around what you want to see." },
+    ],
+  },
+
+  {
+    id: "home.valueband",
+    label: "Homepage — why book with us",
+    description: "The tinted band under the hero. The numbers beneath it are counted from the database and are not editable — that is deliberate, so they can't drift from reality.",
+    fields: [
+      { key: "home.valueband.heading", label: "Heading", type: "text", default: "Bhutan, Arranged Properly" },
+      { key: "home.valueband.subheading", label: "Sub-heading", type: "textarea", default: "Bhutan asks every visitor to travel with a licensed guide and a planned itinerary. We handle that part so the trip still feels like yours." },
+      { key: "home.valueband.linkLabel", label: "Link label", type: "text", default: "About Droelma" },
+      { key: "home.valueband.pillar1.eyebrow", label: "Pillar 1 — small line", type: "text", default: "Your trip" },
+      { key: "home.valueband.pillar1.title", label: "Pillar 1 — big line", type: "text", default: "Your way" },
+      { key: "home.valueband.pillar1.body", label: "Pillar 1 — text", type: "textarea", default: "Take a ready-made journey as it stands, or tell us what you want to see and we'll shape the itinerary around your interests, dates and pace." },
+      { key: "home.valueband.pillar2.eyebrow", label: "Pillar 2 — small line", type: "text", default: "Licensed" },
+      { key: "home.valueband.pillar2.title", label: "Pillar 2 — big line", type: "text", default: "Local guides" },
+      { key: "home.valueband.pillar2.body", label: "Pillar 2 — text", type: "textarea", default: "Every guide listed carries a Tourism Council of Bhutan licence number and is reviewed by our team before they can accept a single booking." },
+      { key: "home.valueband.pillar3.eyebrow", label: "Pillar 3 — small line", type: "text", default: "Grounded in" },
+      { key: "home.valueband.pillar3.title", label: "Pillar 3 — big line", type: "text", default: "Bhutan itself" },
+      { key: "home.valueband.pillar3.body", label: "Pillar 3 — text", type: "textarea", default: "Routes are built on local knowledge of the dzongkhags — which festivals fall when, which trails open in which season, and what is worth your time." },
+      { key: "home.valueband.pillar4.eyebrow", label: "Pillar 4 — small line", type: "text", default: "Book" },
+      { key: "home.valueband.pillar4.title", label: "Pillar 4 — big line", type: "text", default: "Directly" },
+      { key: "home.valueband.pillar4.body", label: "Pillar 4 — text", type: "textarea", default: "Reserve packages, guides and transport straight through Droelma, with real availability and a confirmation you can hold us to." },
+    ],
+  },
+
+  {
+    id: "home.sections",
+    label: "Homepage — section headings",
+    description: "The heading and supporting line above each block of cards.",
+    fields: [
+      { key: "home.packages.heading", label: "Featured tours — heading", type: "text", default: "Journeys Worth the Flight" },
+      { key: "home.packages.subtitle", label: "Featured tours — sub-line", type: "textarea", default: "Planned end to end, priced per person, and ready to book — or to use as the starting point for something of your own." },
+      { key: "home.packages.cta", label: "Featured tours — button", type: "text", default: "See all tour packages" },
+      { key: "home.guides.heading", label: "Guides — heading", type: "text", default: "The People You'll Travel With" },
+      { key: "home.guides.subtitle", label: "Guides — sub-line", type: "textarea", default: "Bhutan requires every visitor to travel with a licensed guide. These are ours." },
+      { key: "home.guides.cta", label: "Guides — link", type: "text", default: "Meet all our guides →" },
+      { key: "home.treks.heading", label: "Trekking — heading", type: "text", default: "Take the Long Way" },
+      { key: "home.treks.subtitle", label: "Trekking — sub-line", type: "textarea", default: "Multi-day treks through the high valleys, with guide, crew and gear arranged." },
+      { key: "home.destinations.heading", label: "Destinations — heading", type: "text", default: "Twenty Dzongkhags, One Country" },
+      { key: "home.destinations.subtitle", label: "Destinations — sub-line", type: "textarea", default: "From the well-trodden west to the far east, visited by only a handful of travelers each year." },
+      { key: "home.destinations.cta", label: "Destinations — link", type: "text", default: "Explore every destination →" },
+      { key: "home.testimonials.heading", label: "Reviews — heading", type: "text", default: "Our Travelers Say It Best" },
+      { key: "home.testimonials.subtitle", label: "Reviews — sub-line", type: "textarea", default: "Every review here is tied to a completed booking — we can't write them, and neither can anyone else." },
+      { key: "home.articles.heading", label: "Travel guide — heading", type: "text", default: "Before You Go" },
+      { key: "home.articles.subtitle", label: "Travel guide — sub-line", type: "textarea", default: "Visas, the Sustainable Development Fee, and when the weather is actually on your side." },
+      { key: "home.articles.cta", label: "Travel guide — link", type: "text", default: "Read the travel guide →" },
+    ],
+  },
+
+  {
+    id: "home.responsible",
+    label: "Homepage — responsible travel",
+    description: "The split panel. The left-hand panel states a fact about Bhutan; keep it to something verifiable.",
+    fields: [
+      { key: "home.responsible.eyebrow", label: "Panel — small line", type: "text", default: "Carbon negative" },
+      { key: "home.responsible.stat", label: "Panel — large statement", type: "textarea", default: "Bhutan absorbs more carbon than it emits — the only country in the world that does." },
+      { key: "home.responsible.caption", label: "Panel — caption", type: "textarea", default: "Its constitution requires at least 60% of the country to stay under forest cover, in perpetuity." },
+      { key: "home.responsible.heading", label: "Heading", type: "text", default: "High Value, Low Volume" },
+      { key: "home.responsible.body1", label: "First paragraph", type: "textarea", default: "Bhutan has never chased visitor numbers. Instead, every traveler pays a Sustainable Development Fee, which goes towards free healthcare and education for Bhutanese citizens, conservation work, and training for people working in tourism." },
+      { key: "home.responsible.body2", label: "Second paragraph", type: "textarea", default: "It is the reason the valleys you came to see still look the way they do — and the reason trips here are planned rather than improvised." },
+      { key: "home.responsible.cta", label: "Button label", type: "text", default: "How the fee works" },
+      { key: "home.responsible.ctaHref", label: "Button link", type: "text", default: "/travel-guide/bhutans-sustainable-development-fee-explained" },
+    ],
+  },
+
+  {
+    id: "home.banner",
+    label: "Homepage — closing banner",
+    description: "The full-width band over the video, near the bottom of the page.",
+    fields: [
+      { key: "home.banner.heading", label: "Heading", type: "text", default: "No Two Trips Should Look Alike" },
+      { key: "home.banner.subtitle", label: "Sub-line", type: "textarea", default: "Tell us how long you have, what you want to see, and how hard you want to walk. We'll build the rest around it." },
+      { key: "home.banner.cta", label: "Button label", type: "text", default: "Plan My Trip" },
+      { key: "home.banner.ctaHref", label: "Button link", type: "text", default: "/custom-tour" },
+    ],
+  },
+
+  {
+    id: "footer",
+    label: "Footer",
+    fields: [
+      { key: "footer.tagline", label: "Tagline", type: "textarea", default: "Guides, hotels, transport and flights — arranged directly with a licensed Bhutanese operator." },
+      { key: "footer.copyrightNote", label: "Extra line under the copyright", type: "text", default: "" },
+    ],
+  },
+];
+
+/** Flat key → default, built once from the registry. */
+export const CONTENT_DEFAULTS: Record<string, string> = Object.fromEntries(
+  CONTENT_GROUPS.flatMap((g) => g.fields.map((f) => [f.key, f.default]))
+);
+
+/** Keys the content API is willing to write. Anything else is rejected. */
+export const CONTENT_KEYS = new Set(Object.keys(CONTENT_DEFAULTS));

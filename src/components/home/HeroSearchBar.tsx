@@ -30,7 +30,7 @@ const DIFFICULTIES = [
   { value: "CHALLENGING", label: "Challenging" },
 ];
 
-export default function HeroSearchBar({ destinations }: { destinations: Destination[] }) {
+export default function HeroSearchBar({ destinations, submitLabel }: { destinations: Destination[]; submitLabel: string }) {
   return (
     <form
       method="get"
@@ -91,7 +91,7 @@ export default function HeroSearchBar({ destinations }: { destinations: Destinat
         type="submit"
         className="mt-1 shrink-0 rounded-full bg-brand-700 px-8 py-4 font-display text-base font-semibold text-white transition-colors hover:bg-brand-800 sm:mt-0 sm:self-center sm:py-3.5"
       >
-        See All Trips
+        {submitLabel}
       </button>
     </form>
   );

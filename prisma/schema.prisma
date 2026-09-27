@@ -793,3 +793,20 @@ model KnowledgeChunk {
 
   @@index([agencyId, visibility])
 }
+
+/// Editable site copy, one row per field.
+///
+/// A flat key/value store rather than a column per piece of text: the set of
+/// editable fields changes whenever a section is added or reworded, and a
+/// migration per wording change is not a workable way to run a website. The
+/// authoritative list of fields — their keys, labels, input types and
+/// defaults — lives in src/lib/content/registry.ts, which also supplies the
+/// fallback when a row is absent. That means a missing row renders the
+/// designed default rather than an empty page, and adding a new editable
+/// field needs no migration at all.
+model SiteContent {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}

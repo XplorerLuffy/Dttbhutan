@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content";
 import Hero from "@/components/home/Hero";
 import ScrollReveal from "@/components/ScrollReveal";
 import PackageCard from "@/components/listing/PackageCard";
@@ -127,13 +128,22 @@ export default async function HomePage() {
   const overallRating = await prisma.review.aggregate({ _avg: { rating: true }, _count: { rating: true } });
 
   const testimonials = (await getTestimonials()).slice(0, 3);
+  const content = await getSiteContent();
 
   return (
     <div>
-      <Hero destinations={destinations} />
+      <Hero
+        destinations={destinations}
+        headline={content("home.hero.headline")}
+        searchButton={content("home.hero.searchButton")}
+        customPrefix={content("home.hero.customPrefix")}
+        customLink={content("home.hero.customLink")}
+        customSuffix={content("home.hero.customSuffix")}
+      />
 
       <div>
         <ValueBand
+          content={content}
           packageCount={publishedItineraries.length}
           destinationCount={destinations.length}
           ratingAverage={overallRating._avg.rating}
@@ -144,8 +154,8 @@ export default async function HomePage() {
       {featured.length > 0 && (
         <Container className="py-20 sm:py-24">
           <SectionHeading
-            title="Journeys Worth the Flight"
-            subtitle="Planned end to end, priced per person, and ready to book — or to use as the starting point for something of your own."
+            title={content("home.packages.heading")}
+            subtitle={content("home.packages.subtitle")}
           />
           <ScrollReveal className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((p) => (
@@ -157,7 +167,7 @@ export default async function HomePage() {
               href="/packages"
               className="inline-block rounded-full border border-stone-300 bg-white px-8 py-3.5 font-display text-base font-semibold text-stone-800 transition-colors hover:bg-stone-50"
             >
-              See all tour packages
+              {content("home.packages.cta")}
             </Link>
           </div>
         </Container>
@@ -167,15 +177,15 @@ export default async function HomePage() {
         <div className="bg-stone-100/70 py-20 sm:py-24">
           <Container>
             <SectionHeading
-              title="The People You'll Travel With"
-              subtitle="Bhutan requires every visitor to travel with a licensed guide. These are ours."
+              title={content("home.guides.heading")}
+              subtitle={content("home.guides.subtitle")}
             />
             <div className="mt-14">
               <GuideSpotlight guides={featuredGuides} />
             </div>
             <div className="mt-12 text-center">
               <Link href="/guides" className="font-semibold text-brand-700 hover:underline">
-                Meet all our guides →
+                {content("home.guides.cta")}
               </Link>
             </div>
           </Container>
@@ -183,14 +193,14 @@ export default async function HomePage() {
       )}
 
       <Container className="py-20 sm:py-24">
-        <ResponsibleTravel />
+        <ResponsibleTravel content={content} />
       </Container>
 
       {trendingTreks.length > 0 && (
         <Container className="pb-20 sm:pb-24">
           <SectionHeading
-            title="Take the Long Way"
-            subtitle="Multi-day treks through the high valleys, with guide, crew and gear arranged."
+            title={content("home.treks.heading")}
+            subtitle={content("home.treks.subtitle")}
           />
           <ScrollReveal className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {trendingTreks.map((p) => (
@@ -203,8 +213,8 @@ export default async function HomePage() {
       <div className="bg-stone-100/70 py-20 sm:py-24">
         <Container>
           <SectionHeading
-            title="Twenty Dzongkhags, One Country"
-            subtitle="From the well-trodden west to the far east, visited by only a handful of travelers each year."
+            title={content("home.destinations.heading")}
+            subtitle={content("home.destinations.subtitle")}
           />
           <ScrollReveal className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {featuredDestinations.map((d) => (
@@ -220,7 +230,7 @@ export default async function HomePage() {
           </ScrollReveal>
           <div className="mt-12 text-center">
             <Link href="/destinations" className="font-semibold text-brand-700 hover:underline">
-              Explore every destination →
+              {content("home.destinations.cta")}
             </Link>
           </div>
         </Container>
@@ -229,8 +239,8 @@ export default async function HomePage() {
       {testimonials.length > 0 && (
         <Container className="py-20 sm:py-24">
           <SectionHeading
-            title="Our Travelers Say It Best"
-            subtitle="Every review here is tied to a completed booking — we can't write them, and neither can anyone else."
+            title={content("home.testimonials.heading")}
+            subtitle={content("home.testimonials.subtitle")}
           />
           <div className="mt-14">
             <QuoteCards testimonials={testimonials} />
@@ -238,13 +248,18 @@ export default async function HomePage() {
         </Container>
       )}
 
-      <FeatureBanner />
+      <FeatureBanner
+        heading={content("home.banner.heading")}
+        subtitle={content("home.banner.subtitle")}
+        cta={content("home.banner.cta")}
+        ctaHref={content("home.banner.ctaHref")}
+      />
 
       {articles.length > 0 && (
         <Container className="py-20 sm:py-24">
           <SectionHeading
-            title="Before You Go"
-            subtitle="Visas, the Sustainable Development Fee, and when the weather is actually on your side."
+            title={content("home.articles.heading")}
+            subtitle={content("home.articles.subtitle")}
           />
           <ScrollReveal className="mt-14 grid gap-6 sm:grid-cols-3">
             {articles.map((a) => (
@@ -260,7 +275,7 @@ export default async function HomePage() {
           </ScrollReveal>
           <div className="mt-12 text-center">
             <Link href="/travel-guide" className="font-semibold text-brand-700 hover:underline">
-              Read the travel guide →
+              {content("home.articles.cta")}
             </Link>
           </div>
         </Container>

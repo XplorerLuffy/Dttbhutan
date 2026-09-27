@@ -17,7 +17,21 @@ type Destination = { id: string; name: string; slug: string };
  * fallback background (shown before the video paints, and if playback is
  * ever blocked) rather than decoration competing with the footage.
  */
-export default function Hero({ destinations }: { destinations: Destination[] }) {
+export default function Hero({
+  destinations,
+  headline,
+  searchButton,
+  customPrefix,
+  customLink,
+  customSuffix,
+}: {
+  destinations: Destination[];
+  headline: string;
+  searchButton: string;
+  customPrefix: string;
+  customLink: string;
+  customSuffix: string;
+}) {
   const contentRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -71,19 +85,19 @@ export default function Hero({ destinations }: { destinations: Destination[] }) 
 
       <div ref={contentRef} className="w-full px-4 py-24 sm:px-6 sm:py-28">
         <h1 className="text-balance text-center font-display text-4xl font-semibold leading-tight text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] sm:text-6xl">
-          Discover Bhutan, Your Way
+          {headline}
         </h1>
 
         <div className="mt-10 sm:mt-12">
-          <HeroSearchBar destinations={destinations} />
+          <HeroSearchBar destinations={destinations} submitLabel={searchButton} />
         </div>
 
         <p className="mt-6 text-center text-sm text-white/90 [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
-          Or{" "}
+          {customPrefix}{" "}
           <Link href="/custom-tour" className="font-semibold underline underline-offset-4 hover:text-white">
-            have us build a custom trip
+            {customLink}
           </Link>{" "}
-          around what you want to see.
+          {customSuffix}
         </p>
       </div>
     </section>

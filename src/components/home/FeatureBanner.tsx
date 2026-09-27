@@ -13,7 +13,17 @@ import { useEffect, useRef } from "react";
  * battery on a page this long, and `preload="none"` keeps it off the
  * critical path entirely.
  */
-export default function FeatureBanner() {
+export default function FeatureBanner({
+  heading,
+  subtitle,
+  cta,
+  ctaHref,
+}: {
+  heading: string;
+  subtitle: string;
+  cta: string;
+  ctaHref: string;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -50,17 +60,16 @@ export default function FeatureBanner() {
 
       <div className="mx-auto max-w-3xl px-4 py-28 text-center text-white sm:px-6 sm:py-36">
         <h2 className="text-balance font-display text-3xl font-semibold leading-tight sm:text-5xl">
-          No Two Trips Should Look Alike
+          {heading}
         </h2>
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
-          Tell us how long you have, what you want to see, and how hard you want to walk. We&apos;ll
-          build the rest around it.
+          {subtitle}
         </p>
         <Link
-          href="/custom-tour"
+          href={ctaHref}
           className="mt-10 inline-block rounded-full bg-white px-9 py-3.5 font-display text-base font-semibold text-brand-900 shadow-lg transition-transform hover:scale-[1.03]"
         >
-          Plan My Trip
+          {cta}
         </Link>
       </div>
     </section>

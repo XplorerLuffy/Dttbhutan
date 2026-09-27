@@ -1,0 +1,161 @@
+"use client";
+
+import { useState } from "react";
+import type { ContentGroup } from "@/lib/content/registry";
+
+/**
+ * Renders the whole content admin from the registry, so adding an editable
+ * field is a one-line change there and needs no work here.
+ *
+ * Saves only the fields that actually changed. That keeps the "cleared =
+ * back to the designed default" behaviour honest: an untouched field is
+ * never written, so it can't quietly acquire a row equal to its default and
+ * stop tracking future copy changes.
+ */
+export default function ContentEditor({
+  groups,
+  initial,
+}: {
+  groups: ContentGroup[];
+  initial: Record<string, string>;
+}) {
+  const [activeGroup, setActiveGroup] = useState(groups[0]?.id ?? "");
+  const [values, setValues] = useState<Record<string, string>>(initial);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  const group = groups.find((g) => g.id === activeGroup) ?? groups[0];
+  const changed = Object.keys(values).filter((k) => values[k] !== initial[k]);
+
+  async function save() {
+    setStatus("saving");
+    setMessage("");
+    const payload = Object.fromEntries(changed.map((k) => [k, values[k]]));
+    try {
+      const res = await fetch("/api/admin/content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values: payload }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(typeof body.error === "string" ? body.error : "Could not save changes.");
+      }
+      setStatus("saved");
+      setMessage(`Saved ${changed.length} ${changed.length === 1 ? "change" : "changes"}.`);
+      // Reload so the page reflects what the site will now render, and so
+      // "changed" resets against the newly-saved values.
+      setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+      setStatus("error");
+      setMessage(err instanceof Error ? err.message : "Could not save changes.");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6 lg:flex-row">
+      <nav className="lg:w-64 lg:shrink-0" aria-label="Content sections">
+        <ul className="flex flex-wrap gap-1 lg:flex-col">
+          {groups.map((g) => {
+            const dirty = g.fields.some((f) => values[f.key] !== initial[f.key]);
+            return (
+              <li key={g.id}>
+                <button
+                  type="button"
+                  onClick={() => setActiveGroup(g.id)}
+                  aria-current={g.id === activeGroup ? "true" : undefined}
+                  className={`flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                    g.id === activeGroup
+                      ? "bg-brand-700 text-white"
+                      : "text-stone-700 hover:bg-stone-100"
+                  }`}
+                >
+                  {g.label}
+                  {dirty && (
+                    <span
+                      aria-label="unsaved changes"
+                      className={`h-2 w-2 shrink-0 rounded-full ${g.id === activeGroup ? "bg-white" : "bg-gold-500"}`}
+                    />
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <div className="min-w-0 flex-1">
+        <div className="card">
+          <h2 className="font-display text-lg font-semibold text-stone-900">{group.label}</h2>
+          {group.description && (
+            <p className="mt-1 text-sm text-stone-600">{group.description}</p>
+          )}
+
+          <div className="mt-6 space-y-5">
+            {group.fields.map((f) => {
+              const id = `field-${f.key}`;
+              const isDirty = values[f.key] !== initial[f.key];
+              return (
+                <div key={f.key}>
+                  <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-stone-900">
+                    {f.label}
+                    {isDirty && <span className="ml-2 text-xs font-normal text-gold-700">edited</span>}
+                  </label>
+                  {f.type === "textarea" ? (
+                    <textarea
+                      id={id}
+                      rows={3}
+                      className="input"
+                      value={values[f.key] ?? ""}
+                      onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                    />
+                  ) : (
+                    <input
+                      id={id}
+                      type={f.type === "tel" ? "tel" : f.type === "email" ? "email" : f.type === "url" ? "url" : "text"}
+                      className="input"
+                      value={values[f.key] ?? ""}
+                      onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                    />
+                  )}
+                  {f.help && <p className="mt-1 text-xs text-stone-500">{f.help}</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 mt-4 flex flex-wrap items-center gap-3 border-t border-stone-200 bg-stone-50 py-3">
+          <button
+            type="button"
+            onClick={save}
+            disabled={changed.length === 0 || status === "saving"}
+            className="btn-primary"
+          >
+            {status === "saving" ? "Saving…" : `Save ${changed.length || ""} change${changed.length === 1 ? "" : "s"}`.trim()}
+          </button>
+          {changed.length > 0 && status !== "saving" && (
+            <button
+              type="button"
+              onClick={() => setValues(initial)}
+              className="btn-secondary"
+            >
+              Discard
+            </button>
+          )}
+          {message && (
+            <p
+              role="status"
+              className={`text-sm ${status === "error" ? "text-red-700" : "text-pine-700"}`}
+            >
+              {message}
+            </p>
+          )}
+          <p className="ml-auto text-xs text-stone-500">
+            Clear a field to restore its original wording.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

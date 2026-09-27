@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { SiteContent } from "@/lib/content";
 
 /**
  * Split panel on how Bhutan handles tourism.
@@ -10,43 +11,39 @@ import Link from "next/link";
  * have yet; it carries a fact rather than a decorative gradient so the space
  * earns itself either way.
  */
-export default function ResponsibleTravel() {
+export default function ResponsibleTravel({ content }: { content: SiteContent }) {
   return (
     <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-900 via-brand-800 to-pine-800 px-8 py-16 text-white sm:px-12">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(242,162,39,0.22),transparent_60%)]" />
         <div className="relative">
           <p className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-gold-300">
-            Carbon negative
+            {content("home.responsible.eyebrow")}
           </p>
           <p className="mt-5 font-display text-3xl font-semibold leading-tight sm:text-4xl">
-            Bhutan absorbs more carbon than it emits — the only country in the world that does.
+            {content("home.responsible.stat")}
           </p>
           <p className="mt-6 text-sm leading-relaxed text-white/75">
-            Its constitution requires at least 60% of the country to stay under forest cover, in
-            perpetuity.
+            {content("home.responsible.caption")}
           </p>
         </div>
       </div>
 
       <div>
         <h2 className="font-display text-3xl font-semibold leading-tight text-stone-900 sm:text-4xl">
-          High Value, Low Volume
+          {content("home.responsible.heading")}
         </h2>
         <p className="mt-6 text-base leading-relaxed text-stone-600">
-          Bhutan has never chased visitor numbers. Instead, every traveler pays a Sustainable
-          Development Fee, which goes towards free healthcare and education for Bhutanese citizens,
-          conservation work, and training for people working in tourism.
+          {content("home.responsible.body1")}
         </p>
         <p className="mt-4 text-base leading-relaxed text-stone-600">
-          It is the reason the valleys you came to see still look the way they do — and the reason
-          trips here are planned rather than improvised.
+          {content("home.responsible.body2")}
         </p>
         <Link
-          href="/travel-guide/bhutans-sustainable-development-fee-explained"
+          href={content("home.responsible.ctaHref")}
           className="mt-8 inline-block rounded-full bg-brand-700 px-8 py-3.5 font-display text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-800"
         >
-          How the fee works
+          {content("home.responsible.cta")}
         </Link>
       </div>
     </div>

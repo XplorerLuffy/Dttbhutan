@@ -1,20 +1,21 @@
 import Link from "next/link";
 import CompanyFact from "@/components/company/CompanyFact";
-import { COMPANY, formattedAddress } from "@/lib/company";
+import { getSiteContent, companyFrom } from "@/lib/content";
 
-export default function Footer() {
+export default async function Footer() {
+  const content = await getSiteContent();
+  const company = companyFrom(content);
+  const address = [company.address.street, company.address.city, company.address.country]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <footer className="mt-20 border-t border-stone-200 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            <p className="font-display text-lg font-semibold text-brand-800">
-              Droelma Tours &amp; Travels
-            </p>
-            <p className="mt-2 text-sm text-stone-500">
-              Guides, hotels, transport, and flights for your trip — with
-              GPS-verified trip mileage and live tracking.
-            </p>
+            <p className="font-display text-lg font-semibold text-brand-800">{company.name}</p>
+            <p className="mt-2 text-sm text-stone-500">{content("footer.tagline")}</p>
           </div>
           <FooterColumn
             title="Explore"
@@ -56,11 +57,12 @@ export default function Footer() {
 
         <div className="mt-10 flex flex-col gap-3 border-t border-stone-100 pt-6 text-xs text-stone-400 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} {COMPANY.name}
-            {formattedAddress() ? `, ${formattedAddress()}` : ""}.
+            © {new Date().getFullYear()} {company.name}
+            {address ? `, ${address}` : ""}.
+            {content("footer.copyrightNote") ? ` ${content("footer.copyrightNote")}` : ""}
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <CompanyFact label="TCB licence" value={COMPANY.tcbLicenceNumber} />
+            <CompanyFact label="TCB licence" value={company.tcbLicenceNumber} />
             <Link href="/terms" className="hover:text-stone-600">
               Terms
             </Link>
