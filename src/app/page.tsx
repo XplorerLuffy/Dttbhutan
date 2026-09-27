@@ -9,6 +9,7 @@ import ArticleCard from "@/components/ArticleCard";
 import AiPlannerTeaser from "@/components/home/AiPlannerTeaser";
 import SectionHeading from "@/components/home/SectionHeading";
 import ValueBand from "@/components/home/ValueBand";
+import FeaturedCollections, { type Collection } from "@/components/home/FeaturedCollections";
 import GuideSpotlight, { type SpotlightGuide } from "@/components/home/GuideSpotlight";
 import ResponsibleTravel from "@/components/home/ResponsibleTravel";
 import QuoteCards from "@/components/home/QuoteCards";
@@ -130,6 +131,21 @@ export default async function HomePage() {
   const testimonials = (await getTestimonials()).slice(0, 3);
   const content = await getSiteContent();
 
+  // Grouped from the packages already in memory rather than another query.
+  // A category with nothing published is dropped, so no card can lead to an
+  // empty result page.
+  const collections: Collection[] = ["CULTURAL", "TREKKING", "WILDLIFE", "HONEYMOON"]
+    .map((category) => {
+      const inCategory = publishedItineraries.filter((p) => p.category === category);
+      return {
+        category,
+        count: inCategory.length,
+        fromPrice: Math.min(...inCategory.map((p) => Number(p.pricePerPerson))),
+        photoUrl: inCategory.find((p) => p.coverPhotoUrl)?.coverPhotoUrl ?? null,
+      };
+    })
+    .filter((c) => c.count > 0);
+
   return (
     <div>
       <Hero
@@ -151,8 +167,14 @@ export default async function HomePage() {
         />
       </div>
 
-      {featured.length > 0 && (
+      {collections.length > 0 && (
         <Container className="py-20 sm:py-24">
+          <FeaturedCollections content={content} collections={collections} />
+        </Container>
+      )}
+
+      {featured.length > 0 && (
+        <Container className="pb-20 sm:pb-24">
           <SectionHeading
             title={content("home.packages.heading")}
             subtitle={content("home.packages.subtitle")}

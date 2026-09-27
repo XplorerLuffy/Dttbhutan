@@ -25,6 +25,18 @@ h3 {
   }
 }
 
+@layer utilities {
+  /* Horizontal card rows scroll by swipe or trackpad; the bar itself adds
+     nothing and cuts into the card edge on desktop. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer components {
   .input {
     @apply w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600;

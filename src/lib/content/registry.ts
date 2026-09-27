@@ -116,6 +116,24 @@ export const CONTENT_GROUPS: ContentGroup[] = [
   },
 
   {
+    id: "home.collections",
+    label: "Homepage — featured collections",
+    description:
+      "The scrolling row of collection cards. Each one links to that category of tour. The trip count and the \"from\" price on each card are counted from the database, not typed here, and a collection with no published tours is hidden automatically.",
+    fields: [
+      { key: "home.collections.heading", label: "Heading", type: "text", default: "Featured Collections" },
+      { key: "home.collections.subtitle", label: "Sub-line", type: "textarea", default: "Four ways into Bhutan, depending on what you came for." },
+      { key: "home.collections.CULTURAL.title", label: "Cultural — title", type: "text", default: "Dzongs & Festivals" },
+      { key: "home.collections.CULTURAL.subtitle", label: "Cultural — sub-line", type: "text", default: "Monasteries, masked dances, market towns" },
+      { key: "home.collections.TREKKING.title", label: "Trekking — title", type: "text", default: "Into the High Valleys" },
+      { key: "home.collections.TREKKING.subtitle", label: "Trekking — sub-line", type: "text", default: "Multi-day routes with guide, crew and gear" },
+      { key: "home.collections.WILDLIFE.title", label: "Wildlife — title", type: "text", default: "Black-Necked Cranes & Forests" },
+      { key: "home.collections.WILDLIFE.subtitle", label: "Wildlife — sub-line", type: "text", default: "Phobjikha, Royal Manas and the deep south" },
+      { key: "home.collections.HONEYMOON.title", label: "Honeymoon — title", type: "text", default: "Just the Two of You" },
+      { key: "home.collections.HONEYMOON.subtitle", label: "Honeymoon — sub-line", type: "text", default: "Quiet valleys, slow mornings, no itinerary to keep up with" },
+    ],
+  },
+  {
     id: "home.responsible",
     label: "Homepage — responsible travel",
     description: "The split panel. The left-hand panel states a fact about Bhutan; keep it to something verifiable.",
