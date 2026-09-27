@@ -27,6 +27,11 @@ export type Lodging = {
   photoUrl: string;
 };
 
+export type Photo = {
+  url: string;
+  caption: string;
+};
+
 type InitialValues = {
   id?: string;
   title: string;
@@ -43,6 +48,7 @@ type InitialValues = {
   excludes: string; // comma-separated
   days: Day[];
   lodgings: Lodging[];
+  photos: Photo[];
 };
 
 const EMPTY_DAY: Day = {
@@ -62,6 +68,7 @@ const EMPTY_DAY: Day = {
 };
 
 const EMPTY_LODGING: Lodging = { name: "", location: "", description: "", photoUrl: "" };
+const EMPTY_PHOTO: Photo = { url: "", caption: "" };
 
 /** Blank number inputs stay blank rather than becoming 0. */
 function num(value: string): number | "" {
@@ -99,6 +106,7 @@ export default function ItineraryForm({
   const [excludes, setExcludes] = useState(initial?.excludes ?? "");
   const [days, setDays] = useState<Day[]>(initial?.days?.length ? initial.days : [{ ...EMPTY_DAY }]);
   const [lodgings, setLodgings] = useState<Lodging[]>(initial?.lodgings ?? []);
+  const [photos, setPhotos] = useState<Photo[]>(initial?.photos ?? []);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -141,6 +149,24 @@ export default function ItineraryForm({
     );
   }
 
+  function addPhoto() {
+    setPhotos((prev) => [...prev, { ...EMPTY_PHOTO }]);
+  }
+
+  function updatePhoto(index: number, patch: Partial<Photo>) {
+    setPhotos((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)));
+  }
+
+  function movePhoto(index: number, delta: number) {
+    setPhotos((prev) => {
+      const next = [...prev];
+      const target = index + delta;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -174,6 +200,9 @@ export default function ItineraryForm({
         hikeDifficulty: d.hikeDifficulty || undefined,
         hikeNote: d.hikeNote || undefined,
       })),
+      photos: photos
+        .filter((p) => p.url.trim())
+        .map((p) => ({ url: p.url.trim(), caption: p.caption || undefined })),
       lodgings: lodgings
         .filter((l) => l.name.trim())
         .map((l) => ({
@@ -286,6 +315,76 @@ export default function ItineraryForm({
           <Field label="Excludes (comma-separated)">
             <input value={excludes} onChange={(e) => setExcludes(e.target.value)} className="input" />
           </Field>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Gallery</h2>
+          <button type="button" onClick={addPhoto} className="btn-secondary">
+            + Add photo
+          </button>
+        </div>
+        <p className="mb-3 text-sm text-stone-600">
+          Photos for the trip page&apos;s Gallery tab, in this order — the first one gets the
+          large cell. The tab only appears once there is at least one. This is separate from the
+          cover photo, which has to work cropped to a card.
+        </p>
+
+        <div className="space-y-2">
+          {photos.map((photo, i) => (
+            <div key={i} className="card grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <Field label={i === 0 ? "Photo URL (large cell)" : "Photo URL"}>
+                <input
+                  value={photo.url}
+                  onChange={(e) => updatePhoto(i, { url: e.target.value })}
+                  placeholder="https://…"
+                  className="input"
+                />
+              </Field>
+              <Field label="Caption (optional)">
+                <input
+                  value={photo.caption}
+                  onChange={(e) => updatePhoto(i, { caption: e.target.value })}
+                  placeholder="Prayer flags above Dochula Pass"
+                  className="input"
+                />
+              </Field>
+              <div className="mb-1 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => movePhoto(i, -1)}
+                  disabled={i === 0}
+                  aria-label="Move photo earlier"
+                  className="rounded border border-stone-200 px-2 py-2 text-sm text-stone-600 hover:bg-stone-50 disabled:opacity-30"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => movePhoto(i, 1)}
+                  disabled={i === photos.length - 1}
+                  aria-label="Move photo later"
+                  className="rounded border border-stone-200 px-2 py-2 text-sm text-stone-600 hover:bg-stone-50 disabled:opacity-30"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPhotos((ps) => ps.filter((_, j) => j !== i))}
+                  aria-label="Remove photo"
+                  className="rounded border border-stone-200 px-2 py-2 text-sm text-stone-500 hover:bg-stone-50"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+          {photos.length === 0 && (
+            <p className="text-sm text-stone-500">
+              No gallery photos yet, so the trip page shows no Gallery tab.
+            </p>
+          )}
         </div>
       </div>
 

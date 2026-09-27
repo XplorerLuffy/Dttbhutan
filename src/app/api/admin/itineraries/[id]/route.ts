@@ -18,7 +18,7 @@ export async function PATCH(
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
-    const { days, lodgings, ...itinerary } = parsed.data;
+    const { days, lodgings, photos, ...itinerary } = parsed.data;
 
     const existing = await prisma.itinerary.findUnique({ where: { slug: itinerary.slug } });
     if (existing && existing.id !== id) {
@@ -32,8 +32,9 @@ export async function PATCH(
     const updated = await prisma.$transaction(async (tx) => {
       await tx.itineraryDay.deleteMany({ where: { itineraryId: id } });
       await tx.itineraryLodging.deleteMany({ where: { itineraryId: id } });
+      await tx.itineraryPhoto.deleteMany({ where: { itineraryId: id } });
       const row = await tx.itinerary.update({ where: { id }, data: itinerary });
-      await writeItineraryDaysAndLodgings(tx, id, days, lodgings);
+      await writeItineraryDaysAndLodgings(tx, id, days, lodgings, photos);
       return row;
     });
 

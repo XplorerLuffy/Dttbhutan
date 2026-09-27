@@ -6,7 +6,9 @@ import DepartureList, { type DepartureView } from "@/components/booking/Departur
 import TripPageHeader from "@/components/listing/TripPageHeader";
 import TripRouteMap from "@/components/listing/TripRouteMapClient";
 import type { RouteStop } from "@/components/listing/TripRouteMap";
-import TripSubNav, { type TripSubNavSection } from "@/components/listing/TripSubNav";
+import TripViewSwitch from "@/components/listing/TripViewSwitch";
+import type { TripSubNavSection } from "@/components/listing/TripSubNav";
+import TripGallery, { type GalleryPhoto } from "@/components/listing/TripGallery";
 import ItineraryAccordion, {
   type ItineraryDayView,
 } from "@/components/listing/ItineraryAccordion";
@@ -65,6 +67,7 @@ export default async function PackageDetailPage({
         include: { destination: true, lodging: true },
       },
       lodgings: { orderBy: { position: "asc" } },
+      photos: { orderBy: { position: "asc" } },
       // Past departures are dropped here rather than in the component: a
       // date that has already gone is not a choice, and showing it only
       // invites "why can't I book this".
@@ -163,6 +166,12 @@ export default async function PackageDetailPage({
     nights: nightsByLodging.get(l.id) ?? 0,
   }));
 
+  const photos: GalleryPhoto[] = itinerary.photos.map((p) => ({
+    id: p.id,
+    url: p.url,
+    caption: p.caption,
+  }));
+
   const reviews: TripReview[] = reviewRows.map((r) => ({
     id: r.id,
     rating: r.rating,
@@ -209,15 +218,72 @@ export default async function PackageDetailPage({
 
   const departureMonths = summariseDepartureMonths(itinerary.departures.map((d) => d.startDate));
 
-  // Only sections that actually render get a tab — see TripSubNav.
+  // Only sections that actually render get a tab. Dates are deliberately
+  // absent: they are the other view of this page, reached by the button, not
+  // somewhere to scroll to. "What's included" sits inside the itinerary view
+  // rather than earning a tab of its own.
   const sections: TripSubNavSection[] = [
-    { id: "overview", label: "Overview" },
-    ...(days.length > 0 ? [{ id: "itinerary", label: "Itinerary" }] : []),
+    { id: "itinerary", label: "Itinerary" },
     ...(lodgings.length > 0 ? [{ id: "hotels", label: "Hotels" }] : []),
-    { id: "dates", label: "Dates & Prices" },
-    ...(hasIncludes ? [{ id: "included", label: "What's included" }] : []),
+    ...(photos.length > 0 ? [{ id: "gallery", label: "Gallery" }] : []),
     ...(hasReviews ? [{ id: "reviews", label: "Reviews" }] : []),
   ];
+
+  const datesPanel = (
+    <section id="dates" className="scroll-mt-24 pt-8">
+      <h2 className="font-display text-2xl font-bold text-stone-900">Dates &amp; Prices</h2>
+      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
+        {/* DepartureList owns the empty case too: a trip with no
+            scheduled dates still runs privately, and that tab is the
+            answer to "when can I go" — hiding it behind a paragraph
+            loses the enquiry. */}
+        <div>
+          <DepartureList departures={departures} packageTitle={itinerary.title} />
+        </div>
+
+        {/* No booking form here: every date row already carries its own
+            "Request to Book", and a second form asking for the same
+            thing in different words is how a page ends up with two
+            answers to "how do I book this". */}
+        <aside className="space-y-4 lg:sticky lg:top-24">
+          <div className="rounded-xl border border-stone-200 bg-white p-6">
+            <MapCardIcon />
+            <h3 className="mt-3 font-display text-base font-semibold text-stone-900">
+              Want to learn more about this trip?
+            </h3>
+            <p className="mt-2 text-sm text-stone-600">
+              Download the full itinerary — every day described, where you stay, what&apos;s
+              included and the dates it runs. Easy to share with whoever you&apos;re travelling
+              with.
+            </p>
+            <a
+              href={`/packages/${itinerary.slug}/itinerary.pdf`}
+              className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
+            >
+              Download &amp; share (PDF)
+            </a>
+          </div>
+
+          <div className="rounded-xl border border-stone-200 bg-white p-6">
+            <ShieldIcon />
+            <h3 className="mt-3 font-display text-base font-semibold text-stone-900">
+              Book with confidence
+            </h3>
+            <p className="mt-2 text-sm text-stone-600">
+              Requesting a place costs nothing and commits you to nothing. We confirm the
+              departure, the hotels and the final price in writing before you pay anything.
+            </p>
+            <Link
+              href="/cancellation"
+              className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
+            >
+              Cancellation &amp; refunds
+            </Link>
+          </div>
+        </aside>
+      </div>
+    </section>
+  );
 
   return (
     <div>
@@ -240,7 +306,7 @@ export default async function PackageDetailPage({
           sticky element only sticks within its own parent's box, so wrapping
           it in a container of its own would pin it to a 60px-tall nothing. */}
       <Container className={`mt-10 ${moreTrips.length > 0 ? "" : "pb-16"}`}>
-        <TripSubNav
+        <TripViewSwitch
           sections={sections}
           price={
             priceHigh > priceLow ? (
@@ -252,10 +318,10 @@ export default async function PackageDetailPage({
             )
           }
           priceNote="Includes guide, transport, hotels and the daily SDF"
-          datesId="dates"
-        />
+          datesPanel={datesPanel}
+        >
 
-        <section id="overview" className="scroll-mt-24 pt-8">
+        <section id="itinerary" className="scroll-mt-24 pt-8">
           <h2 className="font-display text-3xl font-bold text-stone-900">{itinerary.title}</h2>
           <p className="mt-4 max-w-4xl text-lg leading-relaxed text-stone-700">
             {itinerary.summary}
@@ -324,7 +390,7 @@ export default async function PackageDetailPage({
         </section>
 
         {days.length > 0 && (
-          <section id="itinerary" className="mt-14 scroll-mt-24">
+          <section id="days" className="mt-14 scroll-mt-24">
             <h2 className="font-display text-2xl font-bold text-stone-900">Day by day</h2>
             <p className="mt-2 max-w-2xl text-stone-600">
               What each day looks like. Timings shift with the weather and the festival calendar —
@@ -351,59 +417,17 @@ export default async function PackageDetailPage({
           </section>
         )}
 
-        <section id="dates" className="mt-14 scroll-mt-24">
-          <h2 className="font-display text-2xl font-bold text-stone-900">Dates &amp; Prices</h2>
-          <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
-            {/* DepartureList owns the empty case too: a trip with no
-                scheduled dates still runs privately, and that tab is the
-                answer to "when can I go" — hiding it behind a paragraph
-                loses the enquiry. */}
-            <div>
-              <DepartureList departures={departures} packageTitle={itinerary.title} />
+        {photos.length > 0 && (
+          <section id="gallery" className="mt-14 scroll-mt-24">
+            <h2 className="font-display text-2xl font-bold text-stone-900">Gallery</h2>
+            <p className="mt-2 max-w-2xl text-stone-600">
+              Photographs from this trip. Tap any of them to see it full size.
+            </p>
+            <div className="mt-6">
+              <TripGallery photos={photos} />
             </div>
-
-            {/* No booking form here: every date row already carries its own
-                "Request to Book", and a second form asking for the same
-                thing in different words is how a page ends up with two
-                answers to "how do I book this". */}
-            <aside className="space-y-4 lg:sticky lg:top-24">
-              <div className="rounded-xl border border-stone-200 bg-white p-6">
-                <MapCardIcon />
-                <h3 className="mt-3 font-display text-base font-semibold text-stone-900">
-                  Want to learn more about this trip?
-                </h3>
-                <p className="mt-2 text-sm text-stone-600">
-                  Download the full itinerary — every day described, where you stay, what&apos;s
-                  included and the dates it runs. Easy to share with whoever you&apos;re travelling
-                  with.
-                </p>
-                <a
-                  href={`/packages/${itinerary.slug}/itinerary.pdf`}
-                  className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
-                >
-                  Download &amp; share (PDF)
-                </a>
-              </div>
-
-              <div className="rounded-xl border border-stone-200 bg-white p-6">
-                <ShieldIcon />
-                <h3 className="mt-3 font-display text-base font-semibold text-stone-900">
-                  Book with confidence
-                </h3>
-                <p className="mt-2 text-sm text-stone-600">
-                  Requesting a place costs nothing and commits you to nothing. We confirm the
-                  departure, the hotels and the final price in writing before you pay anything.
-                </p>
-                <Link
-                  href="/cancellation"
-                  className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
-                >
-                  Cancellation &amp; refunds
-                </Link>
-              </div>
-            </aside>
-          </div>
-        </section>
+          </section>
+        )}
 
         {hasIncludes && (
           <section id="included" className="mt-14 scroll-mt-24">
@@ -455,6 +479,7 @@ export default async function PackageDetailPage({
             </div>
           </section>
         )}
+        </TripViewSwitch>
       </Container>
 
       {moreTrips.length > 0 && (

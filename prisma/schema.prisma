@@ -361,6 +361,21 @@ model Itinerary {
   bookings ItineraryBooking[]
   departures Departure[]
   lodgings   ItineraryLodging[]
+  photos     ItineraryPhoto[]
+}
+
+// The trip's photo gallery, in display order. Separate from
+// `coverPhotoUrl` because the cover has a different job — it has to work
+// cropped to a card and behind a headline — and a gallery shot does not.
+model ItineraryPhoto {
+  id          String    @id @default(cuid())
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  position    Int
+  url         String
+  caption     String?
+
+  @@index([itineraryId, position])
 }
 
 // Where a package's travellers sleep. Held per itinerary rather than per

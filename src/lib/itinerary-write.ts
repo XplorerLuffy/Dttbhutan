@@ -5,6 +5,7 @@ import type { itineraryAdminSchema } from "@/lib/validation";
 type ItineraryInput = z.infer<typeof itineraryAdminSchema>;
 type DayInput = ItineraryInput["days"][number];
 type LodgingInput = ItineraryInput["lodgings"][number];
+type PhotoInput = ItineraryInput["photos"][number];
 
 /** Prisma client or an interactive transaction — both can do the writes below. */
 type Db = PrismaClient | Prisma.TransactionClient;
@@ -15,7 +16,7 @@ function blankToNull(value: string | undefined): string | null {
 }
 
 /**
- * Writes an itinerary's lodgings and days.
+ * Writes an itinerary's lodgings, gallery photos and days.
  *
  * Days reference their lodging by *index* into the submitted lodging array
  * (see itineraryDayInputSchema): on edit the whole set is replaced, so the
@@ -31,7 +32,8 @@ export async function writeItineraryDaysAndLodgings(
   db: Db,
   itineraryId: string,
   days: DayInput[],
-  lodgings: LodgingInput[]
+  lodgings: LodgingInput[],
+  photos: PhotoInput[] = []
 ): Promise<void> {
   const lodgingIds: string[] = [];
   for (let position = 0; position < lodgings.length; position++) {
@@ -48,6 +50,18 @@ export async function writeItineraryDaysAndLodgings(
       select: { id: true },
     });
     lodgingIds.push(created.id);
+  }
+
+  for (let position = 0; position < photos.length; position++) {
+    const photo = photos[position];
+    await db.itineraryPhoto.create({
+      data: {
+        itineraryId,
+        position,
+        url: photo.url.trim(),
+        caption: blankToNull(photo.caption),
+      },
+    });
   }
 
   for (const day of days) {

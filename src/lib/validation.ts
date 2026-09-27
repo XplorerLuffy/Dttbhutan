@@ -163,6 +163,11 @@ export const itineraryLodgingInputSchema = z.object({
   photoUrl: z.string().max(500).optional(),
 });
 
+export const itineraryPhotoInputSchema = z.object({
+  url: z.string().min(1).max(500),
+  caption: z.string().max(200).optional(),
+});
+
 export const itineraryDayInputSchema = z.object({
   dayNumber: z.coerce.number().int().min(1),
   title: z.string().min(1).max(150),
@@ -204,6 +209,7 @@ export const itineraryAdminSchema = z.object({
   excludes: z.array(z.string().min(1)).default([]),
   days: z.array(itineraryDayInputSchema).min(1),
   lodgings: z.array(itineraryLodgingInputSchema).max(60).default([]),
+  photos: z.array(itineraryPhotoInputSchema).max(60).default([]),
 });
 
 export const articleAdminSchema = z.object({

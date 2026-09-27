@@ -3,30 +3,31 @@
 import { useEffect, useRef, useState } from "react";
 
 export type TripSubNavSection = {
-  /** Must match the id of a section element on the page. */
+  /** Must match the id of a section element in the trip's default view. */
   id: string;
   label: string;
 };
 
 /**
- * Sticky section nav for a trip page: jump links to the page's own sections,
- * the trip's from-price, and a shortcut to the departure dates.
+ * Sticky nav for a trip page: tabs into the trip's own sections, the
+ * from-price, and the button that swaps the body over to the dates.
  *
- * Sections are passed in rather than hard-coded so the bar only ever offers
- * tabs that exist — a package with no published departures has no dates
- * section, and a tab that scrolls nowhere is worse than no tab.
+ * Purely presentational — the parent owns which view is showing (see
+ * TripViewSwitch), because the dates are a different view of the page
+ * rather than another section to scroll to.
  *
- * The links are plain in-page anchors, which keeps them keyboard- and
- * right-click-friendly and means they still work before this component
- * hydrates. Lenis is configured with `anchors`, so it takes over the click
- * and eases the scroll; its offset matches the `scroll-mt-24` on the
- * sections, so both paths land in the same place.
+ * Tabs are real anchors so they stay keyboard- and right-click-friendly and
+ * work before this component hydrates. Once hydrated the parent takes every
+ * click: it may need to leave the dates view first, and a single controlled
+ * scroll is the only way both movers agree on where to stop.
  */
 export default function TripSubNav({
   sections,
   price,
   priceNote,
-  datesId,
+  datesOpen = false,
+  onViewDates,
+  onSelectSection,
 }: {
   sections: TripSubNavSection[];
   /**
@@ -36,14 +37,18 @@ export default function TripSubNav({
   price: React.ReactNode;
   /** Small print under the price, e.g. what the fare does and doesn't cover. */
   priceNote?: string;
-  /** Section to point the call-to-action at; omitted when there are no dates. */
-  datesId?: string;
+  datesOpen?: boolean;
+  onViewDates?: () => void;
+  /** Called on a tab click. The parent owns the scroll — see scrollToSection. */
+  onSelectSection?: (id: string) => void;
 }) {
   const [active, setActive] = useState(sections[0]?.id ?? "");
   const tabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (sections.length === 0) return;
+    // Nothing to spy on while the dates are showing: those sections are
+    // unmounted, so every lookup would miss and the first tab would light up.
+    if (sections.length === 0 || datesOpen) return;
 
     let frame = 0;
     const pick = () => {
@@ -78,17 +83,18 @@ export default function TripSubNav({
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [sections]);
+  }, [sections, datesOpen]);
 
   // On a phone the tab strip scrolls sideways, so the active tab can sit off
   // to the right where nobody sees it. Bring it into view as it changes.
   useEffect(() => {
+    if (datesOpen) return;
     const strip = tabsRef.current;
     const tab = strip?.querySelector<HTMLElement>(`[data-tab="${active}"]`);
     if (!strip || !tab) return;
     const left = tab.offsetLeft - strip.offsetWidth / 2 + tab.offsetWidth / 2;
     strip.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
-  }, [active]);
+  }, [active, datesOpen]);
 
   if (sections.length === 0) return null;
 
@@ -101,21 +107,34 @@ export default function TripSubNav({
     >
       <div className="flex items-center gap-4">
         <div ref={tabsRef} className="no-scrollbar -mb-px flex flex-1 gap-6 overflow-x-auto">
-          {sections.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              data-tab={section.id}
-              aria-current={active === section.id ? "true" : undefined}
-              className={`shrink-0 whitespace-nowrap border-b-[3px] py-4 font-display text-sm font-bold transition-colors ${
-                active === section.id
-                  ? "border-brand-800 text-brand-900"
-                  : "border-transparent text-stone-600 hover:text-stone-900"
-              }`}
-            >
-              {section.label}
-            </a>
-          ))}
+          {sections.map((section) => {
+            const isActive = !datesOpen && active === section.id;
+            return (
+              <a
+                key={section.id}
+                href={`#${section.id}`}
+                data-tab={section.id}
+                aria-current={isActive ? "true" : undefined}
+                onClick={(event) => {
+                  if (!onSelectSection) return;
+                  // Both the default jump and Lenis's own anchor handling
+                  // would otherwise move the page, and they disagree.
+                  // stopPropagation is what keeps Lenis's window-level click
+                  // listener out of it.
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onSelectSection(section.id);
+                }}
+                className={`shrink-0 whitespace-nowrap border-b-[3px] py-4 font-display text-sm font-bold transition-colors ${
+                  isActive
+                    ? "border-brand-800 text-brand-900"
+                    : "border-transparent text-stone-600 hover:text-stone-900"
+                }`}
+              >
+                {section.label}
+              </a>
+            );
+          })}
         </div>
 
         <div className="hidden shrink-0 items-center gap-4 py-2.5 md:flex">
@@ -127,13 +146,19 @@ export default function TripSubNav({
             </p>
             {priceNote && <p className="mt-0.5 text-xs text-stone-500">{priceNote}</p>}
           </div>
-          {datesId && (
-            <a
-              href={`#${datesId}`}
-              className="rounded-full bg-brand-800 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-900"
+          {onViewDates && (
+            <button
+              type="button"
+              onClick={onViewDates}
+              aria-pressed={datesOpen}
+              className={`rounded-full px-6 py-3 font-semibold transition-colors ${
+                datesOpen
+                  ? "border-2 border-brand-800 text-brand-900 hover:bg-brand-50"
+                  : "bg-brand-800 text-white hover:bg-brand-900"
+              }`}
             >
-              View Dates
-            </a>
+              {datesOpen ? "Back to trip" : "View Dates"}
+            </button>
           )}
         </div>
       </div>

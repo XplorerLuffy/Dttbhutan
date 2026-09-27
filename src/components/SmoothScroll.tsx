@@ -11,6 +11,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
  * prefers-reduced-motion, falling back to native scroll (Lenis's own easing
  * is a motion effect some users explicitly ask their OS to avoid).
  */
+declare global {
+  interface Window {
+    __lenis?: Lenis;
+  }
+}
+
 export default function SmoothScroll() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -20,19 +26,26 @@ export default function SmoothScroll() {
     const lenis = new Lenis({
       duration: 1.1,
       smoothWheel: true,
-      // In-page anchors (the trip page's section nav) have to go through
-      // Lenis: a native jump moves the scrollbar out from under its rAF loop
-      // and the page snaps back. Lenis honours the target's scroll-margin-top
-      // itself, so the `scroll-mt-24` on those sections clears the sticky
-      // sub-nav on this path and on the native one — passing an offset here
-      // as well would double it.
-      anchors: true,
+      // Deliberately off. The trip page's tabs call lenis.scrollTo directly
+      // (see scrollToSection); leaving this on meant every tab click fired
+      // two scrollTo calls — ours, then Lenis's own from its window click
+      // listener, which re-measures the target mid-animation and lands the
+      // section ~47px short of the sticky bar. One mover, one result.
+      //
+      // Plain anchors elsewhere keep the browser's native jump, which
+      // honours scroll-margin-top and lands in the same place.
+      anchors: false,
     });
 
     // Lenis drives scrolling from its own rAF loop, so ScrollTrigger has to
     // be told to recompute on each Lenis frame. Without this the two run on
     // separate clocks and reveals fire at the wrong scroll position.
     lenis.on("scroll", ScrollTrigger.update);
+
+    // Published so in-page navigation can go through the same instance
+    // instead of racing it. A native jump (or a second scrollTo) while Lenis
+    // is animating leaves the page short of the target — see scrollToSection.
+    window.__lenis = lenis;
 
     let rafId: number;
     function raf(time: number) {
@@ -53,6 +66,7 @@ export default function SmoothScroll() {
       window.removeEventListener("load", refresh);
       lenis.off("scroll", ScrollTrigger.update);
       cancelAnimationFrame(rafId);
+      delete window.__lenis;
       lenis.destroy();
     };
   }, []);

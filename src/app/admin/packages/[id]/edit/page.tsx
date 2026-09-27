@@ -20,6 +20,7 @@ export default async function EditPackagePage({
       include: {
         days: { orderBy: { dayNumber: "asc" } },
         lodgings: { orderBy: { position: "asc" } },
+        photos: { orderBy: { position: "asc" } },
       },
     }),
     prisma.destination.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -63,6 +64,10 @@ export default async function EditPackagePage({
             hikeHours: d.hikeHours === null ? "" : Number(d.hikeHours),
             hikeDifficulty: d.hikeDifficulty ?? "",
             hikeNote: d.hikeNote ?? "",
+          })),
+          photos: itinerary.photos.map((p) => ({
+            url: p.url,
+            caption: p.caption ?? "",
           })),
           lodgings: itinerary.lodgings.map((l) => ({
             name: l.name,

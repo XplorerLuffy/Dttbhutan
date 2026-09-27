@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
-    const { days, lodgings, ...itinerary } = parsed.data;
+    const { days, lodgings, photos, ...itinerary } = parsed.data;
 
     const existing = await prisma.itinerary.findUnique({ where: { slug: itinerary.slug } });
     if (existing) {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     const created = await prisma.$transaction(async (tx) => {
       const row = await tx.itinerary.create({ data: itinerary });
-      await writeItineraryDaysAndLodgings(tx, row.id, days, lodgings);
+      await writeItineraryDaysAndLodgings(tx, row.id, days, lodgings, photos);
       return row;
     });
 
