@@ -24,6 +24,13 @@ const NO_CHROME_PREFIXES = ["/admin", "/login", "/register"];
 /** Routes that lay out their own width, section by section. */
 const FULL_BLEED_PATHS = ["/"];
 
+/**
+ * Same, by prefix. The trailing slash matters: the trip detail pages lay out
+ * their own width (full-bleed hero and photo bands), the /packages listing
+ * does not.
+ */
+const FULL_BLEED_PREFIXES = ["/packages/"];
+
 export default function SiteChrome({
   nav,
   footer,
@@ -38,7 +45,9 @@ export default function SiteChrome({
 }) {
   const pathname = usePathname();
   const hideChrome = NO_CHROME_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
-  const fullBleed = FULL_BLEED_PATHS.includes(pathname ?? "");
+  const fullBleed =
+    FULL_BLEED_PATHS.includes(pathname ?? "") ||
+    FULL_BLEED_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
 
   return (
     <>

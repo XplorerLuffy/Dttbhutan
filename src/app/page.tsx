@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { format, startOfToday } from "date-fns";
+import { startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content";
 import Hero from "@/components/home/Hero";
 import ScrollReveal from "@/components/ScrollReveal";
-import PackageCard, { type PackageCardMeta } from "@/components/listing/PackageCard";
+import TripCard from "@/components/listing/TripCard";
 import DestinationCard from "@/components/home/DestinationCard";
 import ArticleCard from "@/components/ArticleCard";
 import AiPlannerTeaser from "@/components/home/AiPlannerTeaser";
@@ -15,16 +15,7 @@ import GuideSpotlight, { type SpotlightGuide } from "@/components/home/GuideSpot
 import ResponsibleTravel from "@/components/home/ResponsibleTravel";
 import QuoteCards from "@/components/home/QuoteCards";
 import FeatureBanner from "@/components/home/FeatureBanner";
-import Money from "@/components/Money";
 import type { Testimonial } from "@/components/home/TestimonialCarousel";
-import type {
-  Departure,
-  Destination,
-  Itinerary,
-  ItineraryCategory,
-  ItineraryDay,
-  TripDifficulty,
-} from "@prisma/client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -200,7 +191,7 @@ export default async function HomePage() {
           />
           <ScrollReveal className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((p) => (
-              <PackageItemCard key={p.id} itinerary={p} rating={packageRatingById.get(p.id)} />
+              <TripCard key={p.id} itinerary={p} rating={packageRatingById.get(p.id)} />
             ))}
           </ScrollReveal>
           <div className="mt-12 text-center">
@@ -245,7 +236,7 @@ export default async function HomePage() {
           />
           <ScrollReveal className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {trendingTreks.map((p) => (
-              <PackageItemCard key={p.id} itinerary={p} rating={packageRatingById.get(p.id)} />
+              <TripCard key={p.id} itinerary={p} rating={packageRatingById.get(p.id)} />
             ))}
           </ScrollReveal>
         </Container>
@@ -331,69 +322,6 @@ export default async function HomePage() {
 
 function uniqueOrdered(values: string[]) {
   return Array.from(new Set(values));
-}
-
-type PackageWithDays = Itinerary & {
-  days: (ItineraryDay & { destination: Destination | null })[];
-  departures: Departure[];
-};
-
-const CATEGORY_LABEL: Record<ItineraryCategory, string> = {
-  TREKKING: "Trekking",
-  CULTURAL: "Cultural",
-  WILDLIFE: "Wildlife",
-  HONEYMOON: "Honeymoon",
-};
-
-const DIFFICULTY_LABEL: Record<TripDifficulty, string> = {
-  EASY: "Easy",
-  MODERATE: "Moderate",
-  CHALLENGING: "Challenging",
-};
-
-function PackageItemCard({
-  itinerary,
-  rating,
-}: {
-  itinerary: PackageWithDays;
-  rating: { _avg: { rating: number | null }; _count: { rating: number } } | undefined;
-}) {
-  const locations = uniqueOrdered(
-    itinerary.days.map((d) => d.destination?.name).filter((n): n is string => Boolean(n))
-  );
-  const next = itinerary.departures[0];
-
-  const meta: PackageCardMeta[] = [
-    { label: "Activity level", value: DIFFICULTY_LABEL[itinerary.difficulty] },
-  ];
-  if (itinerary.maxGroupSize) {
-    meta.push({ label: "Group size", value: `Max ${itinerary.maxGroupSize}` });
-  }
-  if (next) {
-    // The date column is a DATE, so read it in UTC — a 4 October departure
-    // must not render as the 3rd for a visitor west of Greenwich.
-    meta.push({
-      label: "Next departure",
-      value: format(new Date(next.startDate.toISOString().slice(0, 10) + "T12:00:00"), "d MMM yyyy"),
-    });
-  }
-
-  return (
-    <PackageCard
-      href={`/packages/${itinerary.slug}`}
-      enquireHref={`/contact?subject=${encodeURIComponent(`Enquiry: ${itinerary.title}`)}`}
-      imageUrl={itinerary.coverPhotoUrl}
-      imageFallback={itinerary.title[0]}
-      categoryLabel={CATEGORY_LABEL[itinerary.category]}
-      title={itinerary.title}
-      subtitle={locations.join(" • ") || itinerary.summary}
-      durationDays={itinerary.durationDays}
-      meta={meta}
-      ratingAverage={rating?._avg.rating ?? null}
-      ratingCount={rating?._count.rating ?? 0}
-      priceLabel={<Money btn={Number(itinerary.pricePerPerson)} />}
-    />
-  );
 }
 
 async function getTestimonials(): Promise<Testimonial[]> {
