@@ -1,7 +1,7 @@
 import { PrismaClient, type DepartureStatus, type Itinerary } from "@prisma/client";
 
 /**
- * Generates a plausible year of departure dates for every published package.
+ * Generates a plausible year of departure dates for every package.
  * Run with: npm run db:seed:departures
  *
  * This is demo data, not a schedule anyone has committed to — it exists so
@@ -147,10 +147,10 @@ async function main() {
   assertSafeTarget();
 
   const replace = process.argv.includes("--replace");
-  const itineraries = await prisma.itinerary.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: { slug: "asc" },
-  });
+  // Every itinerary, not just the published ones: a draft that gets
+  // published later would otherwise be the one package on the site with no
+  // dates, and drafts aren't public so there is nothing to protect.
+  const itineraries = await prisma.itinerary.findMany({ orderBy: { slug: "asc" } });
 
   const startOfToday = new Date();
   startOfToday.setUTCHours(0, 0, 0, 0);
