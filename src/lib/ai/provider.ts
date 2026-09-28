@@ -106,7 +106,9 @@ export type AiProviderName = "ollama" | "anthropic" | "gemini";
  * holds an `AiProvider` and calls `.complete()`.
  */
 export function getAiProvider(): AiProvider {
-  const name = (process.env.AI_PROVIDER?.trim() || "ollama") as AiProviderName;
+  const configured = process.env.AI_PROVIDER?.trim();
+  if (!configured) warnMissingProvider();
+  const name = (configured || "ollama") as AiProviderName;
 
   switch (name) {
     case "ollama":
@@ -120,4 +122,36 @@ export function getAiProvider(): AiProvider {
       throw new Error(`Unknown AI_PROVIDER: ${exhaustiveCheck}`);
     }
   }
+}
+
+/** Once per process, so a busy route doesn't fill the log with copies. */
+let warnedMissingProvider = false;
+
+/**
+ * Says out loud that AI_PROVIDER is missing, because the consequence is
+ * otherwise unreadable: the Ollama default points at localhost, and on a
+ * serverless host that is the function itself, so the only symptom is
+ * "fetch failed" against an address nobody configured. Production ran that
+ * way for months and stored visitor questions with no answers.
+ *
+ * It also lists which AI-related variables DID arrive — names only, never
+ * values, since one of them is an API key and this goes to a log. When a
+ * variable was set on the wrong environment, or under a name with a typo or
+ * a stray space, that list is what shows it: the expected name is simply
+ * absent from it while its neighbours are present.
+ */
+function warnMissingProvider(): void {
+  if (warnedMissingProvider) return;
+  warnedMissingProvider = true;
+
+  const related = Object.keys(process.env)
+    .filter((key) => /(^AI_|GEMINI|EMBEDDING|OLLAMA|ANTHROPIC)/i.test(key))
+    .sort();
+
+  console.warn(
+    "[ai] AI_PROVIDER is not set, so the provider defaults to ollama at " +
+      "localhost — nothing answers there on a serverless host. Set it to " +
+      '"gemini" (or "anthropic") for this deployment. AI-related variable ' +
+      `names present in this runtime: ${related.length ? related.join(", ") : "(none)"}`
+  );
 }
