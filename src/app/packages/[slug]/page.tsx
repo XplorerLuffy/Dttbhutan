@@ -223,7 +223,8 @@ export default async function PackageDetailPage({
   // somewhere to scroll to. "What's included" sits inside the itinerary view
   // rather than earning a tab of its own.
   const sections: TripSubNavSection[] = [
-    { id: "itinerary", label: "Itinerary" },
+    { id: "overview", label: "Overview" },
+    ...(days.length > 0 ? [{ id: "itinerary", label: "Itinerary" }] : []),
     ...(lodgings.length > 0 ? [{ id: "hotels", label: "Hotels" }] : []),
     ...(photos.length > 0 ? [{ id: "gallery", label: "Gallery" }] : []),
     ...(hasReviews ? [{ id: "reviews", label: "Reviews" }] : []),
@@ -321,7 +322,7 @@ export default async function PackageDetailPage({
           datesPanel={datesPanel}
         >
 
-        <section id="itinerary" className="scroll-mt-24 pt-8">
+        <section id="overview" className="scroll-mt-24 pt-8">
           <h2 className="font-display text-3xl font-bold text-stone-900">{itinerary.title}</h2>
           <p className="mt-4 max-w-4xl text-lg leading-relaxed text-stone-700">
             {itinerary.summary}
@@ -390,7 +391,7 @@ export default async function PackageDetailPage({
         </section>
 
         {days.length > 0 && (
-          <section id="days" className="mt-14 scroll-mt-24">
+          <section id="itinerary" className="mt-14 scroll-mt-24">
             <h2 className="font-display text-2xl font-bold text-stone-900">Day by day</h2>
             <p className="mt-2 max-w-2xl text-stone-600">
               What each day looks like. Timings shift with the weather and the festival calendar —
