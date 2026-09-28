@@ -70,7 +70,13 @@ export class GeminiProvider implements AiProvider {
 
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
-      throw new AiProviderResponseError(`Gemini responded ${res.status}: ${detail.slice(0, 500)}`);
+      // The key travels in the query string, so Google can echo it back in an
+      // error body (an invalid-key 400 does). This error is logged by
+      // /api/chat, and a key in the logs is a leaked key — so strip it here,
+      // the same way embeddingProviders/gemini.ts does.
+      throw new AiProviderResponseError(
+        `Gemini responded ${res.status}: ${redactKey(detail, this.apiKey).slice(0, 500)}`
+      );
     }
 
     const payload = (await res.json().catch((err) => {
@@ -189,3 +195,7 @@ type GeminiGenerateContentResponse = {
   candidates?: { content?: GeminiContent; finishReason?: string }[];
   promptFeedback?: unknown;
 };
+
+function redactKey(text: string, key: string): string {
+  return key ? text.split(key).join("[redacted]") : text;
+}

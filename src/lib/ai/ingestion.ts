@@ -146,7 +146,7 @@ export async function ingestDocument(args: IngestDocumentArgs): Promise<IngestRe
     if (embeddingSkippedReason) continue;
 
     try {
-      const embedding = await getEmbeddingProvider().embed(content);
+      const embedding = await getEmbeddingProvider().embed(content, "document");
       await setChunkEmbedding(chunk.id, embedding);
       embeddedCount++;
     } catch (err) {

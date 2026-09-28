@@ -1,5 +1,6 @@
 import "server-only";
 import { OllamaEmbeddingProvider } from "./embeddingProviders/ollama";
+import { GeminiEmbeddingProvider } from "./embeddingProviders/gemini";
 
 /**
  * Embedding provider abstraction — the RAG counterpart to provider.ts.
@@ -20,9 +21,16 @@ import { OllamaEmbeddingProvider } from "./embeddingProviders/ollama";
  * each provider rather than silently storing a wrong-width vector. */
 export const EMBEDDING_DIMENSIONS = 768;
 
+/**
+ * What the text is for. Hosted models embed a stored passage and the
+ * question asked of it differently, and saying which measurably improves
+ * the match; providers without the notion ignore it.
+ */
+export type EmbeddingTask = "document" | "query";
+
 export interface EmbeddingProvider {
   /** Returns one vector of EMBEDDING_DIMENSIONS floats for the given text. */
-  embed(text: string): Promise<number[]>;
+  embed(text: string, task?: EmbeddingTask): Promise<number[]>;
 }
 
 /** Thrown when the embedding service can't be reached at all (connection
@@ -36,11 +44,16 @@ export class EmbeddingProviderUnavailableError extends Error {}
  * surface later as a confusing Postgres dimension error). */
 export class EmbeddingProviderResponseError extends Error {}
 
-export type EmbeddingProviderName = "ollama";
+export type EmbeddingProviderName = "ollama" | "gemini";
 
 /**
- * Selects the provider from EMBEDDING_PROVIDER (see .env.example). Only
- * Ollama exists today — the switch is here so adding one later is additive.
+ * Selects the provider from EMBEDDING_PROVIDER (see .env.example).
+ *
+ * Defaults to Ollama, which is right for a laptop and wrong for Vercel —
+ * its base URL is localhost, and on a serverless function that is the
+ * function itself. A deployment that wants vector search set
+ * EMBEDDING_PROVIDER=gemini; otherwise retrieval falls back to text search,
+ * which works but ranks worse.
  */
 export function getEmbeddingProvider(): EmbeddingProvider {
   const name = (process.env.EMBEDDING_PROVIDER?.trim() || "ollama") as EmbeddingProviderName;
@@ -48,6 +61,8 @@ export function getEmbeddingProvider(): EmbeddingProvider {
   switch (name) {
     case "ollama":
       return new OllamaEmbeddingProvider();
+    case "gemini":
+      return new GeminiEmbeddingProvider();
     default: {
       const exhaustiveCheck: never = name;
       throw new Error(`Unknown EMBEDDING_PROVIDER: ${exhaustiveCheck}`);

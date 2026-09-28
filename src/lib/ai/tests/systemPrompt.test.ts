@@ -46,6 +46,20 @@ function main() {
     "instructs the model to never state visa/fee/policy facts from memory",
     /never state visa requirements, government fees, entry rules, or official policy/i.test(prompt)
   );
+  // The policy rule used to say these topics "aren't something your tools
+  // cover" and to deflect them all to the team. Once the knowledge base
+  // existed that was false, and the model obeyed it: a live check asking for
+  // the cancellation policy got a clarifying question back instead of the
+  // ingested answer sitting 0.3 cosine away. The rule has to send the model
+  // to search_knowledge, not away from the subject.
+  check(
+    "routes policy questions to search_knowledge rather than deflecting them",
+    /official policy from memory[\s\S]{0,400}search_knowledge/i.test(prompt)
+  );
+  check(
+    "still forbids falling back on the model's own knowledge of Bhutan",
+    /never fall back on what you remember/i.test(prompt)
+  );
   check(
     "instructs the model to never invent details about a specific listing",
     /never invent details about a specific hotel, guide, package, or vehicle/i.test(prompt)

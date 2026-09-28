@@ -11,7 +11,8 @@ npm run test:ai:ratelimit     # rate limiter, pure logic
 npm run test:ai:systemprompt  # system prompt contains the required safety rules
 npm run test:ai:route         # POST /api/chat itself: 400/429/503/500/200 paths
 npm run test:ai:retrieval     # RAG: tenant isolation, PUBLIC/INTERNAL, pgvector, fallback
-npm run test:ai               # all six
+npm run test:ai:embedding     # Gemini embedding provider, against a stubbed fetch
+npm run test:ai               # all seven
 ```
 
 `test:ai:retrieval` needs pgvector on the local database:
@@ -52,14 +53,28 @@ intercepts nothing except that one specifier; see the file's own comment.
   injection string inside a document comes back as inert text with no
   special parsing. Fixture vectors are hand-written unit vectors so
   nearest-neighbour ordering is deterministic without a model.
-- *Cannot prove here:* that **real** `nomic-embed-text` embeddings are
-  semantically useful — i.e. that embedding "what's your cancellation
-  policy" actually lands near the cancellation chunk. That needs a live
-  Ollama with `nomic-embed-text` pulled, which this environment has no
-  route to. **Status: BLOCKED**, not passing and not failing. To run it:
-  start Ollama, `ollama pull nomic-embed-text`, `npm run ai:ingest` (the
-  chunk count embedded should be non-zero), then ask the assistant a policy
-  question and confirm the answer cites retrieved knowledge.
+- *Cannot prove here:* that **real** embeddings are semantically useful —
+  i.e. that embedding "what's your cancellation policy" actually lands near
+  the cancellation chunk. Fixture vectors prove the ordering logic, not that
+  a model puts a question near its answer. That needs a live provider, so it
+  is a manual check rather than part of `npm run test:ai`:
+
+  ```bash
+  GEMINI_API_KEY=… EMBEDDING_PROVIDER=gemini npm run ai:ingest
+  ```
+
+  The run prints a chunk count per document; every one should report
+  embeddings written rather than "stored without embeddings". Then ask the
+  assistant a policy question and confirm the answer cites retrieved
+  knowledge. With Ollama instead, `ollama pull nomic-embed-text` first.
+
+`test:ai:embedding` stubs `fetch`, so it pins how the provider builds a
+request and handles each reply — not that Google still answers that way. The
+shape *was* checked by hand against the live API (a 768-wide request returns
+`embedding.values` with 768 numbers, at magnitude ~0.59 — unnormalised,
+which is why the provider normalises). If Google changes it, this suite
+stays green and ingestion is what fails; `embeddingProviders/gemini.ts` is
+then the one file to fix.
 
 **Cannot prove with an automated test, and why:**
 - *"The assistant never states an invented price."* That's a claim about

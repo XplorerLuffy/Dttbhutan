@@ -100,7 +100,7 @@ export async function retrieveKnowledge({
   }
 
   try {
-    const embedding = await getEmbeddingProvider().embed(trimmed);
+    const embedding = await getEmbeddingProvider().embed(trimmed, "query");
     const chunks = await vectorSearch({ agencyId, embedding, visibility, limit });
     return { chunks, mode: "vector" };
   } catch (err) {
