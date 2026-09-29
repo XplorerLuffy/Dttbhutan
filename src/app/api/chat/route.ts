@@ -26,6 +26,14 @@ const chatRequestSchema = z.object({
  * stay coherent. */
 const HISTORY_LIMIT = 20;
 
+/**
+ * A reply can take several model calls (MAX_TOOL_ROUNDS), and the provider
+ * now retries a transient upstream 429/503 twice before giving up. The
+ * platform default is far too short for that, and a function killed mid-call
+ * looks identical to the assistant being broken.
+ */
+export const maxDuration = 60;
+
 const UNAVAILABLE_MESSAGE = "Sorry, the travel assistant is temporarily unavailable. Please try again shortly.";
 const GENERIC_ERROR_MESSAGE = "Sorry, something went wrong on our end. Please try again.";
 

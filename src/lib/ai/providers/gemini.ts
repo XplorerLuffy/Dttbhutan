@@ -28,6 +28,20 @@ import {
  *     *object*, not a string — our tool results are JSON.stringify'd by
  *     assistant.ts before reaching here, so this parses them back.
  */
+/** Statuses that mean "not now" rather than "not ever". 500 is included
+ * because Google returns it for transient internal faults; 400/401/403/404
+ * are deliberately absent — retrying a bad request or a bad key wastes the
+ * request's remaining time and still fails. */
+const RETRYABLE_STATUS = new Set([429, 500, 503]);
+
+/** Two extra attempts. Short enough to stay inside the route's budget even
+ * when the assistant makes several model calls for one reply. */
+const RETRY_DELAYS_MS = [700, 1800];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class GeminiProvider implements AiProvider {
   private readonly apiKey: string;
   private readonly model: string;
@@ -55,27 +69,53 @@ export class GeminiProvider implements AiProvider {
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
 
-    let res: Response;
-    try {
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    } catch (err) {
-      throw new AiProviderUnavailableError(
-        `Could not reach Gemini: ${err instanceof Error ? err.message : String(err)}`
-      );
-    }
+    // Google's shared capacity goes away and comes back on its own: a 503
+    // says "experiencing high demand ... usually temporary" in as many words,
+    // and a 429 is the free tier's per-minute window, which refills. Both were
+    // reaching the visitor as "temporarily unavailable" on the first try,
+    // which is a worse answer than waiting a second and asking again.
+    //
+    // Bounded deliberately. Each attempt is a whole model call, the assistant
+    // may make several per reply (MAX_TOOL_ROUNDS), and the route has a
+    // wall-clock budget — so two extra tries with a short backoff, and only
+    // for statuses that mean "not now" rather than "not ever". A 400 or a 403
+    // is a bad request or a bad key: retrying those just burns the budget.
+    let res: Response | null = null;
+    let lastTransient = "";
 
-    if (!res.ok) {
+    for (let attempt = 0; attempt < RETRY_DELAYS_MS.length + 1; attempt++) {
+      if (attempt > 0) await sleep(RETRY_DELAYS_MS[attempt - 1]);
+
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } catch (err) {
+        throw new AiProviderUnavailableError(
+          `Could not reach Gemini: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+
+      if (res.ok) break;
+
       const detail = await res.text().catch(() => "");
       // The key travels in the query string, so Google can echo it back in an
       // error body (an invalid-key 400 does). This error is logged by
       // /api/chat, and a key in the logs is a leaked key — so strip it here,
       // the same way embeddingProviders/gemini.ts does.
+      const safe = `Gemini responded ${res.status}: ${redactKey(detail, this.apiKey).slice(0, 500)}`;
+
+      if (!RETRYABLE_STATUS.has(res.status)) throw new AiProviderResponseError(safe);
+
+      lastTransient = safe;
+      res = null;
+    }
+
+    if (!res) {
       throw new AiProviderResponseError(
-        `Gemini responded ${res.status}: ${redactKey(detail, this.apiKey).slice(0, 500)}`
+        `${lastTransient} (gave up after ${RETRY_DELAYS_MS.length + 1} attempts)`
       );
     }
 
