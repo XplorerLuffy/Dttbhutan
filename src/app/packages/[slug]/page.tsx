@@ -181,7 +181,6 @@ export default async function PackageDetailPage({
   }));
   const reviewAverage = reviewStats._avg.rating;
   const reviewCount = reviewStats._count.rating;
-  const hasReviews = reviews.length > 0 && reviewAverage !== null;
 
   // The sub-nav shows a range when departures are priced differently, the
   // way an outfitter's does — a single "from" price is a half-truth once a
@@ -225,9 +224,15 @@ export default async function PackageDetailPage({
   const sections: TripSubNavSection[] = [
     { id: "overview", label: "Overview" },
     ...(days.length > 0 ? [{ id: "itinerary", label: "Itinerary" }] : []),
-    ...(lodgings.length > 0 ? [{ id: "hotels", label: "Hotels" }] : []),
+    // Hotels and Reviews are always offered, even with nothing in them yet.
+    // Where you sleep and what other travellers made of it are two of the
+    // handful of things someone decides a trip on, so a page that simply
+    // omits them reads as though nobody thought to say — worse than saying
+    // "not published yet". Both sections carry an empty state, so a tab
+    // never lands on a blank anchor.
+    { id: "hotels", label: "Hotels" },
     ...(photos.length > 0 ? [{ id: "gallery", label: "Gallery" }] : []),
-    ...(hasReviews ? [{ id: "reviews", label: "Reviews" }] : []),
+    { id: "reviews", label: "Reviews" },
   ];
 
   const datesPanel = (
@@ -403,20 +408,29 @@ export default async function PackageDetailPage({
           </section>
         )}
 
-        {lodgings.length > 0 && (
-          <section id="hotels" className="mt-14 scroll-mt-24">
-            <h2 className="font-display text-2xl font-bold text-stone-900">
-              Where you&apos;ll stay
-            </h2>
+        <section id="hotels" className="mt-14 scroll-mt-24">
+          <h2 className="font-display text-2xl font-bold text-stone-900">Where you&apos;ll stay</h2>
+          {lodgings.length > 0 ? (
+            <>
+              <p className="mt-2 max-w-2xl text-stone-600">
+                The properties booked for this trip. Occasionally one is swapped for an equivalent
+                when a departure fills — your confirmation lists the final list.
+              </p>
+              <div className="mt-6">
+                <TripLodging lodgings={lodgings} />
+              </div>
+            </>
+          ) : (
             <p className="mt-2 max-w-2xl text-stone-600">
-              The properties booked for this trip. Occasionally one is swapped for an equivalent
-              when a departure fills — your confirmation lists the final list.
+              We haven&apos;t published the property list for this trip yet. Accommodation is
+              included throughout, and we confirm each hotel in writing before you pay anything —{" "}
+              <Link href="/contact" className="font-semibold text-brand-700 hover:underline">
+                ask us
+              </Link>{" "}
+              and we&apos;ll tell you exactly where this itinerary stays.
             </p>
-            <div className="mt-6">
-              <TripLodging lodgings={lodgings} />
-            </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {photos.length > 0 && (
           <section id="gallery" className="mt-14 scroll-mt-24">
@@ -472,14 +486,25 @@ export default async function PackageDetailPage({
           </section>
         )}
 
-        {reviews.length > 0 && reviewAverage !== null && (
-          <section id="reviews" className="mt-14 scroll-mt-24">
-            <h2 className="font-display text-2xl font-bold text-stone-900">Traveler reviews</h2>
+        <section id="reviews" className="mt-14 scroll-mt-24">
+          <h2 className="font-display text-2xl font-bold text-stone-900">Traveler reviews</h2>
+          {reviews.length > 0 && reviewAverage !== null ? (
             <div className="mt-6">
               <TripReviews reviews={reviews} average={reviewAverage} total={reviewCount} />
             </div>
-          </section>
-        )}
+          ) : (
+            // Deliberately not "no reviews" alone: an unreviewed trip is a new
+            // one, not a bad one, and saying only that invites the darker read.
+            <p className="mt-2 max-w-2xl text-stone-600">
+              Nobody has reviewed this trip on the site yet. Reviews here are written by travellers
+              after they return, so they only appear once a departure has run —{" "}
+              <Link href="/contact" className="font-semibold text-brand-700 hover:underline">
+                ask us
+              </Link>{" "}
+              and we can put you in touch with someone who has travelled with us.
+            </p>
+          )}
+        </section>
         </TripViewSwitch>
       </Container>
 
