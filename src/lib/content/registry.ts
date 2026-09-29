@@ -163,6 +163,19 @@ export const CONTENT_GROUPS: ContentGroup[] = [
   },
 
   {
+    id: "home.planner",
+    label: "Homepage — planner prompt",
+    description:
+      "The tinted box at the very bottom of the homepage, for visitors who did not find a package that fits.",
+    fields: [
+      { key: "home.planner.heading", label: "Heading", type: "text", default: "Not sure where to start?" },
+      { key: "home.planner.body", label: "Body", type: "textarea", default: "Tell us what kind of Bhutan experience you're looking for — trekking, culture, festivals, or a slower pace — and we'll help shape a trip around it." },
+      { key: "home.planner.cta", label: "Button label", type: "text", default: "Plan My Trip" },
+      { key: "home.planner.ctaHref", label: "Button link", type: "text", default: "/custom-tour" },
+    ],
+  },
+
+  {
     id: "footer",
     label: "Footer",
     fields: [

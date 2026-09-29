@@ -314,7 +314,12 @@ export default async function HomePage() {
       )}
 
       <Container className="pb-8">
-        <AiPlannerTeaser />
+        <AiPlannerTeaser
+          heading={content("home.planner.heading")}
+          body={content("home.planner.body")}
+          cta={content("home.planner.cta")}
+          ctaHref={content("home.planner.ctaHref")}
+        />
       </Container>
     </div>
   );

@@ -280,3 +280,25 @@ export const gpsIngestSchema = z.object({
   heading: z.number().min(0).max(360).optional(),
   recordedAt: z.coerce.date(),
 });
+
+/**
+ * Everything on a destination that shows up on the public site. Deliberately
+ * excludes `slug`: it's already in circulation as /destinations/<slug>, in
+ * sitemaps and in whatever anyone has bookmarked, so renaming it from an admin
+ * form would silently 404 those. The admin route parses this `.partial()`, so
+ * the older region-only PATCH from the inline select still validates.
+ *
+ * Nullable rather than merely optional on the clearable columns, for the same
+ * reason as itineraryAdminSchema.coverPhotoUrl: the route spreads the parsed
+ * object into prisma.update, where an absent key means "leave alone" — so
+ * emptying a description or a photo has to send an explicit null.
+ */
+export const destinationAdminSchema = z.object({
+  name: z.string().min(2).max(100),
+  region: z.enum(["WEST", "CENTRAL", "EAST", "NORTH", "SOUTH"]),
+  description: z.string().max(3000).nullish(),
+  highlights: z.array(z.string().min(1).max(200)).max(40),
+  photoUrl: z.string().max(500).nullish(),
+  latitude: z.number().min(-90).max(90).nullish(),
+  longitude: z.number().min(-180).max(180).nullish(),
+});
