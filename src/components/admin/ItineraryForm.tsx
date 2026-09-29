@@ -44,6 +44,7 @@ type InitialValues = {
   difficulty: "EASY" | "MODERATE" | "CHALLENGING";
   category: "TREKKING" | "CULTURAL" | "WILDLIFE" | "HONEYMOON";
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  coverPhotoUrl: string;
   includes: string; // comma-separated
   excludes: string; // comma-separated
   days: Day[];
@@ -102,6 +103,7 @@ export default function ItineraryForm({
   const [difficulty, setDifficulty] = useState(initial?.difficulty ?? "EASY");
   const [category, setCategory] = useState(initial?.category ?? "CULTURAL");
   const [status, setStatus] = useState(initial?.status ?? "DRAFT");
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState(initial?.coverPhotoUrl ?? "");
   const [includes, setIncludes] = useState(initial?.includes ?? "");
   const [excludes, setExcludes] = useState(initial?.excludes ?? "");
   const [days, setDays] = useState<Day[]>(initial?.days?.length ? initial.days : [{ ...EMPTY_DAY }]);
@@ -183,6 +185,9 @@ export default function ItineraryForm({
       difficulty,
       category,
       status,
+      // null, not undefined: emptying the box has to clear the stored cover,
+      // and an undefined key would be dropped by JSON.stringify.
+      coverPhotoUrl: coverPhotoUrl.trim() || null,
       includes: splitList(includes),
       excludes: splitList(excludes),
       days: days.map((d) => ({
@@ -315,6 +320,49 @@ export default function ItineraryForm({
           <Field label="Excludes (comma-separated)">
             <input value={excludes} onChange={(e) => setExcludes(e.target.value)} className="input" />
           </Field>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-1 text-lg font-semibold">Cover photo</h2>
+        <p className="mb-3 text-sm text-stone-600">
+          The single most visible image for this trip: the banner across the top of its page, and
+          the photo on every card that links to it. Without one the page opens on a plain colour
+          block, which is the main thing that makes a trip look unfinished.
+        </p>
+
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
+          <Field label="Cover photo URL">
+            <input
+              value={coverPhotoUrl}
+              onChange={(e) => setCoverPhotoUrl(e.target.value)}
+              placeholder="https://…"
+              className="input"
+            />
+          </Field>
+
+          {/* Roughly the shape the banner crops to, so a portrait shot or a
+              subject near the edge shows its problem here rather than live. */}
+          <div className="w-full overflow-hidden rounded border border-stone-200 bg-stone-100 sm:w-64">
+            {coverPhotoUrl.trim() ? (
+              // A half-typed URL from an arbitrary host, re-rendered on every
+              // keystroke — next/image would want that host allow-listed and
+              // would optimise a preview nobody but an admin ever sees.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={coverPhotoUrl}
+                alt=""
+                className="aspect-[16/9] w-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <p className="flex aspect-[16/9] items-center justify-center px-3 text-center text-xs text-stone-500">
+                No cover photo
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

@@ -204,7 +204,10 @@ export const itineraryAdminSchema = z.object({
   difficulty: z.enum(["EASY", "MODERATE", "CHALLENGING"]),
   category: z.enum(["TREKKING", "CULTURAL", "WILDLIFE", "HONEYMOON"]),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
-  coverPhotoUrl: z.string().optional(),
+  // Nullable, not just optional: the PATCH route spreads the parsed object
+  // straight into prisma.update, so an omitted key leaves the column alone.
+  // Clearing a cover photo therefore has to send an explicit null.
+  coverPhotoUrl: z.string().max(500).nullish(),
   includes: z.array(z.string().min(1)).default([]),
   excludes: z.array(z.string().min(1)).default([]),
   days: z.array(itineraryDayInputSchema).min(1),

@@ -46,6 +46,7 @@ export default async function EditPackagePage({
           difficulty: itinerary.difficulty,
           category: itinerary.category,
           status: itinerary.status,
+          coverPhotoUrl: itinerary.coverPhotoUrl ?? "",
           includes: itinerary.includes.join(", "),
           excludes: itinerary.excludes.join(", "),
           days: itinerary.days.map((d) => ({
