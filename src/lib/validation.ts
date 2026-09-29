@@ -302,3 +302,53 @@ export const destinationAdminSchema = z.object({
   latitude: z.number().min(-90).max(90).nullish(),
   longitude: z.number().min(-180).max(180).nullish(),
 });
+
+/**
+ * Admin edits to vendor listings.
+ *
+ * Separate from the registration schemas above (guideProfileSchema, hotelSchema,
+ * vehicleSchema) on purpose. Those describe a sign-up form, where a blank
+ * optional field just means "not supplied yet"; these describe editing a record
+ * that already exists, where clearing a field has to actually empty the column —
+ * so the optional strings are `.nullish()` and the forms send explicit nulls.
+ * They also omit everything a vendor shouldn't have rewritten from this screen:
+ * the owning user, and `status`/`adminNote`, which stay with the approval
+ * controls and vendorStatusUpdateSchema.
+ *
+ * These exist because vendor listings were create-only: the public /guides and
+ * /hotels pages, and the homepage guide spotlight, showed whatever was entered
+ * at registration with no way for anyone to correct it afterwards.
+ */
+export const guideAdminDetailsSchema = z.object({
+  licenseNumber: z.string().min(3).max(50),
+  languages: z.array(z.string().min(1).max(60)).min(1).max(20),
+  specialties: z.array(z.string().min(1).max(60)).min(1).max(20),
+  yearsExperience: z.coerce.number().int().min(0).max(60),
+  ratePerDay: z.coerce.number().positive(),
+  bio: z.string().max(2000).nullish(),
+  photoUrl: z.string().max(500).nullish(),
+  /** Replaces the guide's dzongkhag coverage wholesale — see the `set` in the
+   * route, which is why this is required rather than nullish. */
+  destinationIds: z.array(z.string().min(1)).max(20),
+});
+
+export const hotelAdminDetailsSchema = z.object({
+  name: z.string().min(2).max(150),
+  description: z.string().max(3000).nullish(),
+  destinationId: z.string().min(1),
+  address: z.string().max(300).nullish(),
+  latitude: z.number().min(-90).max(90).nullish(),
+  longitude: z.number().min(-180).max(180).nullish(),
+  amenities: z.array(z.string().min(1).max(60)).max(40),
+  photoUrls: z.array(z.string().min(1).max(500)).max(30),
+});
+
+export const vehicleAdminDetailsSchema = z.object({
+  type: z.enum(["SEDAN", "SUV", "VAN", "BUS"]),
+  capacity: z.coerce.number().int().positive().max(80),
+  plateNumber: z.string().min(2).max(20),
+  driverName: z.string().min(2).max(100),
+  driverLicenseNumber: z.string().min(2).max(50),
+  ratePerDay: z.coerce.number().positive(),
+  ratePerKm: z.number().positive().nullish(),
+});

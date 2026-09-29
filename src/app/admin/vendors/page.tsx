@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -21,7 +22,13 @@ export default async function AdminVendorsPage() {
 
   return (
     <div className="space-y-10">
-      <h1 className="text-2xl font-bold">Vendor approvals</h1>
+      <div>
+        <h1 className="text-2xl font-bold">Vendors</h1>
+        <p className="mt-1 text-sm text-stone-600">
+          Approve or suspend a listing, and edit the details travelers see. Changing a status emails
+          the vendor; editing details does not.
+        </p>
+      </div>
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Tour guides</h2>
@@ -39,7 +46,12 @@ export default async function AdminVendorsPage() {
                   <p className="text-xs text-stone-400">Note: {g.adminNote}</p>
                 )}
               </div>
-              <VendorApprovalControls apiPath={`/api/admin/guides/${g.id}`} />
+              <div className="flex shrink-0 items-center gap-2">
+                <Link href={`/admin/vendors/guides/${g.id}/edit`} className="btn-secondary">
+                  Edit
+                </Link>
+                <VendorApprovalControls apiPath={`/api/admin/guides/${g.id}`} />
+              </div>
             </div>
           ))}
           {guides.length === 0 && <p className="text-sm text-stone-500">No guides yet.</p>}
@@ -62,7 +74,12 @@ export default async function AdminVendorsPage() {
                   <p className="text-xs text-stone-400">Note: {h.adminNote}</p>
                 )}
               </div>
-              <VendorApprovalControls apiPath={`/api/admin/hotels/${h.id}`} />
+              <div className="flex shrink-0 items-center gap-2">
+                <Link href={`/admin/vendors/hotels/${h.id}/edit`} className="btn-secondary">
+                  Edit
+                </Link>
+                <VendorApprovalControls apiPath={`/api/admin/hotels/${h.id}`} />
+              </div>
             </div>
           ))}
           {hotels.length === 0 && <p className="text-sm text-stone-500">No hotels yet.</p>}
@@ -93,7 +110,15 @@ export default async function AdminVendorsPage() {
                       <span>
                         {v.type} · {v.plateNumber} <StatusBadge status={v.status} />
                       </span>
-                      <VendorApprovalControls apiPath={`/api/admin/vehicles/${v.id}`} />
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Link
+                          href={`/admin/vendors/vehicles/${v.id}/edit`}
+                          className="btn-secondary"
+                        >
+                          Edit
+                        </Link>
+                        <VendorApprovalControls apiPath={`/api/admin/vehicles/${v.id}`} />
+                      </div>
                     </div>
                   ))}
                 </div>

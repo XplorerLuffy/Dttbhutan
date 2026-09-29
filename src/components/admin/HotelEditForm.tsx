@@ -1,0 +1,159 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Field,
+  readError,
+  splitList,
+  splitLines,
+  nullableText,
+  nullableNumber,
+} from "@/components/admin/vendorFormFields";
+
+export default function HotelEditForm({
+  hotelId,
+  destinations,
+  initial,
+}: {
+  hotelId: string;
+  destinations: { id: string; name: string }[];
+  initial: {
+    name: string;
+    description: string;
+    destinationId: string;
+    address: string;
+    latitude: string;
+    longitude: string;
+    amenities: string[];
+    photoUrls: string[];
+  };
+}) {
+  const router = useRouter();
+
+  const [name, setName] = useState(initial.name);
+  const [description, setDescription] = useState(initial.description);
+  const [destinationId, setDestinationId] = useState(initial.destinationId);
+  const [address, setAddress] = useState(initial.address);
+  const [latitude, setLatitude] = useState(initial.latitude);
+  const [longitude, setLongitude] = useState(initial.longitude);
+  const [amenities, setAmenities] = useState(initial.amenities.join(", "));
+  const [photoUrls, setPhotoUrls] = useState(initial.photoUrls.join("\n"));
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    const res = await fetch(`/api/admin/hotels/${hotelId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        description: nullableText(description),
+        destinationId,
+        address: nullableText(address),
+        latitude: nullableNumber(latitude),
+        longitude: nullableNumber(longitude),
+        amenities: splitList(amenities),
+        photoUrls: splitLines(photoUrls),
+      }),
+    });
+
+    setIsSubmitting(false);
+    if (!res.ok) {
+      setError(readError(await res.json().catch(() => ({}))));
+      return;
+    }
+    router.push("/admin/vendors");
+    router.refresh();
+  }
+
+  const photos = splitLines(photoUrls);
+
+  return (
+    <form onSubmit={handleSubmit} className="card space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Hotel name">
+          <input value={name} onChange={(e) => setName(e.target.value)} required className="input" />
+        </Field>
+        <Field label="Dzongkhag">
+          <select
+            value={destinationId}
+            onChange={(e) => setDestinationId(e.target.value)}
+            className="input"
+          >
+            {destinations.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+
+      <Field label="Description">
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={5}
+          className="input"
+        />
+      </Field>
+
+      <Field label="Address" help="Area or street within the dzongkhag.">
+        <input value={address} onChange={(e) => setAddress(e.target.value)} className="input" />
+      </Field>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Latitude (optional)">
+          <input
+            value={latitude}
+            onChange={(e) => setLatitude(e.target.value)}
+            inputMode="decimal"
+            className="input"
+          />
+        </Field>
+        <Field label="Longitude (optional)">
+          <input
+            value={longitude}
+            onChange={(e) => setLongitude(e.target.value)}
+            inputMode="decimal"
+            className="input"
+          />
+        </Field>
+      </div>
+
+      <Field label="Amenities" help="Comma-separated, e.g. Wi-Fi, Restaurant, Airport transfer">
+        <input value={amenities} onChange={(e) => setAmenities(e.target.value)} className="input" />
+      </Field>
+
+      <Field label="Photo URLs" help="One per line. The first is used as the card image.">
+        <textarea
+          value={photoUrls}
+          onChange={(e) => setPhotoUrls(e.target.value)}
+          rows={4}
+          className="input font-mono text-xs"
+        />
+      </Field>
+
+      {photos.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {photos.map((url) => (
+            // Vendor-entered URLs, which may be on hosts next/image rejects.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={url} src={url} alt="" className="h-20 w-32 rounded object-cover" />
+          ))}
+        </div>
+      )}
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
+
+      <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
+        {isSubmitting ? "Saving..." : "Save changes"}
+      </button>
+    </form>
+  );
+}
