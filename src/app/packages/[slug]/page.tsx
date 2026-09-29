@@ -231,7 +231,7 @@ export default async function PackageDetailPage({
     // "not published yet". Both sections carry an empty state, so a tab
     // never lands on a blank anchor.
     { id: "hotels", label: "Hotels" },
-    ...(photos.length > 0 ? [{ id: "gallery", label: "Gallery" }] : []),
+    { id: "gallery", label: "Gallery" },
     { id: "reviews", label: "Reviews" },
   ];
 
@@ -432,17 +432,31 @@ export default async function PackageDetailPage({
           )}
         </section>
 
-        {photos.length > 0 && (
-          <section id="gallery" className="mt-14 scroll-mt-24">
-            <h2 className="font-display text-2xl font-bold text-stone-900">Gallery</h2>
+        <section id="gallery" className="mt-14 scroll-mt-24">
+          <h2 className="font-display text-2xl font-bold text-stone-900">Gallery</h2>
+          {photos.length > 0 ? (
+            <>
+              <p className="mt-2 max-w-2xl text-stone-600">
+                Photographs from this trip. Tap any of them to see it full size.
+              </p>
+              <div className="mt-6">
+                <TripGallery photos={photos} />
+              </div>
+            </>
+          ) : (
+            // An empty photo grid is the one empty state no wording rescues,
+            // so this offers the route to real pictures instead of drawing a
+            // frame around nothing.
             <p className="mt-2 max-w-2xl text-stone-600">
-              Photographs from this trip. Tap any of them to see it full size.
+              We haven&apos;t put a photo set together for this trip yet. Our guides come back with
+              pictures from every departure —{" "}
+              <Link href="/contact" className="font-semibold text-brand-700 hover:underline">
+                ask us
+              </Link>{" "}
+              and we&apos;ll send recent ones from this itinerary.
             </p>
-            <div className="mt-6">
-              <TripGallery photos={photos} />
-            </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {hasIncludes && (
           <section id="included" className="mt-14 scroll-mt-24">
