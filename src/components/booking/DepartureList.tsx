@@ -67,6 +67,8 @@ export default function DepartureList({
   const [tab, setTab] = useState<Tab>("scheduled");
   const [adults, setAdults] = useState(2);
   const [rooms, setRooms] = useState(1);
+  /** "" until chosen — a private trip can't be quoted without it. */
+  const [groupSize, setGroupSize] = useState("");
 
   const years = useMemo(
     () => Array.from(new Set(departures.map((d) => d.startDate.slice(0, 4)))).sort(),
@@ -95,22 +97,41 @@ export default function DepartureList({
       </div>
 
       {tab === "private" ? (
-        <div className="mt-6 rounded-xl border border-stone-200 bg-white p-6">
-          <h3 className="font-display text-lg font-semibold text-stone-900">
-            Travel on your own dates
-          </h3>
-          <p className="mt-2 max-w-2xl text-stone-700">
-            Any of our trips can run privately, for your group alone, on dates that suit you. Tell
-            us roughly when you want to travel and how many of you there are, and we&apos;ll come
-            back with a plan and a price.
-          </p>
-          <Link
-            href={`/custom-tour?trip=${encodeURIComponent(packageTitle)}`}
-            className="mt-5 inline-block rounded-full bg-brand-700 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-800"
-          >
-            Request private dates
-          </Link>
-        </div>
+        <>
+          <GroupSizeBar groupSize={groupSize} onChange={setGroupSize} />
+
+          {departures.length > 0 && (
+            <DateFilter
+              years={years}
+              year={year}
+              month={month}
+              monthsInYear={monthsInYear}
+              onYear={(y) => {
+                setYear(y);
+                setMonth("all");
+              }}
+              onMonth={setMonth}
+            />
+          )}
+
+          {shown.length > 0 && (
+            <ul className="mt-5 space-y-3">
+              {shown.map((d) => (
+                <DepartureRow
+                  key={d.id}
+                  departure={d}
+                  packageTitle={packageTitle}
+                  mode="private"
+                  groupSize={groupSize}
+                  adults={adults}
+                  rooms={rooms}
+                />
+              ))}
+            </ul>
+          )}
+
+          <NotFindingTheRightFit packageTitle={packageTitle} />
+        </>
       ) : departures.length === 0 ? (
         <p className="mt-6 text-stone-600">
           No scheduled departures are published for this tour yet — private dates are available.
@@ -122,41 +143,17 @@ export default function DepartureList({
             sharing a twin room.
           </p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            {years.length > 1 && (
-              <div className="inline-flex rounded-full bg-stone-100 p-1">
-                {years.map((y) => (
-                  <button
-                    key={y}
-                    type="button"
-                    onClick={() => {
-                      setYear(y);
-                      setMonth("all");
-                    }}
-                    aria-pressed={y === year}
-                    className={`rounded-full px-5 py-1.5 text-sm font-semibold transition-colors ${
-                      y === year
-                        ? "bg-white text-brand-900 shadow-sm"
-                        : "text-stone-600 hover:text-stone-900"
-                    }`}
-                  >
-                    {y}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-2">
-              <Chip active={month === "all"} onClick={() => setMonth("all")}>
-                All
-              </Chip>
-              {monthsInYear.map((m) => (
-                <Chip key={m} active={month === m} onClick={() => setMonth(m)}>
-                  {MONTHS[Number(m) - 1]}
-                </Chip>
-              ))}
-            </div>
-          </div>
+          <DateFilter
+            years={years}
+            year={year}
+            month={month}
+            monthsInYear={monthsInYear}
+            onYear={(y) => {
+              setYear(y);
+              setMonth("all");
+            }}
+            onMonth={setMonth}
+          />
 
           <GuestSelector
             adults={adults}
@@ -206,21 +203,34 @@ function DepartureRow({
   packageTitle,
   adults,
   rooms,
+  mode = "scheduled",
+  groupSize = "",
 }: {
   departure: DepartureView;
   packageTitle: string;
   adults: number;
   rooms: number;
+  mode?: Tab;
+  groupSize?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const bookable = d.status === "OPEN" || d.status === "LIMITED";
+  const isPrivate = mode === "private";
+  // A private trip runs for one group alone, so it is never "sold out" the
+  // way a shared departure is — the status only governs the shared list.
+  const bookable = isPrivate ? true : d.status === "OPEN" || d.status === "LIMITED";
   const statusLabel = STATUS_LABEL[d.status];
-  const subject = `Booking request: ${packageTitle} — ${fmtLong(d.startDate)} to ${fmtLong(d.endDate)}`;
+  const party = isPrivate ? `a group of ${groupSize}` : partyLabel(adults, rooms);
+
+  const subject = isPrivate
+    ? `Private departure request: ${packageTitle} — ${fmtLong(d.startDate)}`
+    : `Booking request: ${packageTitle} — ${fmtLong(d.startDate)} to ${fmtLong(d.endDate)}`;
   // The party rides in the message rather than the subject: a subject long
   // enough to carry both gets truncated in every mail client.
-  const message = `I'd like to request places on the ${fmtLong(d.startDate)} departure for ${partyLabel(adults, rooms)}.`;
+  const message = isPrivate
+    ? `I'd like a quote to run ${packageTitle} privately, starting ${fmtLong(d.startDate)}, for ${party}.`
+    : `I'd like to request places on the ${fmtLong(d.startDate)} departure for ${party}.`;
   const bookHref = `/contact?subject=${encodeURIComponent(subject)}&departure=${d.id}&message=${encodeURIComponent(message)}`;
-  const panelId = `departure-${d.id}`;
+  const panelId = `departure-${d.id}-${mode}`;
 
   return (
     <li className="overflow-hidden rounded-lg border border-stone-200 bg-white">
@@ -233,7 +243,17 @@ function DepartureRow({
           <DateBlock iso={d.endDate} />
         </div>
 
-        <span className={`shrink-0 font-semibold ${STATUS_CLASS[d.status]}`}>{statusLabel}</span>
+        {isPrivate ? (
+          <span
+            className={`shrink-0 text-sm font-semibold ${
+              groupSize ? "text-stone-600" : "text-rose-600"
+            }`}
+          >
+            {groupSize ? "Priced on request" : "Select a group size for pricing"}
+          </span>
+        ) : (
+          <span className={`shrink-0 font-semibold ${STATUS_CLASS[d.status]}`}>{statusLabel}</span>
+        )}
 
         <button
           type="button"
@@ -265,21 +285,40 @@ function DepartureRow({
       {open && (
         <div id={panelId} className="border-t border-stone-100 bg-stone-50/60 px-5 py-4">
           <dl className="flex flex-wrap gap-x-10 gap-y-3">
-            <div>
-              <dt className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-                Price
-              </dt>
-              <dd className="font-display text-lg font-bold text-brand-800">
-                <Money btn={d.price} />
-                <span className="ml-1 text-sm font-medium text-stone-500">/person</span>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-                Availability
-              </dt>
-              <dd className="font-semibold text-stone-900">{statusLabel ?? "Places available"}</dd>
-            </div>
+            {/* The scheduled per-person price is deliberately absent in private
+                mode. It is the price of sharing a fixed departure, and quoting
+                it for a trip run for one group alone would be a number nobody
+                has agreed to — the team prices these individually. */}
+            {isPrivate ? (
+              <div>
+                <dt className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                  Price
+                </dt>
+                <dd className="font-semibold text-stone-900">
+                  Quoted for your group — it varies with size and season
+                </dd>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <dt className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                    Price
+                  </dt>
+                  <dd className="font-display text-lg font-bold text-brand-800">
+                    <Money btn={d.price} />
+                    <span className="ml-1 text-sm font-medium text-stone-500">/person</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                    Availability
+                  </dt>
+                  <dd className="font-semibold text-stone-900">
+                    {statusLabel ?? "Places available"}
+                  </dd>
+                </div>
+              </>
+            )}
             {d.note && (
               <div>
                 <dt className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
@@ -291,27 +330,164 @@ function DepartureRow({
           </dl>
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
-            {bookable ? (
+            {isPrivate && !groupSize ? (
+              // Sending the enquiry without a group size would produce a
+              // message the team can't quote from, so the button waits.
+              <p className="text-sm font-semibold text-rose-600">
+                Choose an approximate group size above to request this date.
+              </p>
+            ) : bookable ? (
               <Link
                 href={bookHref}
                 className="rounded-full bg-brand-800 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-brand-900"
               >
-                Request to Book
+                {isPrivate ? "Request this date" : "Request to Book"}
               </Link>
             ) : (
               <span className="text-sm text-stone-500">
                 This departure is closed — try another date, or ask us about private dates.
               </span>
             )}
-            {bookable && (
+            {bookable && (!isPrivate || groupSize) && (
               <p className="text-sm text-stone-500">
-                For {partyLabel(adults, rooms)}. Nothing is charged at this stage.
+                For {party}. Nothing is charged at this stage.
               </p>
             )}
           </div>
         </div>
       )}
     </li>
+  );
+}
+
+/** Bands rather than an exact head count: at this stage nobody has a final
+ * list, and a band is enough for the team to price against. */
+const GROUP_SIZES = ["2", "3–4", "5–6", "7–8", "9–12", "13 or more"];
+
+/**
+ * The group-size gate above the private date list.
+ *
+ * A private trip's price moves with how many people share the guide, the
+ * vehicle and the rooms, so the size comes first and every date below stays
+ * unpriced until it is set. Marked required, and outlined in red while
+ * empty, because the alternative is an enquiry the team has to reply to
+ * with a question instead of a price.
+ */
+function GroupSizeBar({
+  groupSize,
+  onChange,
+}: {
+  groupSize: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="mt-6 rounded-lg border border-brand-100 bg-brand-50 px-5 py-4">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <p className="text-stone-800">
+          Pricing varies with your departure date and the size of your group.
+        </p>
+
+        {/* Label and control travel together, so the pair wraps as one block
+            instead of the label stranding itself on the line above. */}
+        <div className="ml-auto flex items-center gap-3">
+          <label htmlFor="group-size" className="text-sm font-semibold text-stone-900">
+            Approx. group size <span className="text-rose-600">*</span>
+          </label>
+          <select
+            id="group-size"
+            value={groupSize}
+            onChange={(e) => onChange(e.target.value)}
+            required
+            className={`rounded-md border-2 bg-white px-4 py-2 font-medium text-stone-900 ${
+              groupSize ? "border-stone-300" : "border-rose-400"
+            }`}
+          >
+            <option value="">Select</option>
+            {GROUP_SIZES.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Year pills and month chips. Shared so the two tabs filter identically —
+ * they are the same calendar, seen two ways. */
+function DateFilter({
+  years,
+  year,
+  month,
+  monthsInYear,
+  onYear,
+  onMonth,
+}: {
+  years: string[];
+  year: string;
+  month: string;
+  monthsInYear: string[];
+  onYear: (y: string) => void;
+  onMonth: (m: string) => void;
+}) {
+  return (
+    <div className="mt-5 flex flex-wrap items-center gap-3">
+      {years.length > 1 && (
+        <div className="inline-flex rounded-full bg-stone-100 p-1">
+          {years.map((y) => (
+            <button
+              key={y}
+              type="button"
+              onClick={() => onYear(y)}
+              aria-pressed={y === year}
+              className={`rounded-full px-5 py-1.5 text-sm font-semibold transition-colors ${
+                y === year ? "bg-white text-brand-900 shadow-sm" : "text-stone-600 hover:text-stone-900"
+              }`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        <Chip active={month === "all"} onClick={() => onMonth("all")}>
+          All
+        </Chip>
+        {monthsInYear.map((m) => (
+          <Chip key={m} active={month === m} onClick={() => onMonth(m)}>
+            {MONTHS[Number(m) - 1]}
+          </Chip>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The way out of the list. The dates above are the ones already on the
+ * calendar; a private group is not bound by them, so the page has to say so
+ * rather than leaving someone to conclude their month is impossible.
+ */
+function NotFindingTheRightFit({ packageTitle }: { packageTitle: string }) {
+  return (
+    <div className="mt-6 rounded-xl border border-stone-200 bg-white px-6 py-6 text-center">
+      <h3 className="font-display text-lg font-semibold text-stone-900">
+        Not finding the right fit?
+      </h3>
+      <p className="mx-auto mt-2 max-w-2xl text-stone-700">
+        These are the start dates already on our calendar. A private trip can run on dates of your
+        own — tell us roughly when you want to travel and we&apos;ll build it around you.
+      </p>
+      <Link
+        href={`/custom-tour?trip=${encodeURIComponent(packageTitle)}`}
+        className="mt-5 inline-block rounded-full bg-brand-700 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-800"
+      >
+        Request your own dates
+      </Link>
+    </div>
   );
 }
 
