@@ -65,7 +65,10 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "home.hero.searchPrompt", label: "Search prompt (phones)", type: "text", default: "Find My Perfect Trip", help: "Shown on the collapsed search pill on phone screens, before it is tapped open." },
       { key: "home.hero.customPrefix", label: "Custom-trip line, before the link", type: "text", default: "Or" },
       { key: "home.hero.customLink", label: "Custom-trip link text", type: "text", default: "have us build a custom trip" },
+      { key: "home.hero.customLinkHref", label: "Custom-trip link target", type: "text", default: "/custom-tour" },
       { key: "home.hero.customSuffix", label: "Custom-trip line, after the link", type: "text", default: "around what you want to see." },
+      { key: "home.hero.videoUrl", label: "Background video URL", type: "text", default: "/media/hero.mp4", help: "Attached only once the page is idle, and skipped entirely on reduced-motion or metered connections — so the poster below has to stand on its own. Leave blank to show the poster only." },
+      { key: "home.hero.posterUrl", label: "Poster image URL", type: "text", default: "/media/hero-poster.jpg", help: "What every visitor sees first. Use a still from the video so there is no jump when it starts." },
     ],
   },
 
@@ -172,6 +175,17 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "home.planner.body", label: "Body", type: "textarea", default: "Tell us what kind of Bhutan experience you're looking for — trekking, culture, festivals, or a slower pace — and we'll help shape a trip around it." },
       { key: "home.planner.cta", label: "Button label", type: "text", default: "Plan My Trip" },
       { key: "home.planner.ctaHref", label: "Button link", type: "text", default: "/custom-tour" },
+    ],
+  },
+
+  {
+    id: "gallery",
+    label: "Gallery page",
+    description:
+      "The photos themselves come from the destinations, packages, hotels and guides — this is just the page's own wording.",
+    fields: [
+      { key: "gallery.heading", label: "Heading", type: "text", default: "Gallery" },
+      { key: "gallery.intro", label: "Intro line", type: "textarea", default: "Destinations, tour packages, stays, and guides from across Bhutan." },
     ],
   },
 

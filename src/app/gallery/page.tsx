@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 type GalleryPhoto = { href: string; photoUrl: string; caption: string };
 
 export default async function GalleryPage() {
+  const content = await getSiteContent();
   const [destinations, itineraries, hotels, guides] = await Promise.all([
     prisma.destination.findMany({
       where: { photoUrl: { not: null } },
@@ -52,10 +54,8 @@ export default async function GalleryPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-bold">Gallery</h1>
-      <p className="mb-6 text-sm text-stone-600">
-        Destinations, tour packages, stays, and guides from across Droelma Tours &amp; Travels.
-      </p>
+      <h1 className="mb-1 text-2xl font-bold">{content("gallery.heading")}</h1>
+      <p className="mb-6 text-sm text-stone-600">{content("gallery.intro")}</p>
 
       {photos.length === 0 ? (
         <p className="text-stone-600">

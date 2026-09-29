@@ -164,7 +164,10 @@ export default async function HomePage() {
         searchPrompt={content("home.hero.searchPrompt")}
         customPrefix={content("home.hero.customPrefix")}
         customLink={content("home.hero.customLink")}
+        customHref={content("home.hero.customLinkHref")}
         customSuffix={content("home.hero.customSuffix")}
+        videoUrl={content("home.hero.videoUrl")}
+        posterUrl={content("home.hero.posterUrl")}
       />
 
       <div>

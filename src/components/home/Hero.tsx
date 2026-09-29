@@ -10,8 +10,6 @@ type Destination = { id: string; name: string; slug: string };
 // Under /media, not /public/uploads: that directory is gitignored as
 // dev-only user-upload scratch space, so anything left there never reaches
 // a deployment. These two are site assets and ship with the code.
-const HERO_VIDEO = "/media/hero.mp4";
-const HERO_POSTER = "/media/hero-poster.jpg";
 
 /**
  * Full-bleed video hero: the clip fills the section edge to edge, with a
@@ -30,7 +28,10 @@ export default function Hero({
   searchPrompt,
   customPrefix,
   customLink,
+  customHref,
   customSuffix,
+  videoUrl,
+  posterUrl,
 }: {
   destinations: Destination[];
   headline: string;
@@ -38,7 +39,13 @@ export default function Hero({
   searchPrompt: string;
   customPrefix: string;
   customLink: string;
+  customHref: string;
   customSuffix: string;
+  /** Both come from site content so the footage can be swapped without a code
+   * change. The poster is what the visitor sees first and on any connection
+   * that never gets the clip, so it should be a still from the same video. */
+  videoUrl: string;
+  posterUrl: string;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -77,14 +84,14 @@ export default function Hero({
     let cancelled = false;
 
     function start() {
-      if (cancelled || !video || video.src) return;
+      if (cancelled || !video || video.src || !videoUrl) return;
       // React doesn't reliably sync the `muted` JSX attribute to the DOM
       // property on every render path, and browsers gate autoplay on the
       // property, not the attribute — so force it directly, then kick off
       // playback ourselves rather than trusting the `autoPlay` attribute.
       video.muted = true;
       video.loop = true;
-      video.src = HERO_VIDEO;
+      video.src = videoUrl;
       video.load();
       video.play().catch(() => {
         // Autoplay can still be refused (e.g. data-saver mode) — the poster
@@ -106,7 +113,7 @@ export default function Hero({
       cancelled = true;
       window.removeEventListener("load", schedule);
     };
-  }, []);
+  }, [videoUrl]);
 
   return (
     <section className="relative isolate flex min-h-[600px] flex-col justify-center overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-900 sm:min-h-[720px]">
@@ -116,7 +123,7 @@ export default function Hero({
           on reduced motion or a metered connection. */}
       <video
         ref={videoRef}
-        poster={HERO_POSTER}
+        poster={posterUrl}
         muted
         loop
         playsInline
@@ -141,7 +148,7 @@ export default function Hero({
 
         <p className="mt-6 text-center text-sm text-white/90 [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
           {customPrefix}{" "}
-          <Link href="/custom-tour" className="font-semibold underline underline-offset-4 hover:text-white">
+          <Link href={customHref} className="font-semibold underline underline-offset-4 hover:text-white">
             {customLink}
           </Link>{" "}
           {customSuffix}
