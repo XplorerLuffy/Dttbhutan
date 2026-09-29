@@ -91,6 +91,28 @@ const BY_CATEGORY: Record<ItineraryCategory, (keyof typeof SHOTS)[]> = {
 };
 
 /**
+ * Every scene, for the places and articles that have no category to sort by.
+ * Ordered so that consecutive items look different from one another, since
+ * destinations are rendered as a four-across grid and neighbours are seen
+ * together.
+ */
+const ALL_SHOTS: (keyof typeof SHOTS)[] = [
+  "valley", "dzong", "camp", "cranes", "courtyard", "yaks", "rhodo",
+  "wheels", "bridge", "forest", "cham", "lodge", "flags",
+];
+
+/**
+ * Articles get a scene that matches what they are about rather than a
+ * rotation: three of them, each on a subject with an obvious picture, and a
+ * visa explainer under a photograph of rhododendrons would just look random.
+ */
+const BY_ARTICLE: Record<string, keyof typeof SHOTS> = {
+  "visa-and-entry-requirements-for-bhutan": "dzong",
+  "bhutans-sustainable-development-fee-explained": "valley",
+  "best-time-to-visit-bhutan": "rhodo",
+};
+
+/**
  * Rotates the category's list by the package's position within its category,
  * rather than by a hash of the slug.
  *
@@ -166,11 +188,39 @@ async function main() {
     console.log(`  ${itinerary.slug}: cover ${needsCover ? "set" : "kept"}, gallery ${needsGallery ? "set" : "kept"}`);
   }
 
+  // --- the homepage's other two picture grids ------------------------------
+  // Destinations and travel-guide articles are shown alongside the packages
+  // on the homepage, so filling only the packages leaves it half-dressed.
+  const destinations = await prisma.destination.findMany({ orderBy: { slug: "asc" } });
+  let places = 0;
+  for (const [i, destination] of destinations.entries()) {
+    if (destination.photoUrl && !replace) continue;
+    await prisma.destination.update({
+      where: { id: destination.id },
+      data: { photoUrl: `${BASE}/${SHOTS[ALL_SHOTS[i % ALL_SHOTS.length]].file}` },
+    });
+    places++;
+  }
+
+  const articles = await prisma.article.findMany({ orderBy: { slug: "asc" } });
+  let written = 0;
+  for (const [i, article] of articles.entries()) {
+    if (article.coverPhotoUrl && !replace) continue;
+    const key = BY_ARTICLE[article.slug] ?? ALL_SHOTS[i % ALL_SHOTS.length];
+    await prisma.article.update({
+      where: { id: article.id },
+      data: { coverPhotoUrl: `${BASE}/${SHOTS[key].file}` },
+    });
+    written++;
+  }
+
   console.log(
     `\n${covered} cover${covered === 1 ? "" : "s"} and ${galleried} galler${galleried === 1 ? "y" : "ies"} set, ${skipped} left alone.`
   );
+  console.log(`${places} destination${places === 1 ? "" : "s"} and ${written} article${written === 1 ? "" : "s"} given a picture.`);
   if (skipped > 0 && !replace) console.log("Pass --replace to overwrite those too.");
   console.log("\nReminder: these are generated placeholders, not photographs of real places.");
+  console.log("Guide portraits are deliberately NOT seeded — see docs/demo-photos.md.");
 }
 
 main()

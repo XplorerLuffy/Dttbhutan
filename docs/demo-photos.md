@@ -41,6 +41,29 @@ They live in `public/media/packages`, so the URLs are same-origin: nothing
 breaks if a third-party image host goes away, and they deploy with the app.
 1600×900 WebP, about 3 MB for the set.
 
+## Where they appear
+
+The same thirteen images fill every picture grid on the site:
+
+- **Package covers and galleries** — 29 covers, 116 gallery photos
+- **Destinations** — all 20, rotated so neighbours in the four-across grid
+  don't repeat
+- **Travel-guide articles** — 3, matched to their subject rather than
+  rotated, because a visa explainer under a photograph of rhododendrons
+  just looks random
+- **Homepage category tiles** — these need no seeding; they already borrow
+  the cover of a package in that category
+
+## Guide portraits are deliberately not seeded
+
+The script fills no `GuideProfile.photoUrl`, and it should stay that way.
+
+A generated landscape is a placeholder for a place. A generated *portrait*
+is an invented human being presented as a named, licensed guide the traveller
+may be about to spend a week in a vehicle with — a different kind of claim
+entirely, and one no caption fixes. Those photographs have to be real people,
+photographed with their consent.
+
 ## Replacing them
 
 Per package, in the admin: **Package tours → (a package) → Edit**. The
@@ -57,6 +80,12 @@ UPDATE "Itinerary" SET "coverPhotoUrl" = NULL
 WHERE "coverPhotoUrl" LIKE '/media/packages/%';
 
 DELETE FROM "ItineraryPhoto" WHERE url LIKE '/media/packages/%';
+
+UPDATE "Destination" SET "photoUrl" = NULL
+WHERE "photoUrl" LIKE '/media/packages/%';
+
+UPDATE "Article" SET "coverPhotoUrl" = NULL
+WHERE "coverPhotoUrl" LIKE '/media/packages/%';
 ```
 
 The `LIKE` matters: it clears only the generated set and leaves any real
