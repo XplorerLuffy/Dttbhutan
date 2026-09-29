@@ -8,6 +8,7 @@ import {
   type AiProvider,
   type AiToolCall,
 } from "@/lib/ai/provider";
+import { describeUnusableGeminiKey } from "@/lib/ai/geminiKey";
 
 /**
  * Google Gemini over plain fetch (no SDK — same reasoning as the Ollama
@@ -50,6 +51,11 @@ export class GeminiProvider implements AiProvider {
     const apiKey = process.env.GEMINI_API_KEY?.trim();
     if (!apiKey) {
       throw new AiProviderUnavailableError("GEMINI_API_KEY is not set");
+    }
+    // Fails here with the remedy rather than in an hour with a bare 401.
+    const unusable = describeUnusableGeminiKey(apiKey);
+    if (unusable) {
+      throw new AiProviderUnavailableError(unusable);
     }
     this.apiKey = apiKey;
     this.model = process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash";

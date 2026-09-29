@@ -209,6 +209,47 @@ async function main() {
     );
   }
 
+  // An OAuth access token in GEMINI_API_KEY works for about an hour and then
+  // 401s. Caught at construction so the message names the remedy, rather than
+  // surfacing later as an auth error that looks like a revoked key.
+  {
+    process.env.GEMINI_API_KEY = "AQ.Ab8RNotARealTokenJustTheShape";
+    let caught: unknown;
+    try {
+      new GeminiEmbeddingProvider();
+    } catch (err) {
+      caught = err;
+    }
+    const message = caught instanceof Error ? caught.message : "";
+    check(
+      "an OAuth access token is rejected at construction, not an hour later",
+      caught instanceof EmbeddingProviderUnavailableError
+    );
+    check(
+      "and the message says to create an API key instead",
+      message.includes("aistudio.google.com/apikey") && message.includes("AIza"),
+      message
+    );
+    check(
+      "and it does not echo the token back",
+      !message.includes("AQ.Ab8RNotARealTokenJustTheShape"),
+      message
+    );
+  }
+
+  // The long-lived kind must still be accepted — the guard is shape-based, so
+  // a regression here would lock out every real deployment.
+  {
+    process.env.GEMINI_API_KEY = "AIzaSyNotARealKeyJustTheShape0123456789";
+    let caught: unknown;
+    try {
+      new GeminiEmbeddingProvider();
+    } catch (err) {
+      caught = err;
+    }
+    check("an AIza API key is accepted at construction", caught === undefined);
+  }
+
   globalThis.fetch = realFetch;
   console.log(`\n${passed}/${passed + failed} checks passed`);
   if (failed > 0) process.exitCode = 1;
