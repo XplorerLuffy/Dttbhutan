@@ -90,20 +90,19 @@ const BY_CATEGORY: Record<ItineraryCategory, (keyof typeof SHOTS)[]> = {
   HONEYMOON: ["lodge", "valley", "rhodo", "courtyard", "flags", "forest"],
 };
 
-/** FNV-1a over the slug — same package, same pictures, every run. */
-function hash(seed: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-/** Rotates the category's list so neighbouring packages don't all match. */
-function shotsFor(slug: string, category: ItineraryCategory) {
+/**
+ * Rotates the category's list by the package's position within its category,
+ * rather than by a hash of the slug.
+ *
+ * A hash looks more principled and is worse here: over 29 packages and pools
+ * of six it clumped badly, and nine covers came out as the same photograph.
+ * On a listing page that repetition is the thing that gives a placeholder
+ * away. Cycling by position spreads the pool as evenly as it can go, and
+ * stays deterministic because the ordering is by slug.
+ */
+function shotsFor(indexInCategory: number, category: ItineraryCategory) {
   const pool = BY_CATEGORY[category];
-  const offset = hash(slug) % pool.length;
+  const offset = indexInCategory % pool.length;
   return pool.map((_, i) => SHOTS[pool[(offset + i) % pool.length]]);
 }
 
@@ -120,8 +119,14 @@ async function main() {
   let galleried = 0;
   let skipped = 0;
 
+  // Position within the category, in slug order, so the rotation below is
+  // both evenly spread and the same on every run.
+  const seenInCategory = new Map<ItineraryCategory, number>();
+
   for (const itinerary of itineraries) {
-    const ordered = shotsFor(itinerary.slug, itinerary.category);
+    const indexInCategory = seenInCategory.get(itinerary.category) ?? 0;
+    seenInCategory.set(itinerary.category, indexInCategory + 1);
+    const ordered = shotsFor(indexInCategory, itinerary.category);
 
     // A real cover beats a generated one, so an existing value is left alone.
     const needsCover = replace || !itinerary.coverPhotoUrl;
