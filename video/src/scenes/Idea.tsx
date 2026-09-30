@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { SectionTitle } from "../components/SectionTitle";
 
@@ -13,11 +14,12 @@ import { SectionTitle } from "../components/SectionTitle";
  * first thing the viewer does is fall into it.
  */
 export const Idea: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
   // The homepage begins arriving at 6s, under the second line.
-  const revealAt = seconds(6);
-  const reveal = interpolate(frame, [revealAt, revealAt + seconds(2.6)], [0, 1], {
+  const revealAt = t(6);
+  const reveal = interpolate(frame, [revealAt, revealAt + t(2.6)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -29,11 +31,11 @@ export const Idea: React.FC = () => {
   // of the site's own hero headline — two pieces of display type in the same
   // place, both unreadable. It only lifts once the last line has gone.
   const typeOnScreen = Math.max(
-    interpolate(frame, [seconds(0.6), seconds(1.0), seconds(4.1), seconds(4.6)], [0, 1, 1, 0], {
+    interpolate(frame, [t(0.6), t(1.0), t(4.1), t(4.6)], [0, 1, 1, 0], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     }),
-    interpolate(frame, [seconds(4.8), seconds(5.2), seconds(8.6), seconds(9.2)], [0, 1, 1, 0], {
+    interpolate(frame, [t(4.8), t(5.2), t(8.6), t(9.2)], [0, 1, 1, 0], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     })
@@ -66,14 +68,14 @@ export const Idea: React.FC = () => {
       />
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", padding: "0 160px" }}>
-        <SectionTitle from={seconds(0.8)} until={seconds(4.1)} size={62} maxWidth={1240}>
+        <SectionTitle from={t(0.8)} until={t(4.1)} size={62} maxWidth={1240}>
           I wanted to build something for travelers
           <br />
           discovering Bhutan.
         </SectionTitle>
 
         <div style={{ position: "absolute" }}>
-          <SectionTitle from={seconds(5.0)} until={seconds(8.6)} size={62} maxWidth={1240}>
+          <SectionTitle from={t(5.0)} until={t(8.6)} size={62} maxWidth={1240}>
             So I started building <span style={{ color: COLORS.gold400 }}>DTT&nbsp;Bhutan</span>.
           </SectionTitle>
         </div>
@@ -84,7 +86,7 @@ export const Idea: React.FC = () => {
           alignItems: "center",
           justifyContent: "flex-end",
           paddingBottom: 64,
-          opacity: interpolate(frame, [seconds(8.6), seconds(9.4)], [0, 1], {
+          opacity: interpolate(frame, [t(8.6), t(9.4)], [0, 1], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           }),

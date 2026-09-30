@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { Architecture } from "../components/Architecture";
 import { SectionTitle } from "../components/SectionTitle";
 import { CORE_MODELS, FACTS } from "../data/projectFacts";
@@ -18,12 +19,13 @@ import { CORE_MODELS, FACTS } from "../data/projectFacts";
  * these are all of them.
  */
 export const Database: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
   return (
     <AbsoluteFill style={{ background: COLORS.ink }}>
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 76 }}>
-        <SectionTitle from={seconds(0.3)} size={38}>
+        <SectionTitle from={t(0.3)} size={38}>
           The data behind the experience had to be structured too.
         </SectionTitle>
       </AbsoluteFill>
@@ -47,7 +49,7 @@ export const Database: React.FC = () => {
             { label: "PostgreSQL", detail: `${FACTS.migrations} migrations applied` },
             { label: "Supabase", detail: "managed Postgres + pgvector" },
           ]}
-          revealOver={[seconds(1.0), seconds(4.0)]}
+          revealOver={[t(1.0), t(4.0)]}
         />
 
         <div style={{ width: 880 }}>
@@ -58,7 +60,7 @@ export const Database: React.FC = () => {
               letterSpacing: "0.2em",
               textTransform: "uppercase",
               color: COLORS.gold400,
-              opacity: interpolate(frame, [seconds(4.0), seconds(4.6)], [0, 1], {
+              opacity: interpolate(frame, [t(4.0), t(4.6)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),
@@ -69,7 +71,7 @@ export const Database: React.FC = () => {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
             {CORE_MODELS.map((model, i) => {
-              const at = seconds(4.2) + i * 3;
+              const at = t(4.2) + i * 3;
               const on = interpolate(frame, [at, at + 12], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
@@ -102,7 +104,7 @@ export const Database: React.FC = () => {
               margin: "22px 0 0",
               font: `400 17px/1 ${FONTS.body}`,
               color: COLORS.textFaint,
-              opacity: interpolate(frame, [seconds(9.0), seconds(9.8)], [0, 1], {
+              opacity: interpolate(frame, [t(9.0), t(9.8)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),

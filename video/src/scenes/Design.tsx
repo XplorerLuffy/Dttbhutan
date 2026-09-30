@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { SectionTitle } from "../components/SectionTitle";
 
@@ -35,13 +36,14 @@ const ARRIVE = (i: number) => 0.7 + i * 2.0;
 const REST = 1.2;
 
 export const Design: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
   // Two keyframes per stop — arrive, then hold — so the move between them is
   // short and the look is long, rather than one unbroken drift.
   const panStops: [number, number][] = STOPS.flatMap(({ pan }, i) => [
-    [seconds(ARRIVE(i)), pan],
-    [seconds(ARRIVE(i) + REST), pan],
+    [t(ARRIVE(i)), pan],
+    [t(ARRIVE(i) + REST), pan],
   ]);
 
   return (
@@ -59,7 +61,7 @@ export const Design: React.FC = () => {
             const arrive = ARRIVE(i);
             const on = interpolate(
               frame,
-              [seconds(arrive - 0.3), seconds(arrive + 0.1), seconds(arrive + REST), seconds(arrive + REST + 0.4)],
+              [t(arrive - 0.3), t(arrive + 0.1), t(arrive + REST), t(arrive + REST + 0.4)],
               [0, 1, 1, 0.2],
               { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
             );
@@ -84,9 +86,9 @@ export const Design: React.FC = () => {
 
       {/* Below the window, not across it — the brief asks that the site's own
           content not be covered, and the search bar is the site's content. */}
-      <Sequence durationInFrames={seconds(3.6)}>
+      <Sequence durationInFrames={t(3.6)}>
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 22 }}>
-          <SectionTitle from={seconds(0.3)} until={seconds(2.6)} size={36}>
+          <SectionTitle from={t(0.3)} until={t(2.6)} size={36}>
             The goal was simple: make discovering Bhutan feel intuitive.
           </SectionTitle>
         </AbsoluteFill>

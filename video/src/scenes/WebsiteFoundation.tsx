@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { SectionTitle } from "../components/SectionTitle";
 import { PROJECT_TREE } from "../data/projectFacts";
@@ -18,16 +19,17 @@ import { PROJECT_TREE } from "../data/projectFacts";
  * third of the homepage off the edge of the frame.
  */
 export const WebsiteFoundation: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
-  const split = interpolate(frame, [seconds(3.4), seconds(5.2)], [0, 1], {
+  const split = interpolate(frame, [t(3.4), t(5.2)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   const lines = PROJECT_TREE.split("\n");
   const shown = Math.round(
-    interpolate(frame, [seconds(5.0), seconds(9.4)], [0, lines.length], {
+    interpolate(frame, [t(5.0), t(9.4)], [0, lines.length], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     })
@@ -61,7 +63,7 @@ export const WebsiteFoundation: React.FC = () => {
             height={780}
             panFrom={0}
             panTo={0.3}
-            panOver={[0, seconds(12)]}
+            panOver={[0, t(12)]}
           />
         </div>
 
@@ -107,8 +109,8 @@ export const WebsiteFoundation: React.FC = () => {
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 40 }}>
         <SectionTitle
-          from={seconds(0.5)}
-          until={seconds(3.0)}
+          from={t(0.5)}
+          until={t(3.0)}
           size={40}
           style={{
             background: "rgba(7,9,13,0.86)",

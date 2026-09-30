@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { COLORS, seconds } from "../theme";
+import { COLORS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { Architecture } from "../components/Architecture";
 import { CodeWindow } from "../components/CodeWindow";
 import { SectionTitle } from "../components/SectionTitle";
@@ -19,33 +20,39 @@ import { FACTS } from "../data/projectFacts";
  * what happens when the trip is already taken.
  */
 export const Backend: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
-  const codeIn = interpolate(frame, [seconds(3.6), seconds(5.0)], [0, 1], {
+  const codeIn = interpolate(frame, [t(3.6), t(5.0)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   return (
     <AbsoluteFill style={{ background: COLORS.ink }}>
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 76 }}>
-        <SectionTitle from={seconds(0.3)} size={38}>
-          Behind the interface, I built the backend that powers it.
-        </SectionTitle>
-      </AbsoluteFill>
+      {/* A column, not two overlaid layers. The route handler is 31 lines, which
+          at any readable size is nearly the height of the frame — laid over a
+          centred row it pushed up into the narration and covered it. Giving the
+          title its own band and the content the rest is the only arrangement
+          that holds at every speed this scene gets cut to. */}
+      <AbsoluteFill style={{ display: "flex", flexDirection: "column", padding: "52px 80px 40px" }}>
+        <div style={{ height: 92, display: "flex", alignItems: "flex-start", justifyContent: "center" }}>
+          <SectionTitle from={t(0.3)} size={36}>
+            Behind the interface, I built the backend that powers it.
+          </SectionTitle>
+        </div>
 
-      <AbsoluteFill
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 74,
-          paddingTop: 92,
-          paddingLeft: 90,
-          paddingRight: 90,
-        }}
-      >
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 70,
+          }}
+        >
         <Architecture
           width={470}
           nodes={[
@@ -56,7 +63,7 @@ export const Backend: React.FC = () => {
             { label: "Business logic", detail: "src/lib — booking, fx, email, gps" },
             { label: "Prisma", detail: "PostgreSQL" },
           ]}
-          revealOver={[seconds(1.2), seconds(4.4)]}
+          revealOver={[t(1.2), t(4.4)]}
         />
 
         <div style={{ opacity: codeIn, transform: `translateX(${interpolate(codeIn, [0, 1], [50, 0])}px)` }}>
@@ -64,11 +71,12 @@ export const Backend: React.FC = () => {
             path={SNIPPETS.bookingRoute.path}
             code={SNIPPETS.bookingRoute.code}
             startLine={SNIPPETS.bookingRoute.startLine}
-            width={940}
-            fontSize={18}
-            typeOver={[seconds(4.4), seconds(9.6)]}
+            width={880}
+            fontSize={15}
+            typeOver={[t(4.4), t(9.6)]}
             highlight={[8, 12, 20, 26, 30]}
           />
+          </div>
         </div>
       </AbsoluteFill>
     </AbsoluteFill>

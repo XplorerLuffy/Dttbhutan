@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { Cursor } from "../components/Cursor";
 import { SectionTitle } from "../components/SectionTitle";
@@ -14,7 +15,6 @@ import { FACTS } from "../data/projectFacts";
  * every destination is a capture of the page that link really opens. No
  * interaction is mimed that the site does not have.
  */
-const STEP = seconds(3.6);
 
 const Card: React.FC<{ children: React.ReactNode; note: string }> = ({ children, note }) => (
   <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
@@ -35,6 +35,9 @@ const Card: React.FC<{ children: React.ReactNode; note: string }> = ({ children,
 );
 
 export const TravelExperience: React.FC = () => {
+  const t = useSceneSeconds();
+  /** One step of the journey: listing, tour, destinations, custom. */
+  const STEP = t(3.6);
   const frame = useCurrentFrame();
 
   return (
@@ -53,9 +56,9 @@ export const TravelExperience: React.FC = () => {
           <Cursor
             from={[1500, 980]}
             to={[760, 640]}
-            moveOver={[seconds(0.5), seconds(2.2)]}
-            clickAt={seconds(2.5)}
-            fadeIn={[seconds(0.3), seconds(0.7)]}
+            moveOver={[t(0.5), t(2.2)]}
+            clickAt={t(2.5)}
+            fadeIn={[t(0.3), t(0.7)]}
           />
         </Card>
       </Sequence>
@@ -88,15 +91,15 @@ export const TravelExperience: React.FC = () => {
           <Cursor
             from={[1400, 200]}
             to={[620, 700]}
-            moveOver={[seconds(0.6), seconds(2.3)]}
-            clickAt={seconds(2.6)}
-            fadeIn={[seconds(0.4), seconds(0.8)]}
+            moveOver={[t(0.6), t(2.3)]}
+            clickAt={t(2.6)}
+            fadeIn={[t(0.4), t(0.8)]}
           />
         </Card>
       </Sequence>
 
       {/* 4 — custom tour, the other way through */}
-      <Sequence from={STEP * 3} durationInFrames={seconds(15) - STEP * 3}>
+      <Sequence from={STEP * 3} durationInFrames={t(15) - STEP * 3}>
         <Card note="/custom-tour — pick your own guide, stay and vehicle">
           <BrowserFrame
             src="custom-tour-full"
@@ -104,15 +107,15 @@ export const TravelExperience: React.FC = () => {
             height={940}
             panFrom={0}
             panTo={0.55}
-            panOver={[0, seconds(4)]}
+            panOver={[0, t(4)]}
           />
         </Card>
       </Sequence>
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 44 }}>
         <SectionTitle
-          from={seconds(0.3)}
-          until={seconds(2.6)}
+          from={t(0.3)}
+          until={t(2.6)}
           size={42}
           style={{ background: "rgba(7,9,13,0.8)", padding: "18px 40px", borderRadius: 999 }}
         >
@@ -127,7 +130,7 @@ export const TravelExperience: React.FC = () => {
             style={{
               position: "absolute",
               inset: 0,
-              width: `${interpolate(frame, [0, seconds(15)], [0, 100], {
+              width: `${interpolate(frame, [0, t(15)], [0, 100], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               })}%`,

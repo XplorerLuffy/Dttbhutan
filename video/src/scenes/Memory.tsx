@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { SectionTitle } from "../components/SectionTitle";
 import { MEMORY_THREAD } from "../data/productionReplies";
@@ -18,9 +19,10 @@ import { MEMORY_THREAD } from "../data/productionReplies";
  * AiConversation and AiMessage rows, replayed into the next request.
  */
 export const Memory: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
-  const secondIn = interpolate(frame, [seconds(4.6), seconds(5.6)], [0, 1], {
+  const secondIn = interpolate(frame, [t(4.6), t(5.6)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -28,7 +30,7 @@ export const Memory: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: COLORS.ink }}>
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 48 }}>
-        <SectionTitle from={seconds(0.3)} size={42}>
+        <SectionTitle from={t(0.3)} size={42}>
           The assistant can also keep track of the conversation.
         </SectionTitle>
       </AbsoluteFill>
@@ -56,7 +58,7 @@ export const Memory: React.FC = () => {
       <AbsoluteFill style={{ alignItems: "flex-start", justifyContent: "center", paddingLeft: 72, paddingTop: 70 }}>
         <div style={{ width: 440 }}>
           {MEMORY_THREAD.map((turn, i) => {
-            const at = i === 0 ? seconds(1.6) : seconds(5.0);
+            const at = i === 0 ? t(1.6) : t(5.0);
             const on = interpolate(frame, [at, at + 14], [0, 1], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
@@ -82,7 +84,7 @@ export const Memory: React.FC = () => {
 
           <div
             style={{
-              opacity: interpolate(frame, [seconds(6.6), seconds(7.4)], [0, 1], {
+              opacity: interpolate(frame, [t(6.6), t(7.4)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),

@@ -5,10 +5,11 @@
   "description": "A Remotion case-study video about how DTT Bhutan was built.",
   "scripts": {
     "studio": "remotion studio",
-    "render": "remotion render DttBhutanBuildStory out/dtt-bhutan-build-story.mp4",
+    "render": "remotion render DttBhutanBuildStory out/dtt-bhutan-2min.mp4 --codec=h264 --crf=18",
     "still": "remotion still DttBhutanBuildStory",
     "typecheck": "tsc --noEmit",
-    "web": "ffmpeg -i out/dtt-bhutan-build-story.mp4 -c:v libx264 -crf 24 -preset slow -pix_fmt yuv420p -movflags +faststart out/dtt-bhutan-build-story-web.mp4 -y"
+    "web": "ffmpeg -i out/dtt-bhutan-2min.mp4 -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p -af loudnorm=I=-15:TP=-1.5:LRA=11 -c:a aac -b:a 160k -movflags +faststart out/dtt-bhutan-2min-web.mp4 -y",
+    "vo": "node build-vo-timing.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.530",

@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { Architecture } from "../components/Architecture";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { CodeWindow } from "../components/CodeWindow";
@@ -22,9 +23,10 @@ import { FACTS, KNOWLEDGE_SOURCES } from "../data/projectFacts";
  * where the agency can correct what the assistant says without a developer.
  */
 export const Knowledge: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
-  const sourcesIn = interpolate(frame, [seconds(4.4), seconds(5.6)], [0, 1], {
+  const sourcesIn = interpolate(frame, [t(4.4), t(5.6)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -32,18 +34,18 @@ export const Knowledge: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: COLORS.ink }}>
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 50 }}>
-        <SectionTitle from={seconds(0.3)} until={seconds(3.4)} size={42}>
+        <SectionTitle from={t(0.3)} until={t(3.4)} size={42}>
           I didn&rsquo;t want it to simply answer from general AI knowledge.
         </SectionTitle>
         <div style={{ position: "absolute", top: 50 }}>
-          <SectionTitle from={seconds(4.0)} until={seconds(13.2)} size={42}>
+          <SectionTitle from={t(4.0)} until={t(13.2)} size={42}>
             I built a knowledge layer around Bhutan travel information.
           </SectionTitle>
         </div>
       </AbsoluteFill>
 
       {/* Beat 1 — the pipeline and the code that performs it. */}
-      <Sequence durationInFrames={seconds(13.4)}>
+      <Sequence durationInFrames={t(13.4)}>
         <AbsoluteFill
           style={{
             display: "flex",
@@ -64,7 +66,7 @@ export const Knowledge: React.FC = () => {
               { label: "pgvector", detail: "KnowledgeChunk.embedding" },
               { label: "Relevant context", detail: "handed to the model" },
             ]}
-            revealOver={[seconds(1.0), seconds(4.2)]}
+            revealOver={[t(1.0), t(4.2)]}
           />
 
           <div style={{ opacity: sourcesIn }}>
@@ -81,7 +83,7 @@ export const Knowledge: React.FC = () => {
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, width: 640, marginBottom: 26 }}>
               {KNOWLEDGE_SOURCES.map((source, i) => {
-                const at = seconds(5.0) + i * 5;
+                const at = t(5.0) + i * 5;
                 const on = interpolate(frame, [at, at + 12], [0, 1], {
                   extrapolateLeft: "clamp",
                   extrapolateRight: "clamp",
@@ -115,14 +117,14 @@ export const Knowledge: React.FC = () => {
               startLine={SNIPPETS.ingestion.startLine}
               width={640}
               fontSize={14}
-              typeOver={[seconds(7.6), seconds(11.4)]}
+              typeOver={[t(7.6), t(11.4)]}
             />
           </div>
         </AbsoluteFill>
       </Sequence>
 
       {/* Beat 2 — the screen the agency keeps it current from. */}
-      <Sequence from={seconds(13.6)}>
+      <Sequence from={t(13.6)}>
         <AbsoluteFill style={{ background: COLORS.ink, alignItems: "center", justifyContent: "center" }}>
           <BrowserFrame
             src="admin-knowledge"
@@ -140,7 +142,7 @@ export const Knowledge: React.FC = () => {
               background: "rgba(7,9,13,0.85)",
               padding: "14px 28px",
               borderRadius: 999,
-              opacity: interpolate(frame - seconds(13.6), [seconds(0.5), seconds(1.2)], [0, 1], {
+              opacity: interpolate(frame - t(13.6), [t(0.5), t(1.2)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),

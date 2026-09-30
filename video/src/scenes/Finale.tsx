@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Img, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { BrowserFrame, PhoneFrame } from "../components/BrowserFrame";
 import { SectionTitle } from "../components/SectionTitle";
 import { PLAN_REPLY } from "../data/productionReplies";
@@ -18,16 +19,17 @@ import { PLAN_REPLY } from "../data/productionReplies";
  * same reason the chapters did.
  */
 export const Finale: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
-  const titleAt = seconds(20);
+  const titleAt = t(20);
 
   return (
     <AbsoluteFill style={{ background: COLORS.ink }}>
       {/* The assistant working inside the site. */}
       <Sequence durationInFrames={titleAt}>
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-          <Sequence durationInFrames={seconds(5.4)}>
+          <Sequence durationInFrames={t(5.4)}>
             <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
               <BrowserFrame src="widget-answer-home" width={1600} height={1000} />
               <p
@@ -44,14 +46,14 @@ export const Finale: React.FC = () => {
             </AbsoluteFill>
           </Sequence>
 
-          <Sequence from={seconds(5.4)} durationInFrames={seconds(5.2)}>
+          <Sequence from={t(5.4)} durationInFrames={t(5.2)}>
             <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
               <BrowserFrame src="widget-answer-sdf" width={1600} height={1000} />
             </AbsoluteFill>
           </Sequence>
 
           {/* It is the same product on a phone, not a separate app. */}
-          <Sequence from={seconds(10.6)} durationInFrames={seconds(5.0)}>
+          <Sequence from={t(10.6)} durationInFrames={t(5.0)}>
             <AbsoluteFill
               style={{
                 display: "flex",
@@ -76,13 +78,13 @@ export const Finale: React.FC = () => {
             </AbsoluteFill>
           </Sequence>
 
-          <Sequence from={seconds(15.6)}>
+          <Sequence from={t(15.6)}>
             <AbsoluteFill
               style={{
                 alignItems: "center",
                 justifyContent: "center",
                 // The slow pull-back the brief asks for.
-                transform: `scale(${interpolate(frame - seconds(15.6), [0, seconds(4.4)], [1.04, 0.86], {
+                transform: `scale(${interpolate(frame - t(15.6), [0, t(4.4)], [1.04, 0.86], {
                   extrapolateLeft: "clamp",
                   extrapolateRight: "clamp",
                 })})`,
@@ -95,15 +97,15 @@ export const Finale: React.FC = () => {
       </Sequence>
 
       {/* The three lines and the title. */}
-      <Sequence from={seconds(15.8)}>
+      <Sequence from={t(15.8)}>
         <AbsoluteFill
           style={{
             background: `linear-gradient(to bottom, rgba(7,9,13,${interpolate(
-              frame - seconds(15.8),
-              [0, seconds(4.0)],
+              frame - t(15.8),
+              [0, t(4.0)],
               [0, 0.96],
               { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-            )}) 0%, rgba(7,9,13,${interpolate(frame - seconds(15.8), [0, seconds(4.0)], [0.2, 1], {
+            )}) 0%, rgba(7,9,13,${interpolate(frame - t(15.8), [0, t(4.0)], [0.2, 1], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
             })}) 100%)`,
@@ -111,23 +113,23 @@ export const Finale: React.FC = () => {
             justifyContent: "center",
           }}
         >
-          <SectionTitle from={seconds(0.6)} until={seconds(2.4)} size={54}>
+          <SectionTitle from={t(0.6)} until={t(2.4)} size={54}>
             From an idea…
           </SectionTitle>
           <div style={{ position: "absolute" }}>
-            <SectionTitle from={seconds(2.8)} until={seconds(4.6)} size={54}>
+            <SectionTitle from={t(2.8)} until={t(4.6)} size={54}>
               …to a website…
             </SectionTitle>
           </div>
           <div style={{ position: "absolute" }}>
-            <SectionTitle from={seconds(5.0)} until={seconds(7.0)} size={54}>
+            <SectionTitle from={t(5.0)} until={t(7.0)} size={54}>
               …to an AI travel assistant built into it.
             </SectionTitle>
           </div>
         </AbsoluteFill>
       </Sequence>
 
-      <Sequence from={titleAt + seconds(3.4)}>
+      <Sequence from={titleAt + t(3.4)}>
         <AbsoluteFill
           style={{ background: COLORS.ink, alignItems: "center", justifyContent: "center", flexDirection: "column" }}
         >
@@ -136,17 +138,17 @@ export const Finale: React.FC = () => {
             style={{
               width: 108,
               marginBottom: 34,
-              opacity: interpolate(frame - titleAt - seconds(3.4), [0, seconds(0.9)], [0, 1], {
+              opacity: interpolate(frame - titleAt - t(3.4), [0, t(0.9)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),
             }}
           />
-          <SectionTitle from={seconds(0.5)} size={92} weight={700} style={{ letterSpacing: "0.04em" }}>
+          <SectionTitle from={t(0.5)} size={92} weight={700} style={{ letterSpacing: "0.04em" }}>
             DTT BHUTAN
           </SectionTitle>
           <div style={{ marginTop: 22 }}>
-            <SectionTitle from={seconds(1.4)} size={26} font="body" weight={400} color={COLORS.textDim}>
+            <SectionTitle from={t(1.4)} size={26} font="body" weight={400} color={COLORS.textDim}>
               Built for travelers discovering Bhutan.
             </SectionTitle>
           </div>
@@ -158,7 +160,7 @@ export const Finale: React.FC = () => {
               font: `500 18px/1 ${FONTS.mono}`,
               letterSpacing: "0.12em",
               color: COLORS.textFaint,
-              opacity: interpolate(frame - titleAt - seconds(3.4), [seconds(2.6), seconds(3.4)], [0, 1], {
+              opacity: interpolate(frame - titleAt - t(3.4), [t(2.6), t(3.4)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),

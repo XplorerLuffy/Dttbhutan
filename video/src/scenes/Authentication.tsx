@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { Architecture } from "../components/Architecture";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { CodeWindow } from "../components/CodeWindow";
@@ -27,11 +28,12 @@ const SHOTS = [
 const ROLES = ["TRAVELER", "GUIDE", "HOTEL_OPERATOR", "TRANSPORT_OPERATOR", "ADMIN"];
 
 export const Authentication: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
   return (
     <AbsoluteFill style={{ background: COLORS.ink }}>
-      <Sequence durationInFrames={seconds(5.0)}>
+      <Sequence durationInFrames={t(5.0)}>
         <AbsoluteFill
           style={{
             display: "flex",
@@ -43,7 +45,7 @@ export const Authentication: React.FC = () => {
           }}
         >
           {SHOTS.map((shot, i) => {
-            const at = seconds(0.3 + i * 0.5);
+            const at = t(0.3 + i * 0.5);
             const on = interpolate(frame, [at, at + 16], [0, 1], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
@@ -72,7 +74,7 @@ export const Authentication: React.FC = () => {
         </AbsoluteFill>
       </Sequence>
 
-      <Sequence from={seconds(5.0)}>
+      <Sequence from={t(5.0)}>
         <AbsoluteFill
           style={{
             background: COLORS.ink,
@@ -94,7 +96,7 @@ export const Authentication: React.FC = () => {
               { label: "requireRole()", detail: "src/lib/auth.ts" },
               { label: "Protected pages", detail: "dashboards, admin, vendor" },
             ]}
-            revealOver={[0, seconds(2.2)]}
+            revealOver={[0, t(2.2)]}
           />
 
           <div style={{ width: 900 }}>
@@ -104,7 +106,7 @@ export const Authentication: React.FC = () => {
               startLine={SNIPPETS.auth.startLine}
               width={900}
               fontSize={20}
-              typeOver={[seconds(0.8), seconds(2.6)]}
+              typeOver={[t(0.8), t(2.6)]}
             />
             <div
               style={{
@@ -112,7 +114,7 @@ export const Authentication: React.FC = () => {
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 9,
-                opacity: interpolate(frame - seconds(5.0), [seconds(2.4), seconds(3.0)], [0, 1], {
+                opacity: interpolate(frame - t(5.0), [t(2.4), t(3.0)], [0, 1], {
                   extrapolateLeft: "clamp",
                   extrapolateRight: "clamp",
                 }),
@@ -138,7 +140,7 @@ export const Authentication: React.FC = () => {
                 margin: "20px 0 0",
                 font: `400 18px/1.5 ${FONTS.body}`,
                 color: COLORS.textFaint,
-                opacity: interpolate(frame - seconds(5.0), [seconds(2.8), seconds(3.4)], [0, 1], {
+                opacity: interpolate(frame - t(5.0), [t(2.8), t(3.4)], [0, 1], {
                   extrapolateLeft: "clamp",
                   extrapolateRight: "clamp",
                 }),
@@ -152,8 +154,8 @@ export const Authentication: React.FC = () => {
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 34 }}>
         <SectionTitle
-          from={seconds(0.4)}
-          until={seconds(3.2)}
+          from={t(0.4)}
+          until={t(3.2)}
           size={38}
           style={{ background: "rgba(7,9,13,0.86)", padding: "16px 36px", borderRadius: 999 }}
         >

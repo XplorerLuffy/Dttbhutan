@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { CodeWindow } from "../components/CodeWindow";
 import { DataFlow } from "../components/DataFlow";
@@ -21,10 +22,11 @@ import { SDF_REPLY } from "../data/productionReplies";
  * it is repeating what the knowledge base says rather than inventing a figure.
  */
 export const RAG: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
-  const answerAt = seconds(8.2);
-  const toAnswer = interpolate(frame, [answerAt, answerAt + seconds(1.1)], [0, 1], {
+  const answerAt = t(8.2);
+  const toAnswer = interpolate(frame, [answerAt, answerAt + t(1.1)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -49,7 +51,7 @@ export const RAG: React.FC = () => {
               margin: "0 0 56px",
               font: `600 40px/1.3 ${FONTS.display}`,
               color: COLORS.text,
-              opacity: interpolate(frame, [seconds(0.3), seconds(1.1)], [0, 1], {
+              opacity: interpolate(frame, [t(0.3), t(1.1)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),
@@ -60,7 +62,7 @@ export const RAG: React.FC = () => {
 
           <DataFlow
             width={1600}
-            runOver={[seconds(1.4), seconds(6.4)]}
+            runOver={[t(1.4), t(6.4)]}
             steps={[
               { label: "Question", note: "POST /api/chat" },
               { label: "search_knowledge", note: "one of 8 tools" },
@@ -76,7 +78,7 @@ export const RAG: React.FC = () => {
               marginTop: 52,
               display: "flex",
               justifyContent: "center",
-              opacity: interpolate(frame, [seconds(4.6), seconds(5.4)], [0, 1], {
+              opacity: interpolate(frame, [t(4.6), t(5.4)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),
@@ -88,7 +90,7 @@ export const RAG: React.FC = () => {
               startLine={SNIPPETS.retrieval.startLine}
               width={1160}
               fontSize={16}
-              typeOver={[seconds(5.0), seconds(7.8)]}
+              typeOver={[t(5.0), t(7.8)]}
             />
           </div>
         </div>
@@ -109,7 +111,7 @@ export const RAG: React.FC = () => {
               margin: 0,
               font: `400 18px/1 ${FONTS.mono}`,
               color: COLORS.textFaint,
-              opacity: interpolate(frame - answerAt, [seconds(1.4), seconds(2.0)], [0, 1], {
+              opacity: interpolate(frame - answerAt, [t(1.4), t(2.0)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),

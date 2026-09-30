@@ -1,20 +1,22 @@
 # How I Built DTT Bhutan — a Remotion case study
 
-A 3m40s developer case study: the idea, the website, the travel platform, and
-then the AI Travel Assistant built and integrated into it afterwards.
+A 2-minute developer case study, narrated: the idea, the website, the travel
+platform, and then the AI Travel Assistant built and integrated into it
+afterwards.
 
-**The finished film is committed:** `out/dtt-bhutan-build-story-web.mp4`
-(19MB). To change it and render again:
+**The finished film is committed:** `out/dtt-bhutan-2min-web.mp4`. To change it
+and render again:
 
 ```bash
 cd video
 npm install
 npm run studio     # scrub the timeline
-npm run render     # out/dtt-bhutan-build-story.mp4, CRF 17, ~55MB
-npm run web        # re-encode that to the committed 19MB delivery file
+npm run render     # out/dtt-bhutan-2min.mp4
+npm run web        # re-encode that to the committed delivery file
+npm run vo         # re-measure the voiceover after regenerating it
 ```
 
-1920 × 1080, 30 fps, 6,600 frames, 3m40s.
+1920 × 1080, 30 fps, 3,600 frames, 2m00s, with narration and score.
 
 ---
 
@@ -63,6 +65,31 @@ lines out of the real files. Each snippet carries its path and starting line
 number, both shown on screen, so any frame can be looked up. Re-run it after
 changing a source file and the video follows.
 
+### Narration — `public/audio/voiceover.mp3`
+
+The developer's own voice, cloned in ElevenLabs ("Jambay",
+`wqwwebTLJIiG3CMLBnAq`, `eleven_multilingual_v2`), speaking a script written
+from the same facts as the rest of the film. `voiceover-raw.mp3` is what came
+back; `voiceover.mp3` is that normalised to about −18 LUFS.
+
+**The film is cut to the narration, not the other way round.** `build-vo-timing.mjs`
+finds where each of the fourteen lines is actually spoken — estimating from the
+text, then snapping each boundary to a pause ffmpeg can hear — and writes
+`src/data/voiceoverTiming.ts`. The chapter table reads it, and each chapter is
+as long as its sentence plus a beat either side.
+
+The take is one continuous recording, so it is placed as fourteen trimmed
+clips rather than one. Placed once, a single offset drifted by nearly seven
+seconds by the end, because the beats between lines accumulate.
+
+### Score — `public/audio/music.mp3`
+
+Generated with `eleven_music_v2_5` to a brief that asks it to stay out of the
+way of a voice: sparse, mid-to-low, nothing sustained where speech lives.
+Normalised to about −23 LUFS and ducked to roughly a third of its level
+whenever a line is speaking. The duck is computed from the same table the voice
+is placed from, so it cannot drift away from it.
+
 ### Numbers — `src/data/projectFacts.ts`
 
 Counted, not estimated; the file records the command used for each. A figure
@@ -102,6 +129,14 @@ opens `AIIntroduction`, because the pivot and the idea it leads to are one
 thought; "Final product" and the closing titles are both `Finale`.
 
 ---
+
+## Re-cutting it
+
+Scenes are choreographed at the timings the original 3m40s brief gave. The
+composition tells each one the ratio between the time it has in the cut and the
+time it was written for (`written` vs `duration` in the chapter table), and
+scenes read their timings through `useSceneSeconds` — so re-cutting the film is
+a change to one table, not to fourteen scenes.
 
 ## Rendering notes
 

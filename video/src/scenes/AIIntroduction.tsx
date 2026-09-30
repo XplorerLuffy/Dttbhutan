@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
 import { COLORS, FONTS, seconds } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { SectionTitle } from "../components/SectionTitle";
 
@@ -17,21 +18,23 @@ import { SectionTitle } from "../components/SectionTitle";
  * does not appear until the website has been shown finished without it.
  */
 const MONTAGE = ["home", "packages", "package-trek", "destination-paro", "travel-guide", "gallery"];
-const HOLD = seconds(1.05);
 
 export const AIIntroduction: React.FC = () => {
+  const t = useSceneSeconds();
+  /** How long each page of the montage is held. */
+  const HOLD = t(1.05);
   const frame = useCurrentFrame();
 
   // Everything before 10s belongs to the website; after it, to the idea.
-  const pivot = seconds(10);
-  const fadeOut = interpolate(frame, [pivot - seconds(0.9), pivot], [1, 0], {
+  const pivot = t(10);
+  const fadeOut = interpolate(frame, [pivot - t(0.9), pivot], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   // The assistant arrives under the last line, with three seconds left to look
   // at it before the next chapter opens on the same screen.
-  const assistantIn = interpolate(frame, [seconds(18.4), seconds(19.6)], [0, 1], {
+  const assistantIn = interpolate(frame, [t(18.4), t(19.6)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -49,7 +52,7 @@ export const AIIntroduction: React.FC = () => {
 
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 46 }}>
           <SectionTitle
-            from={seconds(6.6)}
+            from={t(6.6)}
             size={44}
             style={{ background: "rgba(7,9,13,0.82)", padding: "18px 44px", borderRadius: 999 }}
           >
@@ -61,12 +64,12 @@ export const AIIntroduction: React.FC = () => {
       {/* The dark beat, the two lines that turn the film, and then DRUKA. */}
       <Sequence from={pivot}>
         <AbsoluteFill style={{ background: COLORS.ink, alignItems: "center", justifyContent: "center" }}>
-          <SectionTitle from={seconds(0.9)} until={seconds(4.2)} size={58} maxWidth={1180}>
+          <SectionTitle from={t(0.9)} until={t(4.2)} size={58} maxWidth={1180}>
             I wanted visitors to have someone they could ask.
           </SectionTitle>
 
           <div style={{ position: "absolute" }}>
-            <SectionTitle from={seconds(5.0)} size={58} maxWidth={1180}>
+            <SectionTitle from={t(5.0)} size={58} maxWidth={1180}>
               So I built an <span style={{ color: COLORS.gold400 }}>AI Travel Assistant</span>.
             </SectionTitle>
           </div>
@@ -79,7 +82,7 @@ export const AIIntroduction: React.FC = () => {
               font: `500 19px/1 ${FONTS.mono}`,
               letterSpacing: "0.14em",
               color: COLORS.textFaint,
-              opacity: interpolate(frame - pivot, [seconds(6.4), seconds(7.2)], [0, 1], {
+              opacity: interpolate(frame - pivot, [t(6.4), t(7.2)], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }) * (1 - assistantIn),

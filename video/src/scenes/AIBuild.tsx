@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, seconds } from "../theme";
+import { COLORS, FONTS } from "../theme";
+import { useSceneSeconds } from "../timing";
 import { Architecture } from "../components/Architecture";
 import { BrowserFrame } from "../components/BrowserFrame";
 import { CodeWindow } from "../components/CodeWindow";
@@ -18,9 +19,10 @@ import { FACTS } from "../data/projectFacts";
  * an environment variable rather than a rewrite.
  */
 export const AIBuild: React.FC = () => {
+  const t = useSceneSeconds();
   const frame = useCurrentFrame();
 
-  const toCode = interpolate(frame, [seconds(4.0), seconds(5.4)], [0, 1], {
+  const toCode = interpolate(frame, [t(4.0), t(5.4)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -38,7 +40,7 @@ export const AIBuild: React.FC = () => {
         <BrowserFrame src="assistant-empty" width={1620} height={1012} url="dttbhutan.vercel.app/assistant" />
       </AbsoluteFill>
 
-      <Sequence from={seconds(4.4)}>
+      <Sequence from={t(4.4)}>
         <AbsoluteFill
           style={{
             display: "flex",
@@ -63,7 +65,7 @@ export const AIBuild: React.FC = () => {
                 branches: ["Ollama", "Anthropic", "Gemini"],
               },
             ]}
-            revealOver={[0, seconds(3.2)]}
+            revealOver={[0, t(3.2)]}
           />
 
           <div>
@@ -73,7 +75,7 @@ export const AIBuild: React.FC = () => {
               startLine={SNIPPETS.provider.startLine}
               width={900}
               fontSize={21}
-              typeOver={[seconds(1.0), seconds(2.2)]}
+              typeOver={[t(1.0), t(2.2)]}
             />
             <div style={{ height: 22 }} />
             <CodeWindow
@@ -82,7 +84,7 @@ export const AIBuild: React.FC = () => {
               startLine={SNIPPETS.assistant.startLine}
               width={900}
               fontSize={16}
-              typeOver={[seconds(2.4), seconds(6.0)]}
+              typeOver={[t(2.4), t(6.0)]}
             />
           </div>
         </AbsoluteFill>
@@ -90,8 +92,8 @@ export const AIBuild: React.FC = () => {
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 44 }}>
         <SectionTitle
-          from={seconds(0.4)}
-          until={seconds(3.4)}
+          from={t(0.4)}
+          until={t(3.4)}
           size={42}
           style={{ background: "rgba(7,9,13,0.8)", padding: "18px 40px", borderRadius: 999 }}
         >
