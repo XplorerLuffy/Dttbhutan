@@ -40,36 +40,46 @@ for Production, Preview and Development:
 | Variable | Value | Why |
 | --- | --- | --- |
 | `AI_PROVIDER` | `gemini` | Without it the default is unreachable Ollama |
-| `GEMINI_API_KEY` | an **`AIza…`** key from [AI Studio](https://aistudio.google.com/apikey) | Also used for embeddings — see the warning below |
+| `GEMINI_API_KEY` | a key from [AI Studio](https://aistudio.google.com/apikey) (`AIza…` or `AQ.…`) | Also used for embeddings |
 | `EMBEDDING_PROVIDER` | `gemini` | Same localhost problem as above |
 | `EMBEDDING_MODEL` | `gemini-embedding-001` | Must emit 768 dimensions |
 
 `GEMINI_MODEL` defaults to `gemini-3.6-flash` and needs setting only to
 change models.
 
-### The key must start `AIza`, not `AQ.`
+### If the assistant returns 401
 
-Google's Generative Language API accepts two kinds of credential on the same
-`?key=` parameter and tells them apart by shape:
+Google answers an unrecognised credential with
 
-| Starts with | What it is | Lifetime | Failure when wrong |
-| --- | --- | --- | --- |
-| `AIza` | API key from AI Studio | does not expire | `400 API key not valid` |
-| `AQ.` | OAuth 2 access token | **about an hour** | `401 UNAUTHENTICATED` |
+> 401 UNAUTHENTICATED — Request had invalid authentication credentials.
+> Expected OAuth 2 access token, login cookie or other valid authentication credential.
 
-An `AQ.…` token is easy to pick up by mistake, and it *works* — for an hour.
-Then every reply becomes "temporarily unavailable" with nothing in the logs
-but a 401, which reads like a revoked key rather than an expired token, so the
-obvious fix (issue another one) buys another hour and hides the real problem.
+**This message is misleading.** It is what a *deleted or regenerated API key*
+produces; it does not mean the endpoint wants OAuth. Verified against the live
+API: a revoked key and a bearer token give the identical 401, while a malformed
+key gives `400 API key not valid`.
 
-Both providers therefore reject an `AQ.…` value at construction with a message
-naming the remedy (`src/lib/ai/geminiKey.ts`), rather than letting it fail an
-hour later. Create the key at <https://aistudio.google.com/apikey>; it starts
-`AIza` and does not expire.
+Google issues API keys in two shapes and **both are valid, long-lived API keys**:
 
-Note that the 401 is deliberately **not** retried — only 429, 500 and 503 are
-(see `RETRYABLE_STATUS` in `src/lib/ai/providers/gemini.ts`). Retrying a bad
-credential just burns the request's time budget and still fails.
+| Prefix | Notes |
+| --- | --- |
+| `AIza…` | the long-standing format |
+| `AQ.…` | issued by [AI Studio](https://aistudio.google.com/apikey) since mid-2026; newly created keys generally look like this |
+
+The prefix says nothing about whether a key works, so no code inspects it. An
+earlier version of this provider rejected `AQ.` keys at construction on the
+mistaken reading that they were short-lived OAuth tokens — they are not, and
+that guard would have locked out any deployment issued one. `geminiKey.ts` now
+only translates the status code, and the test suite pins that both shapes
+construct.
+
+So on a 401, check the key still exists in AI Studio and was copied whole. On a
+403, the key is recognised but the Generative Language API may be disabled on
+its project, or an API/referrer restriction may exclude the call.
+
+Neither is retried — only 429, 500 and 503 are (`RETRYABLE_STATUS` in
+`src/lib/ai/providers/gemini.ts`). Retrying a bad credential burns the
+request's time budget and still fails.
 
 ### Free-tier quota is the live constraint
 

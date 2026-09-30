@@ -209,45 +209,40 @@ async function main() {
     );
   }
 
-  // An OAuth access token in GEMINI_API_KEY works for about an hour and then
-  // 401s. Caught at construction so the message names the remedy, rather than
-  // surfacing later as an auth error that looks like a revoked key.
-  {
-    process.env.GEMINI_API_KEY = "AQ.Ab8RNotARealTokenJustTheShape";
+  // Both key formats Google issues must construct. An earlier version of this
+  // provider rejected the newer "AQ." prefix at construction, on the mistaken
+  // reading that it was a short-lived OAuth token; it is an ordinary API key,
+  // and that guard would have locked out every deployment issued one. Pinned in
+  // both directions so it cannot come back.
+  for (const shape of ["AIzaSyNotARealKeyJustTheShape0123456789", "AQ.Ab8RNotARealKeyJustTheShape"]) {
+    process.env.GEMINI_API_KEY = shape;
     let caught: unknown;
     try {
       new GeminiEmbeddingProvider();
     } catch (err) {
       caught = err;
     }
-    const message = caught instanceof Error ? caught.message : "";
-    check(
-      "an OAuth access token is rejected at construction, not an hour later",
-      caught instanceof EmbeddingProviderUnavailableError
-    );
-    check(
-      "and the message says to create an API key instead",
-      message.includes("aistudio.google.com/apikey") && message.includes("AIza"),
-      message
-    );
-    check(
-      "and it does not echo the token back",
-      !message.includes("AQ.Ab8RNotARealTokenJustTheShape"),
-      message
-    );
+    check(`a key shaped "${shape.slice(0, 4)}…" is accepted at construction`, caught === undefined);
   }
 
-  // The long-lived kind must still be accepted — the guard is shape-based, so
-  // a regression here would lock out every real deployment.
+  // The 401 Google returns for a revoked key says "Expected OAuth 2 access
+  // token", which reads as "wrong auth scheme" and sends you to the wrong fix.
   {
-    process.env.GEMINI_API_KEY = "AIzaSyNotARealKeyJustTheShape0123456789";
-    let caught: unknown;
+    process.env.GEMINI_API_KEY = KEY;
+    globalThis.fetch = (async () =>
+      new Response(
+        JSON.stringify({ error: { code: 401, status: "UNAUTHENTICATED", message: "Expected OAuth 2 access token" } }),
+        { status: 401 }
+      )) as typeof fetch;
+    let message = "";
     try {
-      new GeminiEmbeddingProvider();
+      await new GeminiEmbeddingProvider().embed("x");
     } catch (err) {
-      caught = err;
+      message = err instanceof Error ? err.message : String(err);
     }
-    check("an AIza API key is accepted at construction", caught === undefined);
+    check("a 401 is explained as an unrecognised key, not a missing OAuth token", message.includes("does not recognise"), message);
+    check("and it names where to check the key", message.includes("aistudio.google.com/apikey"), message);
+    check("and it says both key formats are valid", message.includes("AQ."), message);
   }
 
   globalThis.fetch = realFetch;

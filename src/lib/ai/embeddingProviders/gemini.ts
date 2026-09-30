@@ -6,7 +6,7 @@ import {
   type EmbeddingProvider,
   type EmbeddingTask,
 } from "@/lib/ai/embeddingProvider";
-import { describeUnusableGeminiKey } from "@/lib/ai/geminiKey";
+import { explainGeminiStatus } from "@/lib/ai/geminiKey";
 
 /**
  * Embeddings from Google's Generative Language API — the hosted counterpart
@@ -38,10 +38,6 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
       throw new EmbeddingProviderUnavailableError(
         "GEMINI_API_KEY is not set, but EMBEDDING_PROVIDER is \"gemini\"."
       );
-    }
-    const unusable = describeUnusableGeminiKey(apiKey);
-    if (unusable) {
-      throw new EmbeddingProviderUnavailableError(unusable);
     }
     this.apiKey = apiKey;
     this.model = process.env.EMBEDDING_MODEL?.trim() || "gemini-embedding-001";
@@ -81,7 +77,8 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
       // The key is in the query string, so it would otherwise ride along in
       // any error text Google echoes back — and from there into logs.
       throw new EmbeddingProviderResponseError(
-        `Gemini embeddings responded ${res.status}: ${redactKey(detail, this.apiKey).slice(0, 500)}`
+        `Gemini embeddings responded ${res.status}: ${redactKey(detail, this.apiKey).slice(0, 500)}` +
+          (explainGeminiStatus(res.status) ?? "")
       );
     }
 
