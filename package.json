@@ -24,6 +24,7 @@
     "db:seed:photos": "tsx prisma/seed-photos.ts",
     "test:ai:embedding": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/geminiEmbedding.test.ts",
     "test:ai:ollama": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/ollamaAuth.test.ts",
+    "test:ai:knowledge": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/knowledgeAdmin.test.ts",
     "check:ai:semantic": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/semanticRetrieval.check.ts",
     "check:ai:live": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/liveAssistant.check.ts"
   },

@@ -352,3 +352,30 @@ export const vehicleAdminDetailsSchema = z.object({
   ratePerDay: z.coerce.number().positive(),
   ratePerKm: z.number().positive().nullish(),
 });
+
+/**
+ * Admin edits to DRUKA's knowledge base.
+ *
+ * `sourceType` is deliberately narrowed to the hand-authored kinds. ARTICLE,
+ * PACKAGE and DESTINATION documents are machine-written copies of rows the
+ * website already renders from (see src/lib/ai/siteKnowledge.ts) and are
+ * replaced wholesale on every sync — editing one by hand would look like it
+ * worked and then silently revert, so the dashboard doesn't offer it.
+ *
+ * `category` is `.nullish()` rather than optional for the same reason as
+ * destinationAdminSchema: clearing it has to send an explicit null, because
+ * the route hands the parsed object to an update that treats an absent key as
+ * "leave this column alone".
+ *
+ * The content ceiling matches MAX_DOCUMENT_CHARS in src/lib/ai/ingestion.ts, so
+ * an over-long paste is refused by the form with a field error rather than
+ * throwing DocumentTooLargeError halfway through the request.
+ */
+export const knowledgeAdminSchema = z.object({
+  title: z.string().min(3).max(200),
+  content: z.string().min(20).max(200_000),
+  sourceType: z.enum(["MANUAL", "FAQ", "POLICY", "UPLOAD"]),
+  category: z.string().max(80).nullish(),
+  visibility: z.enum(["PUBLIC", "INTERNAL"]),
+  status: z.enum(["DRAFT", "PUBLISHED"]),
+});

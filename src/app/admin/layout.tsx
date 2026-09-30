@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin/custom-tours", label: "Custom tour requests" },
   { href: "/admin/enquiries", label: "Enquiries" },
   { href: "/admin/travel-guide", label: "Travel guide" },
+  { href: "/admin/knowledge", label: "DRUKA knowledge" },
   { href: "/admin/exchange-rates", label: "Exchange rates" },
 ];
 

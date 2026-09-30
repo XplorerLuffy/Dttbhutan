@@ -125,20 +125,99 @@ export async function ingestDocument(args: IngestDocumentArgs): Promise<IngestRe
     },
   });
 
-  const pieces = chunkText(args.content);
+  const rebuilt = await rebuildChunks({
+    documentId: document.id,
+    agencyId: args.agencyId,
+    visibility: args.visibility,
+    content: args.content,
+  });
+
+  return { documentId: document.id, ...rebuilt };
+}
+
+export type ReingestDocumentArgs = {
+  documentId: string;
+  title: string;
+  content: string;
+  category?: string | null;
+  visibility: KnowledgeVisibility;
+  status: KnowledgeStatus;
+};
+
+/**
+ * Rewrites an existing document in place and rebuilds its chunks.
+ *
+ * Distinct from ingestDocument's replace-by-sourceRef, which deletes the old
+ * row and creates a new one: an admin editing knowledge through the dashboard
+ * is looking at /admin/knowledge/<id>/edit, and a new id would leave them on
+ * a dead URL after every save. Keeping the id also keeps the edit history
+ * readable — one row whose updatedAt moves, rather than a fresh row each time.
+ *
+ * Chunks are always rebuilt, never patched, and that includes a visibility-only
+ * change: KnowledgeChunk carries its own copy of `visibility` because retrieval
+ * filters on the chunk row (see the schema comment), so leaving stale chunks
+ * behind after a PUBLIC → INTERNAL edit would keep serving the old text to
+ * anonymous visitors.
+ */
+export async function reingestDocument(args: ReingestDocumentArgs): Promise<IngestResult> {
+  if (args.content.length > MAX_DOCUMENT_CHARS) {
+    throw new DocumentTooLargeError(
+      `Document "${args.title}" is ${args.content.length} characters; the limit is ${MAX_DOCUMENT_CHARS}.`
+    );
+  }
+
+  const document = await prisma.knowledgeDocument.update({
+    where: { id: args.documentId },
+    data: {
+      title: args.title,
+      content: args.content,
+      category: args.category ?? null,
+      visibility: args.visibility,
+      status: args.status,
+    },
+    select: { id: true, agencyId: true },
+  });
+
+  await prisma.knowledgeChunk.deleteMany({ where: { documentId: document.id } });
+
+  const rebuilt = await rebuildChunks({
+    documentId: document.id,
+    agencyId: document.agencyId,
+    visibility: args.visibility,
+    content: args.content,
+  });
+
+  return { documentId: document.id, ...rebuilt };
+}
+
+/**
+ * Chunks the text, stores each piece, and embeds it. Shared by first-time
+ * ingestion and re-ingestion so both produce identical chunk boundaries — a
+ * saved edit has to be searchable the same way a seeded document is.
+ *
+ * Embeddings are best-effort by design: a chunk with no vector is still found
+ * by retrieval's text-search fallback, so an unreachable provider degrades the
+ * answer rather than losing the content.
+ */
+async function rebuildChunks({
+  documentId,
+  agencyId,
+  visibility,
+  content,
+}: {
+  documentId: string;
+  agencyId: string;
+  visibility: KnowledgeVisibility;
+  content: string;
+}): Promise<Omit<IngestResult, "documentId">> {
+  const pieces = chunkText(content);
   let embeddedCount = 0;
   let embeddingSkippedReason: string | undefined;
 
   for (let index = 0; index < pieces.length; index++) {
-    const content = pieces[index];
+    const piece = pieces[index];
     const chunk = await prisma.knowledgeChunk.create({
-      data: {
-        documentId: document.id,
-        agencyId: args.agencyId,
-        visibility: args.visibility,
-        content,
-        chunkIndex: index,
-      },
+      data: { documentId, agencyId, visibility, content: piece, chunkIndex: index },
     });
 
     // Once the provider has failed, stop retrying it for every remaining
@@ -146,7 +225,7 @@ export async function ingestDocument(args: IngestDocumentArgs): Promise<IngestRe
     if (embeddingSkippedReason) continue;
 
     try {
-      const embedding = await getEmbeddingProvider().embed(content, "document");
+      const embedding = await getEmbeddingProvider().embed(piece, "document");
       await setChunkEmbedding(chunk.id, embedding);
       embeddedCount++;
     } catch (err) {
@@ -155,7 +234,7 @@ export async function ingestDocument(args: IngestDocumentArgs): Promise<IngestRe
     }
   }
 
-  return { documentId: document.id, chunkCount: pieces.length, embeddedCount, embeddingSkippedReason };
+  return { chunkCount: pieces.length, embeddedCount, embeddingSkippedReason };
 }
 
 /**

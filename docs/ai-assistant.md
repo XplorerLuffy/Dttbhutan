@@ -135,15 +135,17 @@ Google Cloud project behind the key before the site takes real traffic.**
 
 ## The knowledge base
 
-Eight documents, twelve chunks, all embedded. Two sources:
+57 documents, 140 chunks, all embedded. Three sources:
 
-- **Published `Article` rows** — indexed, not copied. The Article stays the
-  source of truth for the travel-guide pages; re-running ingestion refreshes
-  the searchable copy. Three today: visa & entry, the SDF, best time to
-  visit.
+- **Published `Article`, `Itinerary` and `Destination` rows** — indexed, not
+  copied. Those rows stay the source of truth the website renders from;
+  refreshing rebuilds the searchable copy. See `src/lib/ai/siteKnowledge.ts`,
+  which the admin screen and the CLI script share.
 - **`prisma/data/knowledgeSeed.ts`** — text with no database home yet:
   booking FAQ, the guide requirement, cancellation, payments, and one
   INTERNAL staff note.
+- **Hand-authored documents written in `/admin/knowledge`** — anything else
+  DRUKA should know, added without a developer. Same pipeline, no `sourceRef`.
 
 Visibility matters: the INTERNAL note is excluded from `/api/chat`, which
 hardcodes `["PUBLIC"]` because the endpoint is anonymous. Verified in
@@ -162,10 +164,42 @@ any previous document with the same one, so re-running leaves one current
 copy rather than accumulating duplicates. It also upserts the `Agency` row.
 Without `--allow-production` it refuses any non-local `DATABASE_URL`.
 
-Editing an Article in the admin does **not** update the knowledge base on
-its own — the searchable copy is only refreshed by running ingestion. That
-is a deliberate trade (no embedding API call inside an admin save) and a
-reasonable thing to automate later.
+Editing an Article, package or destination does **not** update the knowledge
+base on its own. The searchable copy is refreshed either by the script above
+or by **Refresh from website content** on `/admin/knowledge` — a deliberate
+trade, so an admin saving a package never waits on an embedding API call.
+
+### Editing knowledge from the admin dashboard
+
+`/admin/knowledge` lists every document and splits them by who owns the text.
+
+**Written by you** — `MANUAL`, `FAQ`, `POLICY`, `UPLOAD`. Fully editable:
+create, edit, delete. Saving re-chunks and re-embeds through
+`reingestDocument`, which keeps the document id (so the edit URL survives a
+save) and *replaces* the chunks rather than adding to them. That replacement
+is load-bearing, not tidiness: `KnowledgeChunk` carries its own copy of
+`visibility` because retrieval filters on the chunk row, so leaving stale
+chunks behind after a PUBLIC → INTERNAL edit would keep serving staff-only
+text to the anonymous chat widget. `npm run test:ai:knowledge` pins that.
+
+**Read from your website** — `ARTICLE`, `PACKAGE`, `DESTINATION`. Listed but
+not editable, and the API refuses a PATCH or DELETE with 409: these are
+regenerated on every refresh, so a hand edit would appear to save and then
+silently revert. Each row links to the admin screen where the real record
+lives.
+
+The refresh button sends one request per kind — packages, then destinations,
+then articles — because a full re-index is more embedding calls than a
+serverless function's 60 seconds allows. `syncSiteKnowledge(agencyId, scope)`
+takes the scope; `"all"` remains for the CLI, which has no such limit.
+
+Two things the screen surfaces that nothing else did:
+
+- how many passages a save actually embedded, and the provider error when it
+  embedded none — a document stored without vectors is findable by keyword
+  only, and that is otherwise invisible
+- a running count of unembedded chunks across the whole base, so a
+  half-indexed knowledge base is visible at a glance
 
 ### Why both sides must use the same embedding model
 
@@ -177,8 +211,16 @@ needs a migration.
 
 ## Checking it actually works
 
-Two opt-in checks, deliberately outside `npm run test:ai` because they cost
-API calls and their output needs a person to read it:
+`npm run test:ai:knowledge` round-trips an admin edit against a real database
+(create → retrieve → edit → change visibility → draft → delete, restoring what
+it found). It sits outside `npm run test:ai` because every other test in that
+suite is pure and runs anywhere, while this one needs Postgres with pgvector
+and the seeded agency. It stubs only the embedding HTTP call, with hashed
+bag-of-words vectors, so shared vocabulary still means a small cosine distance
+and the distance threshold stays meaningful.
+
+Two further opt-in checks, deliberately outside `npm run test:ai` because they
+cost API calls and their output needs a person to read it:
 
 ```bash
 # Do real embeddings put a question near its answer?

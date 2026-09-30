@@ -21,6 +21,17 @@ import { ingestDocument, type IngestResult } from "@/lib/ai/ingestion";
  * is still writing must not start coming out of the assistant's mouth.
  */
 
+/**
+ * Which slice of the site to refresh.
+ *
+ * A full refresh re-embeds every package, destination and article, which is
+ * well over a minute of embedding calls — longer than a serverless function is
+ * allowed to run. So the admin screen refreshes one kind at a time and each
+ * request stays inside its budget; "all" remains for the CLI ingest script,
+ * which has no such limit.
+ */
+export type SyncScope = "all" | "packages" | "destinations" | "articles";
+
 export type SyncSummary = {
   packages: number;
   destinations: number;
@@ -127,7 +138,12 @@ function destinationToText(d: {
   ]);
 }
 
-export async function syncSiteKnowledge(agencyId: string): Promise<SyncSummary> {
+export async function syncSiteKnowledge(
+  agencyId: string,
+  scope: SyncScope = "all"
+): Promise<SyncSummary> {
+  const wants = (kind: Exclude<SyncScope, "all">) => scope === "all" || scope === kind;
+
   const summary: SyncSummary = {
     packages: 0,
     destinations: 0,
@@ -146,7 +162,7 @@ export async function syncSiteKnowledge(agencyId: string): Promise<SyncSummary> 
     }
   };
 
-  const packages = await prisma.itinerary.findMany({
+  const packages = !wants("packages") ? [] : await prisma.itinerary.findMany({
     where: { status: "PUBLISHED" },
     select: {
       slug: true,
@@ -193,7 +209,7 @@ export async function syncSiteKnowledge(agencyId: string): Promise<SyncSummary> 
 
   // Destinations with nothing written about them would index as a bare name
   // and a region — noise that can only dilute retrieval, never improve it.
-  const destinations = await prisma.destination.findMany({
+  const destinations = !wants("destinations") ? [] : await prisma.destination.findMany({
     select: { slug: true, name: true, region: true, description: true, highlights: true },
   });
 
@@ -214,7 +230,7 @@ export async function syncSiteKnowledge(agencyId: string): Promise<SyncSummary> 
     summary.destinations += 1;
   }
 
-  const articles = await prisma.article.findMany({
+  const articles = !wants("articles") ? [] : await prisma.article.findMany({
     where: { status: "PUBLISHED" },
     select: { slug: true, title: true, category: true, excerpt: true, content: true },
   });
