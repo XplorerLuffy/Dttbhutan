@@ -1,4 +1,5 @@
 import { searchFlights } from "@/lib/flights/aggregator";
+import { getSiteContent } from "@/lib/content";
 import { flightSearchSchema } from "@/lib/validation";
 import FlightBookingButton from "@/components/booking/FlightBookingButton";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -50,14 +51,14 @@ export default async function FlightsSearchPage({
 
   const offers = parsed.success ? await searchFlights(parsed.data) : [];
 
+  const content = await getSiteContent();
+
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-bold">Flights</h1>
-      <p className="mb-6 text-sm text-stone-600">
-        Bhutan-specific routes (Drukair, Bhutan Airlines) are shown first out
-        of/into Paro. This search runs against a demo flight aggregator — see
-        the README for what a production integration needs.
-      </p>
+      <h1 className="mb-1 text-2xl font-bold">{content("flights.heading")}</h1>
+      {content("flights.intro") && (
+        <p className="mb-6 text-sm text-stone-600">{content("flights.intro")}</p>
+      )}
 
       <form className="card mb-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-6" method="get">
         <input

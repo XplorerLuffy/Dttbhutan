@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ContactForm from "./ContactForm";
 import CompanyFact from "@/components/company/CompanyFact";
-import { getCompany, formatAddress } from "@/lib/content";
+import { getSiteContent, companyFrom, formatAddress } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Contact us",
@@ -15,7 +15,8 @@ export default async function ContactPage({
 }: {
   searchParams: Promise<{ subject?: string; departure?: string; message?: string }>;
 }) {
-  const company = await getCompany();
+  const content = await getSiteContent();
+  const company = companyFrom(content);
   const address = formatAddress(company);
   const { subject, departure, message } = await searchParams;
   const contactDetails = [
@@ -24,13 +25,24 @@ export default async function ContactPage({
     { label: "Email", value: company.email },
   ].filter((d) => d.value.trim() || process.env.NODE_ENV !== "production");
 
+  // Each link's destination is fixed — these are real pages, not editable
+  // URLs — but its wording is not. Clearing the label removes the whole entry,
+  // which is how an admin hides "List your business" once they stop recruiting
+  // vendors, rather than being stuck with a link they don't want.
+  const elsewhere = [
+    { href: "/faq", label: content("contact.elsewhere.faqLabel"), body: content("contact.elsewhere.faqBody") },
+    { href: "/custom-tour", label: content("contact.elsewhere.customLabel"), body: content("contact.elsewhere.customBody") },
+    { href: "/register", label: content("contact.elsewhere.registerLabel"), body: content("contact.elsewhere.registerBody") },
+  ].filter((item) => item.label.trim());
+
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="mb-1 font-display text-3xl font-bold text-stone-900">Contact us</h1>
-      <p className="mb-8 text-stone-600">
-        Ask us anything about visiting Bhutan — you don&apos;t need an account. We usually
-        reply within one working day.
-      </p>
+      <h1 className="mb-1 font-display text-3xl font-bold text-stone-900">
+        {content("contact.heading")}
+      </h1>
+      {content("contact.intro") && (
+        <p className="mb-8 text-stone-600">{content("contact.intro")}</p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <ContactForm defaultSubject={subject} defaultMessage={message} departureId={departure} />
@@ -38,7 +50,7 @@ export default async function ContactPage({
         <aside className="space-y-4">
           <div className="card">
             <h2 className="mb-3 font-display text-lg font-semibold text-stone-900">
-              Get in touch directly
+              {content("contact.direct.heading")}
             </h2>
             <dl className="space-y-2 text-sm">
               {contactDetails.map(({ label, value }) => (
@@ -62,35 +74,23 @@ export default async function ContactPage({
             </dl>
           </div>
 
-          <div className="card">
-            <h2 className="mb-2 font-display text-lg font-semibold text-stone-900">
-              Looking for something else?
-            </h2>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/faq" className="text-brand-700 hover:underline">
-                  Frequently asked questions
-                </Link>
-                <p className="text-stone-600">Visas, fees, seasons and how booking works.</p>
-              </li>
-              <li>
-                <Link href="/custom-tour" className="text-brand-700 hover:underline">
-                  Build a custom tour
-                </Link>
-                <p className="text-stone-600">
-                  Pick your guide, rooms and vehicle and see the price as you go.
-                </p>
-              </li>
-              <li>
-                <Link href="/register" className="text-brand-700 hover:underline">
-                  List your business
-                </Link>
-                <p className="text-stone-600">
-                  Guides, hotels and transport operators can apply to join.
-                </p>
-              </li>
-            </ul>
-          </div>
+          {elsewhere.length > 0 && (
+            <div className="card">
+              <h2 className="mb-2 font-display text-lg font-semibold text-stone-900">
+                {content("contact.elsewhere.heading")}
+              </h2>
+              <ul className="space-y-2 text-sm">
+                {elsewhere.map((item) => (
+                  <li key={item.href}>
+                    <Link href={item.href} className="text-brand-700 hover:underline">
+                      {item.label}
+                    </Link>
+                    {item.body && <p className="text-stone-600">{item.body}</p>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </aside>
       </div>
     </div>

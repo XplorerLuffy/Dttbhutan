@@ -101,3 +101,19 @@ export function formatAddress(company: CompanyDetails): string {
     .filter(Boolean)
     .join(", ");
 }
+
+/**
+ * Splits an editable block into paragraphs on blank lines.
+ *
+ * Any field an admin can write several paragraphs into needs this: a single
+ * `whitespace-pre-line` block would run them together with no spacing, and
+ * rendering the raw string as HTML would hand whoever can edit content a way
+ * to inject markup into every visitor's page. Returning strings keeps the
+ * caller mapping them to real elements.
+ */
+export function paragraphs(text: string): string[] {
+  return text
+    .split(/\n\s*\n/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}

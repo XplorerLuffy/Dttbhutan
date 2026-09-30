@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content";
 import ScrollReveal from "@/components/ScrollReveal";
 import ListingRow from "@/components/listing/ListingRow";
 import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
@@ -67,18 +68,25 @@ export default async function PackagesPage({
     }),
     prisma.destination.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } }),
   ]);
+  const content = await getSiteContent();
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-bold">Package Tours</h1>
-      <p className="mb-6 text-sm text-stone-600">
-        Ready-made itineraries combining a guide, transport, and accommodation into one trip.
-        Want something different?{" "}
-        <a href="/custom-tour" className="text-brand-700 hover:underline">
-          Request a custom tour
-        </a>{" "}
-        instead.
-      </p>
+      <h1 className="mb-1 text-2xl font-bold">{content("packages.heading")}</h1>
+      {(content("packages.intro") || content("packages.customLink")) && (
+        <p className="mb-6 text-sm text-stone-600">
+          {content("packages.intro")}
+          {content("packages.customLink") && (
+            <>
+              {content("packages.customPrompt") && ` ${content("packages.customPrompt")}`}{" "}
+              <a href="/custom-tour" className="text-brand-700 hover:underline">
+                {content("packages.customLink")}
+              </a>
+              {content("packages.customSuffix") && ` ${content("packages.customSuffix")}`}
+            </>
+          )}
+        </p>
+      )}
 
       <form method="get" className="flex flex-col gap-6 lg:flex-row">
         <FilterSidebar>

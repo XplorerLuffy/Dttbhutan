@@ -1,6 +1,7 @@
 import ArticleCard from "@/components/ArticleCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content";
 
 import type { Metadata } from "next";
 
@@ -19,12 +20,14 @@ export default async function TravelGuidePage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const content = await getSiteContent();
+
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-bold">Travel Guide</h1>
-      <p className="mb-8 text-sm text-stone-600">
-        Practical answers to the questions travelers ask us most — visas, fees, timing, and what to expect on the ground in Bhutan.
-      </p>
+      <h1 className="mb-1 text-2xl font-bold">{content("travelGuide.heading")}</h1>
+      {content("travelGuide.intro") && (
+        <p className="mb-8 text-sm text-stone-600">{content("travelGuide.intro")}</p>
+      )}
 
       {articles.length === 0 ? (
         <p className="text-stone-600">No articles published yet.</p>

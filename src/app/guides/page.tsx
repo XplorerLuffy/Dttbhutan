@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content";
 import ScrollReveal from "@/components/ScrollReveal";
 import ListingRow from "@/components/listing/ListingRow";
 import { FilterSidebar, FilterGroup } from "@/components/listing/FilterSidebar";
@@ -56,9 +57,16 @@ export default async function GuidesSearchPage({
   });
   const ratingById = new Map(ratings.map((r) => [r.targetId, r]));
 
+  const content = await getSiteContent();
+
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Tour Guides</h1>
+      <h1 className={content("guides.intro") ? "mb-1 text-2xl font-bold" : "mb-4 text-2xl font-bold"}>
+        {content("guides.heading")}
+      </h1>
+      {content("guides.intro") && (
+        <p className="mb-4 text-sm text-stone-600">{content("guides.intro")}</p>
+      )}
 
       <form method="get" className="flex flex-col gap-6 lg:flex-row">
         <FilterSidebar>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LogoMark from "@/components/Logo";
 import CompanyFact from "@/components/company/CompanyFact";
-import { getCompany, formatAddress } from "@/lib/content";
+import { getSiteContent, companyFrom, formatAddress, paragraphs } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "About us",
@@ -10,83 +10,73 @@ export const metadata: Metadata = {
     "Droelma Tours & Travels is a Bhutan-based tour operator arranging licensed guides, hotels, transport and custom itineraries across all 20 dzongkhags.",
 };
 
-const WHAT_WE_DO = [
-  {
-    title: "Licensed guides",
-    body: "Every guide on the platform holds a Tourism Council of Bhutan licence, which we verify before their profile goes live.",
-  },
-  {
-    title: "Hotels & homestays",
-    body: "Accommodation across all 20 dzongkhags, from town hotels to village homestays, with real room availability rather than enquiry-only listings.",
-  },
-  {
-    title: "Transport with GPS",
-    body: "Vehicles come with licensed drivers, and trips are GPS-tracked so mileage on your invoice matches the distance actually driven.",
-  },
-  {
-    title: "Custom itineraries",
-    body: "Pick your own guide, accommodation and vehicle and see the price per person update as you go — or tell us what you want and we'll build it.",
-  },
-];
+/** The four cards under "What we do". Numbered rather than named so the
+ * registry can hold them as flat keys the admin form renders without any
+ * per-card work here. */
+const CARD_NUMBERS = [1, 2, 3, 4] as const;
 
 export default async function AboutPage() {
-  const company = await getCompany();
+  const content = await getSiteContent();
+  const company = companyFrom(content);
   const address = formatAddress(company);
+
+  // A card with neither a title nor a body is one the admin emptied, so it
+  // disappears rather than leaving a blank box in the grid.
+  const cards = CARD_NUMBERS.map((n) => ({
+    title: content(`about.whatWeDo.${n}.title`),
+    body: content(`about.whatWeDo.${n}.body`),
+  })).filter((card) => card.title.trim() || card.body.trim());
+
+  const travelling = paragraphs(content("about.travelling.body"));
 
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-10 flex flex-col items-center text-center">
         <LogoMark className="mb-4 h-16 w-auto" />
         <h1 className="font-display text-3xl font-bold text-stone-900">About {company.name}</h1>
-        <p className="mt-3 text-stone-600">
-          A Bhutan-based tour operator arranging guides, accommodation, transport and
-          complete itineraries for travellers visiting the kingdom.
-        </p>
+        {content("about.intro") && <p className="mt-3 text-stone-600">{content("about.intro")}</p>}
       </div>
 
-      <section className="mb-10">
-        <h2 className="mb-3 font-display text-xl font-semibold text-stone-900">What we do</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {WHAT_WE_DO.map((item) => (
-            <div key={item.title} className="card">
-              <p className="font-medium text-stone-900">{item.title}</p>
-              <p className="mt-1 text-sm text-stone-600">{item.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {cards.length > 0 && (
+        <section className="mb-10">
+          <h2 className="mb-3 font-display text-xl font-semibold text-stone-900">
+            {content("about.whatWeDo.heading")}
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {cards.map((item) => (
+              <div key={item.title} className="card">
+                <p className="font-medium text-stone-900">{item.title}</p>
+                <p className="mt-1 text-sm text-stone-600">{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(travelling.length > 0 || content("about.travelling.linkText")) && (
+        <section className="mb-10">
+          <h2 className="mb-3 font-display text-xl font-semibold text-stone-900">
+            {content("about.travelling.heading")}
+          </h2>
+          <div className="card space-y-3 text-sm text-stone-700">
+            {travelling.map((para, i) => (
+              <p key={i}>{para}</p>
+            ))}
+            {content("about.travelling.linkText") && (
+              <Link
+                href="/travel-guide"
+                className="inline-block font-medium text-brand-700 hover:underline"
+              >
+                {content("about.travelling.linkText")}
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="mb-10">
         <h2 className="mb-3 font-display text-xl font-semibold text-stone-900">
-          Travelling in Bhutan
-        </h2>
-        <div className="card space-y-3 text-sm text-stone-700">
-          <p>
-            Bhutan manages tourism differently from most destinations. Most international
-            visitors need a visa arranged in advance through a licensed local operator, pay a
-            daily Sustainable Development Fee that funds free healthcare, education and
-            conservation, and travel with a licensed guide.
-          </p>
-          <p>
-            That means you can&apos;t simply book a flight and arrive — the arrangements have to
-            go through an operator like us. We handle the visa application, the SDF, and the
-            ground arrangements, and itemise each of them separately so you can see exactly
-            what you&apos;re paying for.
-          </p>
-          <p>
-            Fees and entry rules are set by the government and change from time to time. We
-            confirm the current figures for your nationality and travel dates as part of your
-            quote rather than quoting a number here that may go out of date.
-          </p>
-          <Link href="/travel-guide" className="inline-block font-medium text-brand-700 hover:underline">
-            Read our travel guide →
-          </Link>
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="mb-3 font-display text-xl font-semibold text-stone-900">
-          Company details
+          {content("about.companyDetails.heading")}
         </h2>
         <div className="card">
           <dl className="space-y-2 text-sm">
@@ -120,16 +110,20 @@ export default async function AboutPage() {
       </section>
 
       <div className="card flex flex-col items-center gap-3 text-center">
-        <p className="text-sm text-stone-600">
-          Planning a trip, or want to ask something first?
-        </p>
+        {content("about.cta.text") && (
+          <p className="text-sm text-stone-600">{content("about.cta.text")}</p>
+        )}
         <div className="flex flex-wrap justify-center gap-2">
-          <Link href="/contact" className="btn-primary">
-            Contact us
-          </Link>
-          <Link href="/custom-tour" className="btn-secondary">
-            Build a custom tour
-          </Link>
+          {content("about.cta.contactLabel") && (
+            <Link href="/contact" className="btn-primary">
+              {content("about.cta.contactLabel")}
+            </Link>
+          )}
+          {content("about.cta.customLabel") && (
+            <Link href="/custom-tour" className="btn-secondary">
+              {content("about.cta.customLabel")}
+            </Link>
+          )}
         </div>
       </div>
     </div>

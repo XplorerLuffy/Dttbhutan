@@ -2,6 +2,7 @@ import Image from "next/image";
 import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content";
 
 import type { Metadata } from "next";
 
@@ -20,13 +21,14 @@ export default async function DestinationsPage() {
     include: { _count: { select: { hotels: true, guides: true } } },
   });
 
+  const content = await getSiteContent();
+
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-bold">Destinations</h1>
-      <p className="mb-8 text-sm text-stone-600">
-        All 20 dzongkhags (districts) of Bhutan — from the well-trodden west
-        to the far east, visited by only a handful of travelers each year.
-      </p>
+      <h1 className="mb-1 text-2xl font-bold">{content("destinations.heading")}</h1>
+      {content("destinations.intro") && (
+        <p className="mb-8 text-sm text-stone-600">{content("destinations.intro")}</p>
+      )}
 
       <ScrollReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {destinations.map((d) => (

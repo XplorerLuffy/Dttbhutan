@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content";
 import CustomTourRequestForm from "./CustomTourRequestForm";
 
 import type { Metadata } from "next";
@@ -38,16 +39,14 @@ export default async function CustomTourPage({
     }),
   ]);
 
+  const content = await getSiteContent();
+
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="mb-1 text-2xl font-bold">Build a Custom Tour</h1>
-      <p className="mb-8 text-sm text-stone-600">
-        Want something more tailored than our package tours? Pick your
-        destinations, dates, and — if you already know what you want — your
-        guide, hotel or homestay, and vehicle. We&apos;ll show you the price
-        per person right away; our team still reviews every request before
-        it&apos;s confirmed.
-      </p>
+      <h1 className="mb-1 text-2xl font-bold">{content("customTour.heading")}</h1>
+      {content("customTour.intro") && (
+        <p className="mb-8 text-sm text-stone-600">{content("customTour.intro")}</p>
+      )}
 
       <CustomTourRequestForm
         destinations={destinations}

@@ -190,6 +190,91 @@ export const CONTENT_GROUPS: ContentGroup[] = [
   },
 
   {
+    id: "browse",
+    label: "Browse pages",
+    description:
+      "The heading and opening line on each page that lists something. The listings themselves come from your packages, destinations and vendor records — this is only the page's own wording. Leave an intro blank and the page shows just the heading.",
+    fields: [
+      { key: "packages.heading", label: "Package tours — heading", type: "text", default: "Package Tours" },
+      { key: "packages.intro", label: "Package tours — intro", type: "textarea", default: "Ready-made itineraries combining a guide, transport, and accommodation into one trip." },
+      { key: "packages.customPrompt", label: "Package tours — custom-trip prompt", type: "text", default: "Want something different?", help: "Followed by the link below. Clear this and the link to drop the whole sentence." },
+      { key: "packages.customLink", label: "Package tours — custom-trip link text", type: "text", default: "Request a custom tour" },
+      { key: "packages.customSuffix", label: "Package tours — after the link", type: "text", default: "instead." },
+
+      { key: "destinations.heading", label: "Destinations — heading", type: "text", default: "Destinations" },
+      { key: "destinations.intro", label: "Destinations — intro", type: "textarea", default: "All 20 dzongkhags (districts) of Bhutan — from the well-trodden west to the far east, visited by only a handful of travelers each year." },
+
+      { key: "guides.heading", label: "Tour guides — heading", type: "text", default: "Tour Guides" },
+      { key: "guides.intro", label: "Tour guides — intro", type: "textarea", default: "", help: "Empty by design — the page currently shows only a heading. Write something here and it appears beneath it." },
+
+      { key: "hotels.heading", label: "Hotels & stays — heading", type: "text", default: "Hotels & Stays" },
+      { key: "hotels.intro", label: "Hotels & stays — intro", type: "textarea", default: "" },
+
+      { key: "vehicles.heading", label: "Transport — heading", type: "text", default: "Transport" },
+      { key: "vehicles.intro", label: "Transport — intro", type: "textarea", default: "" },
+
+      { key: "flights.heading", label: "Flights — heading", type: "text", default: "Flights" },
+      { key: "flights.intro", label: "Flights — intro", type: "textarea", default: "Bhutan-specific routes (Drukair, Bhutan Airlines) are shown first out of/into Paro. This search runs against a demo flight aggregator — see the README for what a production integration needs.", help: "The second sentence is true today: flight results are not live. Rewrite it when a real airline integration replaces the demo one, and not before." },
+
+      { key: "travelGuide.heading", label: "Travel guide — heading", type: "text", default: "Travel Guide" },
+      { key: "travelGuide.intro", label: "Travel guide — intro", type: "textarea", default: "Practical answers to the questions travelers ask us most — visas, fees, timing, and what to expect on the ground in Bhutan." },
+
+      { key: "customTour.heading", label: "Custom tour — heading", type: "text", default: "Build a Custom Tour" },
+      { key: "customTour.intro", label: "Custom tour — intro", type: "textarea", default: "Want something more tailored than our package tours? Pick your destinations, dates, and — if you already know what you want — your guide, hotel or homestay, and vehicle. We'll show you the price per person right away; our team still reviews every request before it's confirmed." },
+    ],
+  },
+
+  {
+    id: "about",
+    label: "About page",
+    description:
+      "Everything written on /about. The company facts lower down that page (licence number, registration, address) come from Company details instead, so they can't say two different things in two places.",
+    fields: [
+      { key: "about.intro", label: "Opening line, under the logo", type: "textarea", default: "A Bhutan-based tour operator arranging guides, accommodation, transport and complete itineraries for travellers visiting the kingdom.", help: "The heading above it is \"About\" followed by your trading name, so it always matches Company details." },
+
+      { key: "about.whatWeDo.heading", label: "\"What we do\" — heading", type: "text", default: "What we do" },
+      { key: "about.whatWeDo.1.title", label: "Card 1 — title", type: "text", default: "Licensed guides" },
+      { key: "about.whatWeDo.1.body", label: "Card 1 — text", type: "textarea", default: "Every guide on the platform holds a Tourism Council of Bhutan licence, which we verify before their profile goes live." },
+      { key: "about.whatWeDo.2.title", label: "Card 2 — title", type: "text", default: "Hotels & homestays" },
+      { key: "about.whatWeDo.2.body", label: "Card 2 — text", type: "textarea", default: "Accommodation across all 20 dzongkhags, from town hotels to village homestays, with real room availability rather than enquiry-only listings." },
+      { key: "about.whatWeDo.3.title", label: "Card 3 — title", type: "text", default: "Transport with GPS" },
+      { key: "about.whatWeDo.3.body", label: "Card 3 — text", type: "textarea", default: "Vehicles come with licensed drivers, and trips are GPS-tracked so mileage on your invoice matches the distance actually driven." },
+      { key: "about.whatWeDo.4.title", label: "Card 4 — title", type: "text", default: "Custom itineraries" },
+      { key: "about.whatWeDo.4.body", label: "Card 4 — text", type: "textarea", default: "Pick your own guide, accommodation and vehicle and see the price per person update as you go — or tell us what you want and we'll build it." },
+
+      { key: "about.travelling.heading", label: "\"Travelling in Bhutan\" — heading", type: "text", default: "Travelling in Bhutan" },
+      { key: "about.travelling.body", label: "\"Travelling in Bhutan\" — text", type: "textarea", default: "Bhutan manages tourism differently from most destinations. Most international visitors need a visa arranged in advance through a licensed local operator, pay a daily Sustainable Development Fee that funds free healthcare, education and conservation, and travel with a licensed guide.\n\nThat means you can't simply book a flight and arrive — the arrangements have to go through an operator like us. We handle the visa application, the SDF, and the ground arrangements, and itemise each of them separately so you can see exactly what you're paying for.\n\nFees and entry rules are set by the government and change from time to time. We confirm the current figures for your nationality and travel dates as part of your quote rather than quoting a number here that may go out of date.", help: "Leave a blank line between paragraphs. Deliberately quotes no SDF figure — the last paragraph explains why, so read it before adding one." },
+      { key: "about.travelling.linkText", label: "\"Travelling in Bhutan\" — link text", type: "text", default: "Read our travel guide →", help: "Links to /travel-guide. Clear it to hide the link." },
+
+      { key: "about.companyDetails.heading", label: "\"Company details\" — heading", type: "text", default: "Company details" },
+      { key: "about.cta.text", label: "Closing prompt above the buttons", type: "text", default: "Planning a trip, or want to ask something first?" },
+      { key: "about.cta.contactLabel", label: "Closing — first button", type: "text", default: "Contact us" },
+      { key: "about.cta.customLabel", label: "Closing — second button", type: "text", default: "Build a custom tour" },
+    ],
+  },
+
+  {
+    id: "contact",
+    label: "Contact page",
+    description:
+      "The wording on /contact. The phone number, email, address and office hours in the sidebar come from Company details — change them there.",
+    fields: [
+      { key: "contact.heading", label: "Heading", type: "text", default: "Contact us" },
+      { key: "contact.intro", label: "Intro", type: "textarea", default: "Ask us anything about visiting Bhutan — you don't need an account. We usually reply within one working day.", help: "It promises a reply time. Only say one you can keep." },
+
+      { key: "contact.direct.heading", label: "Sidebar — contact details heading", type: "text", default: "Get in touch directly" },
+
+      { key: "contact.elsewhere.heading", label: "Sidebar — \"elsewhere\" heading", type: "text", default: "Looking for something else?" },
+      { key: "contact.elsewhere.faqLabel", label: "Link 1 — text", type: "text", default: "Frequently asked questions" },
+      { key: "contact.elsewhere.faqBody", label: "Link 1 — description", type: "textarea", default: "Visas, fees, seasons and how booking works." },
+      { key: "contact.elsewhere.customLabel", label: "Link 2 — text", type: "text", default: "Build a custom tour" },
+      { key: "contact.elsewhere.customBody", label: "Link 2 — description", type: "textarea", default: "Pick your guide, rooms and vehicle and see the price as you go." },
+      { key: "contact.elsewhere.registerLabel", label: "Link 3 — text", type: "text", default: "List your business" },
+      { key: "contact.elsewhere.registerBody", label: "Link 3 — description", type: "textarea", default: "Guides, hotels and transport operators can apply to join." },
+    ],
+  },
+
+  {
     id: "assistant",
     label: "AI assistant (DRUKA)",
     description:
