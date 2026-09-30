@@ -149,6 +149,102 @@ export const CAPTURE_SIZES: Record<string, { width: number; height: number }> = 
     "width": 1800,
     "height": 1125
   },
+  "p-admin-content-full": {
+    "width": 1170,
+    "height": 7902
+  },
+  "p-admin-content": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-admin-knowledge-full": {
+    "width": 1170,
+    "height": 18318
+  },
+  "p-admin-knowledge": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-assistant-full": {
+    "width": 1170,
+    "height": 8379
+  },
+  "p-assistant": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-custom-tour-full": {
+    "width": 1170,
+    "height": 9714
+  },
+  "p-custom-tour": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-destination-full": {
+    "width": 1170,
+    "height": 15126
+  },
+  "p-destination": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-destinations-full": {
+    "width": 1170,
+    "height": 15342
+  },
+  "p-destinations": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-guides-full": {
+    "width": 1170,
+    "height": 7509
+  },
+  "p-guides": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-home-full": {
+    "width": 1170,
+    "height": 56001
+  },
+  "p-home": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-package-full": {
+    "width": 1170,
+    "height": 24534
+  },
+  "p-package-trek-full": {
+    "width": 1170,
+    "height": 25434
+  },
+  "p-package-trek": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-package": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-packages-full": {
+    "width": 1170,
+    "height": 45894
+  },
+  "p-packages": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-travel-guide-full": {
+    "width": 1170,
+    "height": 6747
+  },
+  "p-travel-guide": {
+    "width": 1170,
+    "height": 2532
+  },
   "package-detail-full": {
     "width": 1800,
     "height": 6561

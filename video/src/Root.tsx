@@ -1,6 +1,7 @@
 import React from "react";
 import { Composition, continueRender, delayRender, staticFile } from "remotion";
 import { DttBhutanBuildStory, TOTAL_FRAMES } from "./compositions/DttBhutanBuildStory";
+import { TikTokCut, VERTICAL_FRAMES } from "./vertical/TikTokCut";
 import { FPS } from "./theme";
 
 /**
@@ -46,6 +47,17 @@ export const RemotionRoot: React.FC = () => (
       fps={FPS}
       width={1920}
       height={1080}
+    />
+
+    {/* The vertical cut for TikTok. Same material, different film — see
+        vertical/TikTokCut.tsx for why it is not a crop of the one above. */}
+    <Composition
+      id="TikTokCut"
+      component={TikTokCut}
+      durationInFrames={VERTICAL_FRAMES}
+      fps={FPS}
+      width={1080}
+      height={1920}
     />
   </>
 );

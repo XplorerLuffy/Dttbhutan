@@ -1,8 +1,25 @@
 # How I Built DTT Bhutan — a Remotion case study
 
-A 2-minute developer case study, narrated: the idea, the website, the travel
+Two films from the same material, both narrated in the developer's own voice.
+
+| | `DttBhutanBuildStory` | `TikTokCut` |
+|---|---|---|
+| For | jambayang.com, clients | TikTok |
+| | 1920 × 1080 | 1080 × 1920 |
+| | 2m 00s | 50s |
+| Committed | `out/dtt-bhutan-2min-web.mp4` | `out/dtt-bhutan-tiktok-web.mp4` |
+
+The landscape one is the case study: the idea, the website, the travel
 platform, and then the AI Travel Assistant built and integrated into it
-afterwards.
+afterwards. The vertical one is the same story told to someone scrolling, and
+it ends by asking for work.
+
+**The vertical cut is not a crop.** It opens on the product already moving,
+because a feed does not give you eight seconds of black; its pictures are
+captures of the site at phone width, because a 16:9 screenshot in a 9:16 frame
+is a third of the height with nothing legible in it; every line is on screen as
+well as in the ear, because most people meet a TikTok muted; and picture and
+caption both stay inside the area TikTok's own interface does not cover.
 
 **The finished film is committed:** `out/dtt-bhutan-2min-web.mp4`. To change it
 and render again:
@@ -10,13 +27,18 @@ and render again:
 ```bash
 cd video
 npm install
-npm run studio     # scrub the timeline
-npm run render     # out/dtt-bhutan-2min.mp4
-npm run web        # re-encode that to the committed delivery file
-npm run vo         # re-measure the voiceover after regenerating it
-```
+npm run studio           # scrub either timeline
 
-1920 × 1080, 30 fps, 3,600 frames, 2m00s, with narration and score.
+npm run render           # the 2-minute landscape film
+npm run web              # re-encode it to the committed delivery file
+
+npm run render:tiktok    # the 50-second vertical cut
+npm run web:tiktok       # re-encode it, normalised to -14 LUFS for TikTok
+
+./prepare-audio.sh       # rebuild both audio tracks from the raw takes
+npm run vo               # re-measure the landscape narration
+npm run vo:tiktok        # re-measure the vertical narration
+```
 
 ---
 
@@ -65,14 +87,18 @@ lines out of the real files. Each snippet carries its path and starting line
 number, both shown on screen, so any frame can be looked up. Re-run it after
 changing a source file and the video follows.
 
-### Narration — `public/audio/voiceover.mp3`
+### Narration — `public/audio/voiceover.mp3`, `public/audio/vertical-vo.mp3`
 
 The developer's own voice, cloned in ElevenLabs ("Jambay",
 `wqwwebTLJIiG3CMLBnAq`, `eleven_multilingual_v2`), speaking a script written
 from the same facts as the rest of the film. `voiceover-raw.mp3` is what came
 back; `voiceover.mp3` is that normalised to about −18 LUFS.
 
-**The film is cut to the narration, not the other way round.** `build-vo-timing.mjs`
+The vertical cut has its own, shorter script (`vertical-vo-raw.mp3`,
+measured by `build-vertical-vo.mjs`) — 45 seconds rather than 98, written to be
+heard by someone who has not decided to watch yet, and ending on jambayang.com.
+
+**Each film is cut to its narration, not the other way round.** `build-vo-timing.mjs`
 finds where each of the fourteen lines is actually spoken — estimating from the
 text, then snapping each boundary to a pause ffmpeg can hear — and writes
 `src/data/voiceoverTiming.ts`. The chapter table reads it, and each chapter is
@@ -82,13 +108,15 @@ The take is one continuous recording, so it is placed as fourteen trimmed
 clips rather than one. Placed once, a single offset drifted by nearly seven
 seconds by the end, because the beats between lines accumulate.
 
-### Score — `public/audio/music.mp3`
+### Score — `public/audio/music.mp3`, `public/audio/vertical-music.mp3`
 
 Generated with `eleven_music_v2_5` to a brief that asks it to stay out of the
 way of a voice: sparse, mid-to-low, nothing sustained where speech lives.
 Normalised to about −23 LUFS and ducked to roughly a third of its level
 whenever a line is speaking. The duck is computed from the same table the voice
-is placed from, so it cannot drift away from it.
+is placed from, so it cannot drift away from it. The vertical cut takes a
+50-second window of the same track — from 62s, where it turns — so its build
+lands on the AI section and its resolve on the closing card.
 
 ### Numbers — `src/data/projectFacts.ts`
 

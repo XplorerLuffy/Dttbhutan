@@ -9,7 +9,10 @@
     "still": "remotion still DttBhutanBuildStory",
     "typecheck": "tsc --noEmit",
     "web": "ffmpeg -i out/dtt-bhutan-2min.mp4 -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p -af loudnorm=I=-15:TP=-1.5:LRA=11 -c:a aac -b:a 160k -movflags +faststart out/dtt-bhutan-2min-web.mp4 -y",
-    "vo": "node build-vo-timing.mjs"
+    "vo": "node build-vo-timing.mjs",
+    "render:tiktok": "remotion render TikTokCut out/dtt-bhutan-tiktok.mp4 --codec=h264 --crf=19",
+    "web:tiktok": "ffmpeg -i out/dtt-bhutan-tiktok.mp4 -c:v libx264 -crf 22 -preset slow -pix_fmt yuv420p -af loudnorm=I=-14:TP=-1:LRA=11 -c:a aac -b:a 160k -movflags +faststart out/dtt-bhutan-tiktok-web.mp4 -y",
+    "vo:tiktok": "node build-vertical-vo.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.530",

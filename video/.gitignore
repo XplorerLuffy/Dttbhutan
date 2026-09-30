@@ -1,8 +1,8 @@
 node_modules
 
-# Render output is ignored, with one exception: the finished film itself is the
-# deliverable, so dtt-bhutan-2min-web.mp4 is committed. The CRF 18 master beside
-# it is not — it is 38MB to the web encode's 18MB and, on a film of static UI
-# and slow pans, indistinguishable.
+# Render output is ignored, with two exceptions: the finished films are the
+# deliverables. The CRF masters beside them are not — they are twice the size
+# and, on films of static UI and slow pans, indistinguishable.
 out/*
 !out/dtt-bhutan-2min-web.mp4
+!out/dtt-bhutan-tiktok-web.mp4
