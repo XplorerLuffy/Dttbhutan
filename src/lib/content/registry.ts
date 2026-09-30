@@ -173,8 +173,8 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     fields: [
       { key: "home.planner.heading", label: "Heading", type: "text", default: "Not sure where to start?" },
       { key: "home.planner.body", label: "Body", type: "textarea", default: "Tell us what kind of Bhutan experience you're looking for — trekking, culture, festivals, or a slower pace — and we'll help shape a trip around it." },
-      { key: "home.planner.cta", label: "Button label", type: "text", default: "Plan My Trip" },
-      { key: "home.planner.ctaHref", label: "Button link", type: "text", default: "/custom-tour" },
+      { key: "home.planner.cta", label: "Button label", type: "text", default: "Plan with DRUKA" },
+      { key: "home.planner.ctaHref", label: "Button link", type: "text", default: "/assistant" },
     ],
   },
 
@@ -186,6 +186,51 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     fields: [
       { key: "gallery.heading", label: "Heading", type: "text", default: "Gallery" },
       { key: "gallery.intro", label: "Intro line", type: "textarea", default: "Destinations, tour packages, stays, and guides from across Bhutan." },
+    ],
+  },
+
+  {
+    id: "assistant",
+    label: "AI assistant (DRUKA)",
+    description:
+      "The assistant's own page at /assistant. The capability cards and the popular questions are not decoration — each one is sent as a message when tapped, so they are how a visitor who doesn't know what to ask gets started. Rewrite them to match the enquiries you actually want.",
+    fields: [
+      { key: "assistant.name", label: "Assistant name", type: "text", default: "DRUKA" },
+      { key: "assistant.role", label: "Assistant role", type: "text", default: "Your AI Travel Assistant" },
+      { key: "assistant.brandName", label: "Name on the side rail", type: "text", default: "", help: "Leave blank to use the trading name from Company details." },
+      { key: "assistant.brandTagline", label: "Tagline under it", type: "text", default: "Explore · Experience · Belong" },
+      { key: "assistant.railFooter", label: "Side rail footer line", type: "textarea", default: "Bhutan awaits,\nlet's plan it together." },
+
+      { key: "assistant.hero.eyebrow", label: "Hero — small line above", type: "text", default: "Your AI travel assistant" },
+      { key: "assistant.hero.headline", label: "Hero — headline", type: "text", default: "Discover Bhutan with DRUKA" },
+      { key: "assistant.hero.subtitle", label: "Hero — sub-line", type: "textarea", default: "Ask anything — from travel plans to local tips.\nI'm here to help you create the perfect journey." },
+      { key: "assistant.hero.imageUrl", label: "Hero — background image", type: "text", default: "/media/packages/dzong-ridge.webp" },
+
+      { key: "assistant.intro", label: "Who the assistant is", type: "textarea", default: "I'm DRUKA — your Bhutan travel assistant. Ask me anything about itineraries, destinations, permits, local culture, guides, and more." },
+      { key: "assistant.greeting", label: "Opening message", type: "textarea", default: "Kuzuzangpo la! I'm DRUKA. Tell me what kind of trip you have in mind — how long you have, what you'd like to see, how much walking you enjoy — and I'll suggest something. Or pick one of the questions on the right." },
+      { key: "assistant.quote", label: "Gold quote box", type: "textarea", default: "Real advice. Local insight.\nYour journey, made easier." },
+      { key: "assistant.placeholder", label: "Message box placeholder", type: "text", default: "Ask me anything — e.g. \"Plan a 7-day trip\" or \"What are the visa requirements?\"" },
+
+      { key: "assistant.action1.title", label: "Card 1 — title", type: "text", default: "Plan itineraries" },
+      { key: "assistant.action1.subtitle", label: "Card 1 — sub-line", type: "text", default: "Custom trips for your interests" },
+      { key: "assistant.action1.prompt", label: "Card 1 — question it sends", type: "textarea", default: "Help me plan a trip to Bhutan. What itineraries do you offer?" },
+
+      { key: "assistant.action2.title", label: "Card 2 — title", type: "text", default: "Get travel information" },
+      { key: "assistant.action2.subtitle", label: "Card 2 — sub-line", type: "text", default: "Visa, permits, weather, culture" },
+      { key: "assistant.action2.prompt", label: "Card 2 — question it sends", type: "textarea", default: "What do I need to know before travelling to Bhutan — visas, permits and the daily fee?" },
+
+      { key: "assistant.action3.title", label: "Card 3 — title", type: "text", default: "Find tour guides" },
+      { key: "assistant.action3.subtitle", label: "Card 3 — sub-line", type: "text", default: "Verified local guides" },
+      { key: "assistant.action3.prompt", label: "Card 3 — question it sends", type: "textarea", default: "Which licensed guides do you work with, and what languages do they speak?" },
+
+      { key: "assistant.action4.title", label: "Card 4 — title", type: "text", default: "Make bookings" },
+      { key: "assistant.action4.subtitle", label: "Card 4 — sub-line", type: "text", default: "Tours, experiences, activities" },
+      { key: "assistant.action4.prompt", label: "Card 4 — question it sends", type: "textarea", default: "How do I book a trip with you, and what happens after I enquire?" },
+
+      { key: "assistant.questions", label: "Popular questions", type: "textarea", default: "Best time to visit Bhutan\nVisa & entry requirements\nHiking in Bhutan\nCultural etiquette\nTop places to visit", help: "One per line. Each is sent as a message when tapped." },
+
+      { key: "assistant.closing.imageUrl", label: "Closing image", type: "text", default: "/media/packages/alpine-camp.webp", help: "Leave blank to hide the card at the foot of the right rail." },
+      { key: "assistant.closing.line", label: "Closing image caption", type: "textarea", default: "More than a trip,\nit's a journey within." },
     ],
   },
 

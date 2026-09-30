@@ -21,6 +21,16 @@ import type { AiMessage, AiProvider } from "@/lib/ai/provider";
 /** A prior turn as persisted in AiMessage — see prisma/schema.prisma. */
 export type ConversationTurn = { role: "USER" | "ASSISTANT"; content: string };
 
+/** One tool the model asked for and what it got back. Reported to the caller
+ * so a UI can show what the answer was built from — the assistant page turns
+ * the packages a reply looked up into real cards, which needs to know which
+ * ones those were rather than parsing them back out of the prose. */
+export type ToolObservation = {
+  name: string;
+  arguments: Record<string, unknown>;
+  result: unknown;
+};
+
 /** Hard ceiling on how many times we'll call the model within one HTTP
  * request while it keeps requesting tools. A well-behaved model finishes in
  * 1-2 rounds; this exists only to guarantee the request terminates instead
@@ -33,7 +43,10 @@ const FALLBACK_REPLY =
 export async function runAssistantTurn(
   provider: AiProvider,
   history: ConversationTurn[],
-  userMessage: string
+  userMessage: string,
+  /** Called for each tool the model ran. Optional so existing callers and the
+   * test harness are unaffected; the reply itself is unchanged either way. */
+  observe?: (observation: ToolObservation) => void
 ): Promise<string> {
   // The agency name is editable in admin, so the prompt reads it rather than
   // hardcoding it — otherwise the assistant would introduce itself under a
@@ -66,6 +79,7 @@ export async function runAssistantTurn(
 
     for (const call of result.toolCalls) {
       const toolResult = await executeTool(call.name, call.arguments);
+      observe?.({ name: call.name, arguments: call.arguments, result: toolResult });
       messages.push({
         role: "tool",
         content: JSON.stringify(toolResult),

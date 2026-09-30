@@ -5,10 +5,12 @@ import AutoReveal from "@/components/AutoReveal";
 
 /**
  * Hides the public NavBar/Footer (and the AI chat widget — see `chat`
- * below) on /admin routes (which have their own sidebar navigation) and on
+ * below) on /admin routes (which have their own sidebar navigation), on
  * /login and /register (which have their own logo + copyright via
  * AuthLayout, and are the entry point into /admin for signed-out users —
- * so they need the same chrome-free treatment). NavBar/Footer/chat are
+ * so they need the same chrome-free treatment), and on /assistant, which is
+ * a full-screen workspace with its own rail. The chat widget in particular
+ * would otherwise float a second, smaller assistant over the first. NavBar/Footer/chat are
  * rendered server-side in the root layout and passed in as already-resolved
  * elements, so this client component only decides whether to show them —
  * it never renders them itself.
@@ -19,7 +21,7 @@ import AutoReveal from "@/components/AutoReveal";
  * `100vw` breakout trick overflows by the width of the scrollbar. Every
  * other route keeps the identical container it had before.
  */
-const NO_CHROME_PREFIXES = ["/admin", "/login", "/register"];
+const NO_CHROME_PREFIXES = ["/admin", "/login", "/register", "/assistant"];
 
 /** Routes that lay out their own width, section by section. */
 const FULL_BLEED_PATHS = ["/"];
@@ -27,9 +29,10 @@ const FULL_BLEED_PATHS = ["/"];
 /**
  * Same, by prefix. The trailing slash matters: the trip detail pages lay out
  * their own width (full-bleed hero and photo bands), the /packages listing
- * does not.
+ * does not. /assistant is a full-screen workspace with its own rails, so the
+ * shared max-w-6xl would squeeze three columns into two-thirds of the screen.
  */
-const FULL_BLEED_PREFIXES = ["/packages/"];
+const FULL_BLEED_PREFIXES = ["/packages/", "/assistant"];
 
 export default function SiteChrome({
   nav,

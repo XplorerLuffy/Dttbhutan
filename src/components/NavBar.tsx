@@ -26,6 +26,10 @@ const MAIN_LINKS = [
   { href: "/travel-guide", label: "Travel Guide" },
   { href: "/gallery", label: "Gallery" },
   { href: "/about", label: "About Us" },
+  // Last in the row but first in intent: the assistant is the front door for
+  // anyone who hasn't decided what they want yet, which the fixed links above
+  // can't serve.
+  { href: "/assistant", label: "Ask DRUKA" },
 ];
 
 export default async function NavBar() {

@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getAiProvider, AiProviderResponseError, AiProviderUnavailableError } from "@/lib/ai/provider";
-import { runAssistantTurn, type ConversationTurn } from "@/lib/ai/assistant";
+import { collectPackageCards } from "@/lib/ai/cards";
+import {
+  runAssistantTurn,
+  type ConversationTurn,
+  type ToolObservation,
+} from "@/lib/ai/assistant";
 import { isChatRateLimited } from "@/lib/ai/rateLimit";
 
 /**
@@ -87,9 +92,10 @@ export async function POST(req: NextRequest) {
   });
 
   let reply: string;
+  const observations: ToolObservation[] = [];
   try {
     const provider = getAiProvider();
-    reply = await runAssistantTurn(provider, history, message);
+    reply = await runAssistantTurn(provider, history, message, (o) => observations.push(o));
   } catch (err) {
     if (err instanceof AiProviderUnavailableError || err instanceof AiProviderResponseError) {
       console.error("[ai] provider call failed:", err.message);
@@ -107,5 +113,16 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ message: reply, conversationId }, { status: 200 });
+  // Cards are derived, not persisted: only the prose is a durable part of the
+  // conversation, and a price stored on a card would go stale the moment the
+  // package is edited. Rebuilding them from the tool results each turn keeps
+  // every figure current.
+  const cards = await collectPackageCards(observations, reply).catch((err) => {
+    // A failure here must not cost the visitor their answer — the reply is
+    // complete and correct without the illustration beside it.
+    console.warn("[ai] could not build package cards:", err instanceof Error ? err.message : err);
+    return [];
+  });
+
+  return NextResponse.json({ message: reply, conversationId, cards }, { status: 200 });
 }
