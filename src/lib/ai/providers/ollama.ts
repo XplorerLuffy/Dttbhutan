@@ -34,6 +34,34 @@ import { ollamaBaseUrl, ollamaHeaders, explainOllamaStatus } from "@/lib/ai/olla
  *   - a tool result is sent back as `{ role: "tool", content, tool_name }`
  *     (not `name`, and no id).
  */
+/**
+ * Statuses that mean "not now" rather than "not ever".
+ *
+ * 500 is the one that matters here, and it is not theoretical: production
+ * answered a visitor with "temporarily unavailable" because Ollama's hosted
+ * service returned a single `500 Internal Server Error (ref: …)` mid-turn,
+ * while the same request succeeded on every attempt minutes later. The Gemini
+ * provider has retried these since it was written; this one never did, so one
+ * transient upstream blip was a failed conversation.
+ *
+ * 4xx is deliberately absent. A 404 (unknown model), 410 (retired model) and
+ * 401 (bad key) are all settled facts — verified against the live service —
+ * and retrying them only spends the request's remaining time.
+ */
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+
+/**
+ * Two extra attempts. A reply can take several model calls (MAX_TOOL_ROUNDS)
+ * and the route has a wall-clock budget, so this has to stay small — but the
+ * failure being retried is a momentary upstream fault, which a short pause
+ * clears far more often than not.
+ */
+const RETRY_DELAYS_MS = [600, 1800];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class OllamaProvider implements AiProvider {
   private readonly baseUrl: string;
   private readonly model: string;
@@ -62,27 +90,44 @@ export class OllamaProvider implements AiProvider {
         : {}),
     };
 
-    let res: Response;
-    try {
-      res = await fetch(`${this.baseUrl}/api/chat`, {
-        method: "POST",
-        headers: ollamaHeaders(),
-        body: JSON.stringify(body),
-        // No AbortSignal.timeout here on purpose in Phase 1 — a local model's
-        // first response after loading into memory can legitimately take a
-        // while. Revisit once real-world latency is measured.
-      });
-    } catch (err) {
-      throw new AiProviderUnavailableError(
-        `Could not reach Ollama at ${this.baseUrl}: ${err instanceof Error ? err.message : String(err)}`
-      );
+    const payloadJson = JSON.stringify(body);
+    let res: Response | null = null;
+    let lastTransient = "";
+
+    for (let attempt = 0; attempt < RETRY_DELAYS_MS.length + 1; attempt++) {
+      if (attempt > 0) await sleep(RETRY_DELAYS_MS[attempt - 1]);
+
+      try {
+        res = await fetch(`${this.baseUrl}/api/chat`, {
+          method: "POST",
+          headers: ollamaHeaders(),
+          body: payloadJson,
+          // No AbortSignal.timeout here on purpose in Phase 1 — a local model's
+          // first response after loading into memory can legitimately take a
+          // while. Revisit once real-world latency is measured.
+        });
+      } catch (err) {
+        throw new AiProviderUnavailableError(
+          `Could not reach Ollama at ${this.baseUrl}: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+
+      if (res.ok) break;
+
+      const detail = await res.text().catch(() => "");
+      const safe =
+        `Ollama responded ${res.status}: ${detail.slice(0, 500)}` +
+        explainOllamaStatus(res.status, this.baseUrl);
+
+      if (!RETRYABLE_STATUS.has(res.status)) throw new AiProviderResponseError(safe);
+
+      lastTransient = safe;
+      res = null;
     }
 
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
+    if (!res) {
       throw new AiProviderResponseError(
-        `Ollama responded ${res.status}: ${detail.slice(0, 500)}` +
-          explainOllamaStatus(res.status, this.baseUrl)
+        `${lastTransient} (gave up after ${RETRY_DELAYS_MS.length + 1} attempts)`
       );
     }
 

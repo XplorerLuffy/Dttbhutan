@@ -159,6 +159,69 @@ async function main() {
     check("and does not echo the key itself", !message.includes(KEY), message);
   }
 
+  // --- transient upstream failures are retried ---
+  // Production answered a visitor "temporarily unavailable" because the hosted
+  // service returned one 500 mid-turn. These pin that a blip is ridden out and
+  // that a settled 4xx still fails fast.
+  {
+    process.env.OLLAMA_BASE_URL = "https://ollama.com";
+    process.env.OLLAMA_API_KEY = KEY;
+
+    let attempts = 0;
+    globalThis.fetch = (async () => {
+      attempts++;
+      if (attempts < 3) return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
+      return new Response(JSON.stringify(CHAT_OK), { status: 200 });
+    }) as typeof fetch;
+
+    const result = await new OllamaProvider().complete({ messages: [{ role: "user", content: "hi" }] });
+    check("a 500 is retried until it succeeds", attempts === 3 && result.content === "hi", `attempts=${attempts}`);
+
+    // A 404 is a settled fact (unknown model) — retrying only burns the budget.
+    attempts = 0;
+    globalThis.fetch = (async () => {
+      attempts++;
+      return new Response(JSON.stringify({ error: "model 'x' not found" }), { status: 404 });
+    }) as typeof fetch;
+    let message = "";
+    try {
+      await new OllamaProvider().complete({ messages: [{ role: "user", content: "hi" }] });
+    } catch (err) {
+      message = err instanceof Error ? err.message : String(err);
+    }
+    check("a 404 fails on the first attempt", attempts === 1, `attempts=${attempts}`);
+    check("and a 404 names OLLAMA_MODEL", message.includes("OLLAMA_MODEL"), message);
+
+    // Give up rather than loop forever.
+    attempts = 0;
+    globalThis.fetch = (async () => {
+      attempts++;
+      return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
+    }) as typeof fetch;
+    message = "";
+    try {
+      await new OllamaProvider().complete({ messages: [{ role: "user", content: "hi" }] });
+    } catch (err) {
+      message = err instanceof Error ? err.message : String(err);
+    }
+    check("a persistent 500 gives up after 3 attempts", attempts === 3, `attempts=${attempts}`);
+    check("and says so", message.includes("gave up after 3 attempts"), message);
+  }
+
+  // --- a proxy 403 must not be blamed on the API key ---
+  {
+    process.env.OLLAMA_BASE_URL = "https://ollama.com";
+    process.env.OLLAMA_API_KEY = KEY;
+    capture({ error: "Host not in allowlist: ollama.com" }, 403);
+    let message = "";
+    try {
+      await new OllamaProvider().complete({ messages: [{ role: "user", content: "hi" }] });
+    } catch (err) {
+      message = err instanceof Error ? err.message : String(err);
+    }
+    check("a 403 is not reported as a rejected key", !message.includes("was rejected"), message);
+  }
+
   // --- localhost gets no hosted-service advice ---
   {
     process.env.OLLAMA_BASE_URL = "http://localhost:11434";

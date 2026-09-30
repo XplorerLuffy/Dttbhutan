@@ -26,15 +26,27 @@ export function ollamaHeaders(): Record<string, string> {
   return headers;
 }
 
-/** Ollama's hosted service refuses an unauthenticated or unknown key with 401,
- * and a plain "responded 401" leaves it ambiguous whether the key is wrong or
- * simply absent — which matters most on a deployment, where the difference is
- * an unset environment variable rather than a bad paste. */
+/**
+ * Turns a status into a sentence that names the likely cause, for statuses
+ * where "responded 401" on its own sends you looking in the wrong place.
+ *
+ * Only 401 is treated as an auth problem. 403 deliberately is not: an outbound
+ * proxy returns 403 for a blocked host, and this helper claimed a rejected API
+ * key for exactly that — a wrong answer that costs someone an hour. Verified
+ * shapes from the live service: 404 is an unknown model and 410 a retired one,
+ * both of which name the model in the body, so neither needs help from here.
+ */
 export function explainOllamaStatus(status: number, baseUrl: string): string {
-  if (status !== 401 && status !== 403) return "";
   const hosted = !/localhost|127\.0\.0\.1/.test(baseUrl);
   if (!hosted) return "";
-  return process.env.OLLAMA_API_KEY?.trim()
-    ? " — OLLAMA_API_KEY is set but was rejected; check it at https://ollama.com/settings/keys."
-    : " — OLLAMA_API_KEY is not set, and this host requires one.";
+
+  if (status === 401) {
+    return process.env.OLLAMA_API_KEY?.trim()
+      ? " — OLLAMA_API_KEY is set but was rejected; check it at https://ollama.com/settings/keys."
+      : " — OLLAMA_API_KEY is not set, and this host requires one.";
+  }
+  if (status === 404 || status === 410) {
+    return ` — OLLAMA_MODEL is "${process.env.OLLAMA_MODEL?.trim() || "(unset, defaulting to llama3.2)"}"; the hosted service serves a specific list, which GET /api/tags returns.`;
+  }
+  return "";
 }
