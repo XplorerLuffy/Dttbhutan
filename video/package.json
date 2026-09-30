@@ -7,7 +7,8 @@
     "studio": "remotion studio",
     "render": "remotion render DttBhutanBuildStory out/dtt-bhutan-build-story.mp4",
     "still": "remotion still DttBhutanBuildStory",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "web": "ffmpeg -i out/dtt-bhutan-build-story.mp4 -c:v libx264 -crf 24 -preset slow -pix_fmt yuv420p -movflags +faststart out/dtt-bhutan-build-story-web.mp4 -y"
   },
   "dependencies": {
     "@remotion/cli": "4.0.530",

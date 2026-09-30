@@ -1,2 +1,8 @@
 node_modules
-out
+
+# Render output is ignored, with one exception: the finished film itself is the
+# deliverable, so dtt-bhutan-build-story-web.mp4 is committed. The CRF 17 master
+# beside it is not — it is 55MB to the web encode's 19MB and, on a film of
+# static UI and slow pans, indistinguishable.
+out/*
+!out/dtt-bhutan-build-story-web.mp4

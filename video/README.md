@@ -3,14 +3,18 @@
 A 3m40s developer case study: the idea, the website, the travel platform, and
 then the AI Travel Assistant built and integrated into it afterwards.
 
+**The finished film is committed:** `out/dtt-bhutan-build-story-web.mp4`
+(19MB). To change it and render again:
+
 ```bash
 cd video
 npm install
 npm run studio     # scrub the timeline
-npm run render     # out/dtt-bhutan-build-story.mp4
+npm run render     # out/dtt-bhutan-build-story.mp4, CRF 17, ~55MB
+npm run web        # re-encode that to the committed 19MB delivery file
 ```
 
-1920 × 1080, 30 fps, 6,600 frames.
+1920 × 1080, 30 fps, 6,600 frames, 3m40s.
 
 ---
 
