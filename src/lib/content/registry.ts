@@ -197,9 +197,6 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     fields: [
       { key: "assistant.name", label: "Assistant name", type: "text", default: "DRUKA" },
       { key: "assistant.role", label: "Assistant role", type: "text", default: "Your AI Travel Assistant" },
-      { key: "assistant.brandName", label: "Name on the side rail", type: "text", default: "", help: "Leave blank to use the trading name from Company details." },
-      { key: "assistant.brandTagline", label: "Tagline under it", type: "text", default: "Explore · Experience · Belong" },
-      { key: "assistant.railFooter", label: "Side rail footer line", type: "textarea", default: "Bhutan awaits,\nlet's plan it together." },
 
       { key: "assistant.hero.eyebrow", label: "Hero — small line above", type: "text", default: "Your AI travel assistant" },
       { key: "assistant.hero.headline", label: "Hero — headline", type: "text", default: "Discover Bhutan with DRUKA" },
@@ -207,7 +204,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "assistant.hero.imageUrl", label: "Hero — background image", type: "text", default: "/media/packages/dzong-ridge.webp" },
 
       { key: "assistant.intro", label: "Who the assistant is", type: "textarea", default: "I'm DRUKA — your Bhutan travel assistant. Ask me anything about itineraries, destinations, permits, local culture, guides, and more." },
-      { key: "assistant.greeting", label: "Opening message", type: "textarea", default: "Kuzuzangpo la! I'm DRUKA. Tell me what kind of trip you have in mind — how long you have, what you'd like to see, how much walking you enjoy — and I'll suggest something. Or pick one of the questions on the right." },
+      { key: "assistant.greeting", label: "Opening message", type: "textarea", default: "Kuzuzangpo la! I'm DRUKA. Tell me what kind of trip you have in mind — how long you have, what you'd like to see, how much walking you enjoy — and I'll suggest something. Or pick one of the suggested questions." },
       { key: "assistant.quote", label: "Gold quote box", type: "textarea", default: "Real advice. Local insight.\nYour journey, made easier." },
       { key: "assistant.placeholder", label: "Message box placeholder", type: "text", default: "Ask me anything — e.g. \"Plan a 7-day trip\" or \"What are the visa requirements?\"" },
 

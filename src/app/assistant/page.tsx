@@ -54,9 +54,6 @@ export default async function AssistantPage() {
     .filter(Boolean);
 
   const copy: AssistantCopy = {
-    brandName: content("assistant.brandName") || content("company.name"),
-    brandTagline: content("assistant.brandTagline"),
-    railFooter: content("assistant.railFooter"),
     assistantName: content("assistant.name"),
     assistantRole: content("assistant.role"),
     heroEyebrow: content("assistant.hero.eyebrow"),

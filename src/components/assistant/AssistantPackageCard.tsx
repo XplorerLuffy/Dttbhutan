@@ -29,27 +29,41 @@ const DAYS_SHOWN = 5;
  * from the model's prose — the model chooses which package is relevant, and
  * this shows what that package actually costs.
  */
-export default function AssistantPackageCard({ card }: { card: PackageCard }) {
+export default function AssistantPackageCard({
+  card,
+  compact = false,
+}: {
+  card: PackageCard;
+  /** The floating panel is roughly 340px wide on a desktop viewport, so the
+   * usual `sm:` breakpoint — which asks the *viewport*, not this container —
+   * would put the photo beside the day list in a column too narrow for either.
+   * `compact` stacks them instead. */
+  compact?: boolean;
+}) {
   const shown = card.days.slice(0, DAYS_SHOWN);
   const remaining = card.days.length - shown.length;
 
   return (
     <article className="mt-3 overflow-hidden rounded-xl border border-stone-200 bg-white">
-      <div className="sm:flex">
-        <div className="relative h-40 w-full shrink-0 bg-stone-100 sm:h-auto sm:w-40">
+      <div className={compact ? "" : "sm:flex"}>
+        <div
+          className={`relative w-full shrink-0 bg-stone-100 ${
+            compact ? "h-28" : "h-40 sm:h-auto sm:w-40"
+          }`}
+        >
           {card.coverPhotoUrl && (
             <Image
               src={card.coverPhotoUrl}
               alt=""
               fill
               unoptimized
-              sizes="160px"
+              sizes={compact ? "340px" : "160px"}
               className="object-cover"
             />
           )}
         </div>
 
-        <div className="min-w-0 flex-1 p-4">
+        <div className={`min-w-0 flex-1 ${compact ? "p-3" : "p-4"}`}>
           <h3 className="font-display text-base font-bold leading-snug text-stone-900">
             {card.title}
           </h3>

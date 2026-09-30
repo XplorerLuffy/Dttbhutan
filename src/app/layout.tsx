@@ -10,7 +10,7 @@ import { getCurrentRates } from "@/lib/fx";
 import SiteChrome from "@/components/SiteChrome";
 import AiChatWidget from "@/components/ai/AiChatWidget";
 import { organizationJsonLd, siteUrl } from "@/lib/seo";
-import { getCompany } from "@/lib/content";
+import { getCompany, getSiteContent } from "@/lib/content";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -59,7 +59,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [rates, company] = await Promise.all([getCurrentRates(), getCompany()]);
+  const [rates, company, content] = await Promise.all([
+    getCurrentRates(),
+    getCompany(),
+    getSiteContent(),
+  ]);
 
   return (
     <html lang="en">
@@ -72,7 +76,20 @@ export default async function RootLayout({
         />
         <CurrencyProvider rates={rates}>
           <SmoothScroll />
-          <SiteChrome nav={<NavBar />} footer={<Footer />} chat={<AiChatWidget />}>
+          <SiteChrome nav={<NavBar />} footer={<Footer />} chat={
+              <AiChatWidget
+                copy={{
+                  name: content("assistant.name"),
+                  role: content("assistant.role"),
+                  greeting: content("assistant.greeting"),
+                  placeholder: content("assistant.placeholder"),
+                  questions: content("assistant.questions")
+                    .split("\n")
+                    .map((q) => q.trim())
+                    .filter(Boolean),
+                }}
+              />
+            }>
             <PageTransition>{children}</PageTransition>
           </SiteChrome>
         </CurrencyProvider>

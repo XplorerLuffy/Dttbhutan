@@ -1,6 +1,6 @@
 "use client";
 
-import { MountainMark } from "@/components/assistant/AssistantSidebar";
+import LogoMark from "@/components/Logo";
 
 /**
  * The right-hand rail: who the assistant is, what it can do, and a way in for
@@ -42,8 +42,8 @@ export default function AssistantRail({
     <aside className="w-full shrink-0 space-y-4 xl:w-[21rem]">
       <div className="rounded-2xl border border-stone-200 bg-white p-5">
         <div className="flex flex-col items-center text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-ink-950">
-            <MountainMark className="h-7 w-auto text-brass-400" />
+          <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-stone-200">
+            <LogoMark className="h-full w-full object-contain p-1.5" />
           </span>
           <p className="mt-3 font-display text-xl font-bold tracking-wide text-stone-900">{name}</p>
           <p className="text-xs text-stone-500">{role}</p>
@@ -74,7 +74,7 @@ export default function AssistantRail({
         </div>
 
         <div className="mt-4 flex items-start gap-3 rounded-xl bg-brass-100/60 p-4">
-          <MountainMark className="mt-0.5 h-4 w-auto shrink-0 text-brass-600" />
+          <LogoMark className="mt-0.5 h-5 w-5 shrink-0 object-contain" />
           <p className="whitespace-pre-line font-display text-xs italic leading-relaxed text-brass-700">
             {quote}
           </p>

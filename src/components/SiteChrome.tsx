@@ -8,9 +8,8 @@ import AutoReveal from "@/components/AutoReveal";
  * below) on /admin routes (which have their own sidebar navigation), on
  * /login and /register (which have their own logo + copyright via
  * AuthLayout, and are the entry point into /admin for signed-out users —
- * so they need the same chrome-free treatment), and on /assistant, which is
- * a full-screen workspace with its own rail. The chat widget in particular
- * would otherwise float a second, smaller assistant over the first. NavBar/Footer/chat are
+ * so they need the same chrome-free treatment). /assistant keeps the header
+ * and footer but not the chat widget — see NO_CHAT_PREFIXES below. NavBar/Footer/chat are
  * rendered server-side in the root layout and passed in as already-resolved
  * elements, so this client component only decides whether to show them —
  * it never renders them itself.
@@ -21,7 +20,12 @@ import AutoReveal from "@/components/AutoReveal";
  * `100vw` breakout trick overflows by the width of the scrollbar. Every
  * other route keeps the identical container it had before.
  */
-const NO_CHROME_PREFIXES = ["/admin", "/login", "/register", "/assistant"];
+const NO_CHROME_PREFIXES = ["/admin", "/login", "/register"];
+
+/** The assistant's own page keeps the site header and footer — it is a page of
+ * the site, not a separate application — but not the floating panel, which
+ * would put a second, smaller copy of the assistant on top of the first. */
+const NO_CHAT_PREFIXES = ["/assistant"];
 
 /** Routes that lay out their own width, section by section. */
 const FULL_BLEED_PATHS = ["/"];
@@ -48,6 +52,7 @@ export default function SiteChrome({
 }) {
   const pathname = usePathname();
   const hideChrome = NO_CHROME_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
+  const hideChat = hideChrome || NO_CHAT_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
   const fullBleed =
     FULL_BLEED_PATHS.includes(pathname ?? "") ||
     FULL_BLEED_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
@@ -58,7 +63,7 @@ export default function SiteChrome({
       {!hideChrome && nav}
       <main className={fullBleed ? "pb-6" : "mx-auto max-w-6xl px-4 py-6 sm:px-6"}>{children}</main>
       {!hideChrome && footer}
-      {!hideChrome && chat}
+      {!hideChat && chat}
     </>
   );
 }
