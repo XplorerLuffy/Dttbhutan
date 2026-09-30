@@ -81,6 +81,47 @@ Neither is retried — only 429, 500 and 503 are (`RETRYABLE_STATUS` in
 `src/lib/ai/providers/gemini.ts`). Retrying a bad credential burns the
 request's time budget and still fails.
 
+### Ollama's hosted service as the provider
+
+`AI_PROVIDER="ollama"` is viable on Vercel when `OLLAMA_BASE_URL` points at
+Ollama's own service instead of localhost:
+
+```
+AI_PROVIDER="ollama"
+OLLAMA_BASE_URL="https://ollama.com"
+OLLAMA_API_KEY="…"           # https://ollama.com/settings/keys
+OLLAMA_MODEL="gpt-oss:20b"
+```
+
+The key travels as `Authorization: Bearer` (`x-api-key` alone is rejected) and
+does not expire — unlike a quota-limited free tier, which is the main reason to
+prefer it over Gemini for this deployment.
+
+Verified against the live service from a sandbox with egress to ollama.com:
+
+- **Chat works.** `POST /api/chat` returns 200.
+- **Tool calling works**, which is what the assistant actually needs — the model
+  returned `{"id": "call_vbc2qebq", "function": {"name": "search_knowledge",
+  "arguments": {"query": "cancellation policy"}}}` for a tool it was offered.
+  Note it sends a real call id, which a local server does not; the provider
+  keeps whichever it gets.
+- **Embeddings are NOT available.** `/api/embeddings` 404s ("path not found")
+  and `/api/embed` 401s for every embedding model tried. `/api/tags` lists 17
+  models and all of them are generative — `gpt-oss:20b`, `gpt-oss:120b`,
+  `gemma4:31b`, `kimi-k3`, `deepseek-v4.1-flash` and so on — with no embedding
+  model among them.
+
+So the two halves are configured separately, and **`EMBEDDING_PROVIDER` cannot
+be `"ollama"` against the hosted service.** Leave it on `"gemini"` with a
+working key; that is also what the stored vectors were written with, so it
+avoids a re-ingest (see EMBEDDING_MODEL in `.env.example` — both sides of a
+search must use the same model).
+
+Without any embedding provider the assistant still answers: `retrieveKnowledge`
+catches an unavailable embedder and falls back to Postgres text search, marking
+the result `mode: "text-fallback"`. Ranking is worse than semantic search, but
+the policies and FAQs stay reachable rather than dropping out of the answer.
+
 ### Free-tier quota is the live constraint
 
 The free tier allows only a handful of requests per minute, and **one chat

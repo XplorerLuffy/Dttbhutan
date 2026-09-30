@@ -151,7 +151,9 @@ function warnMissingProvider(): void {
   console.warn(
     "[ai] AI_PROVIDER is not set, so the provider defaults to ollama at " +
       "localhost — nothing answers there on a serverless host. Set it to " +
-      '"gemini" (or "anthropic") for this deployment. AI-related variable ' +
+      '"gemini" or "anthropic", or keep "ollama" and point OLLAMA_BASE_URL at ' +
+      "a reachable server (https://ollama.com with OLLAMA_API_KEY). " +
+      "AI-related variable " +
       `names present in this runtime: ${related.length ? related.join(", ") : "(none)"}`
   );
 }

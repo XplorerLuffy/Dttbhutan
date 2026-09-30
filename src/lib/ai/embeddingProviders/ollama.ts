@@ -5,11 +5,13 @@ import {
   EmbeddingProviderUnavailableError,
   type EmbeddingProvider,
 } from "@/lib/ai/embeddingProvider";
+import { ollamaBaseUrl, ollamaHeaders, explainOllamaStatus } from "@/lib/ai/ollamaConfig";
 
 /**
- * Embeddings from a local (or self-hosted) Ollama server — same plain
- * `fetch`, same base URL, same no-SDK reasoning as the chat provider in
- * providers/ollama.ts.
+ * Embeddings from an Ollama server — local, self-hosted, or the hosted service
+ * at https://ollama.com — sharing the base URL and API key with the chat
+ * provider through ollamaConfig.ts, and the same plain `fetch`, no-SDK
+ * reasoning as providers/ollama.ts.
  *
  * Endpoint: POST /api/embeddings with `{ model, prompt }`, responding
  * `{ embedding: number[] }`. Ollama also ships a newer `/api/embed`
@@ -25,7 +27,7 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
   private readonly model: string;
 
   constructor() {
-    this.baseUrl = (process.env.OLLAMA_BASE_URL?.trim() || "http://localhost:11434").replace(/\/$/, "");
+    this.baseUrl = ollamaBaseUrl();
     this.model = process.env.EMBEDDING_MODEL?.trim() || "nomic-embed-text";
   }
 
@@ -34,7 +36,7 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     try {
       res = await fetch(`${this.baseUrl}/api/embeddings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: ollamaHeaders(),
         body: JSON.stringify({ model: this.model, prompt: text }),
       });
     } catch (err) {
@@ -46,7 +48,8 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
       throw new EmbeddingProviderResponseError(
-        `Ollama embeddings responded ${res.status}: ${detail.slice(0, 500)}`
+        `Ollama embeddings responded ${res.status}: ${detail.slice(0, 500)}` +
+          explainOllamaStatus(res.status, this.baseUrl)
       );
     }
 

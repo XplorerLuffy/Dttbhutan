@@ -8,9 +8,15 @@ import {
   type AiProvider,
   type AiToolCall,
 } from "@/lib/ai/provider";
+import { ollamaBaseUrl, ollamaHeaders, explainOllamaStatus } from "@/lib/ai/ollamaConfig";
 
 /**
- * Talks to a local (or self-hosted) Ollama server over its HTTP API —
+ * Talks to an Ollama server over its HTTP API — local, self-hosted, or the
+ * hosted service at https://ollama.com, which speaks the same paths and bodies
+ * and only adds an API key (see ollamaConfig.ts). The hosted one is what a
+ * Vercel deployment can actually reach: localhost on a serverless function is
+ * the function itself, and nothing answers there.
+ *
  * plain `fetch`, no SDK. Ollama's client libraries are thin wrappers over
  * this same endpoint, and pulling one in for a single POST would be an
  * extra dependency for no real benefit (the same reasoning already applied
@@ -19,8 +25,12 @@ import {
  * Wire format verified against Ollama's own API docs
  * (https://github.com/ollama/ollama/blob/main/docs/api.md), notably:
  *   - tool calls come back as `message.tool_calls: [{ function: { name,
- *     arguments } }]` with NO call id — we synthesize one so the rest of
- *     the app can treat every provider uniformly.
+ *     arguments } }]`. A local server sends no call id, so one is synthesized
+ *     and the rest of the app can treat every provider uniformly. The hosted
+ *     service *does* send one (verified: `{"id": "call_vbc2qebq", "function":
+ *     {"index": 0, "name": …}}`), so its id is preferred when present rather
+ *     than thrown away — the two are interchangeable downstream, but keeping
+ *     the server's own makes a traced request line up with Ollama's logs.
  *   - a tool result is sent back as `{ role: "tool", content, tool_name }`
  *     (not `name`, and no id).
  */
@@ -29,7 +39,7 @@ export class OllamaProvider implements AiProvider {
   private readonly model: string;
 
   constructor() {
-    this.baseUrl = (process.env.OLLAMA_BASE_URL?.trim() || "http://localhost:11434").replace(/\/$/, "");
+    this.baseUrl = ollamaBaseUrl();
     this.model = process.env.OLLAMA_MODEL?.trim() || "llama3.2";
   }
 
@@ -56,7 +66,7 @@ export class OllamaProvider implements AiProvider {
     try {
       res = await fetch(`${this.baseUrl}/api/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: ollamaHeaders(),
         body: JSON.stringify(body),
         // No AbortSignal.timeout here on purpose in Phase 1 — a local model's
         // first response after loading into memory can legitimately take a
@@ -70,7 +80,10 @@ export class OllamaProvider implements AiProvider {
 
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
-      throw new AiProviderResponseError(`Ollama responded ${res.status}: ${detail.slice(0, 500)}`);
+      throw new AiProviderResponseError(
+        `Ollama responded ${res.status}: ${detail.slice(0, 500)}` +
+          explainOllamaStatus(res.status, this.baseUrl)
+      );
     }
 
     const payload = (await res.json().catch((err) => {
@@ -86,9 +99,10 @@ export class OllamaProvider implements AiProvider {
       content: message.content ?? "",
       toolCalls: (message.tool_calls ?? []).map(
         (call, index): AiToolCall => ({
-          // Synthesized — see the class doc comment. Stable within a single
+          // The hosted service's own id when it sent one, else a synthesized
+          // one — see the class doc comment. Either way stable within a single
           // response, which is all the orchestration loop needs.
-          id: `ollama_call_${index}`,
+          id: call.id || `ollama_call_${index}`,
           name: call.function.name,
           arguments: call.function.arguments ?? {},
         })
@@ -132,7 +146,9 @@ type OllamaChatResponse = {
   message?: {
     role: string;
     content: string;
-    tool_calls?: { function: { name: string; arguments: Record<string, unknown> } }[];
+    /** `id` is absent on a local server and present on the hosted service;
+     * `index` rides along on the hosted one and is not used. */
+    tool_calls?: { id?: string; function: { name: string; arguments: Record<string, unknown> } }[];
   };
   done?: boolean;
   done_reason?: string;
