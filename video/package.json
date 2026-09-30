@@ -1,0 +1,24 @@
+{
+  "name": "dttbhutan-build-story",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A Remotion case-study video about how DTT Bhutan was built.",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render DttBhutanBuildStory out/dtt-bhutan-build-story.mp4",
+    "still": "remotion still DttBhutanBuildStory",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.530",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.530"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.1",
+    "typescript": "5.9.3"
+  },
+  "main": "src/index.ts"
+}

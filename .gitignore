@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Remotion case-study video: its own dependency tree and render output.
+# The captures and the project source ARE committed — they are the video.
+/video/node_modules
+/video/out

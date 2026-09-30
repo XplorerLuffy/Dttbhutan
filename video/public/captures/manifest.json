@@ -1,0 +1,266 @@
+[
+  {
+    "name": "home",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 2918751
+  },
+  {
+    "name": "home-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 9938,
+    "bytes": 17525600
+  },
+  {
+    "name": "packages",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 1361892
+  },
+  {
+    "name": "packages-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 7840,
+    "bytes": 14471646
+  },
+  {
+    "name": "package-detail",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 2303803
+  },
+  {
+    "name": "package-detail-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 5249,
+    "bytes": 6653466
+  },
+  {
+    "name": "package-trek",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 4139074
+  },
+  {
+    "name": "destinations",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 4121104
+  },
+  {
+    "name": "destinations-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 1687,
+    "bytes": 6159493
+  },
+  {
+    "name": "destination-paro",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 228763
+  },
+  {
+    "name": "destination-paro-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 2403,
+    "bytes": 703275
+  },
+  {
+    "name": "guides",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 242247
+  },
+  {
+    "name": "hotels",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 241340
+  },
+  {
+    "name": "vehicles",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 255622
+  },
+  {
+    "name": "flights",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 248425
+  },
+  {
+    "name": "custom-tour",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 291928
+  },
+  {
+    "name": "custom-tour-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 2187,
+    "bytes": 604750
+  },
+  {
+    "name": "travel-guide",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 1410939
+  },
+  {
+    "name": "article-sdf",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 1560566
+  },
+  {
+    "name": "article-sdf-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 1681,
+    "bytes": 1774871
+  },
+  {
+    "name": "gallery",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 4062944
+  },
+  {
+    "name": "about",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 344079
+  },
+  {
+    "name": "about-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 1811,
+    "bytes": 553305
+  },
+  {
+    "name": "contact",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 280588
+  },
+  {
+    "name": "faq",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 207064
+  },
+  {
+    "name": "login",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 92646
+  },
+  {
+    "name": "register",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 141712
+  },
+  {
+    "name": "vendor-guide-register",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 247927
+  },
+  {
+    "name": "vendor-guide-register-full",
+    "fullPage": true,
+    "cssWidth": 1440,
+    "cssHeight": 1637,
+    "bytes": 397105
+  },
+  {
+    "name": "nav-megamenu",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 1363602
+  },
+  {
+    "name": "home-chat-button",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 2919972
+  },
+  {
+    "name": "phone-home",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "bytes": 1444555
+  },
+  {
+    "name": "phone-package",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "bytes": 1428399
+  },
+  {
+    "name": "dashboard-traveler",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 281321
+  },
+  {
+    "name": "admin-overview",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 159985
+  },
+  {
+    "name": "admin-knowledge",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 363801
+  },
+  {
+    "name": "admin-content",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 347723
+  },
+  {
+    "name": "admin-packages",
+    "fullPage": false,
+    "cssWidth": 1440,
+    "cssHeight": 900,
+    "bytes": 360747
+  }
+]
