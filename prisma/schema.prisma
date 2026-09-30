@@ -797,6 +797,8 @@ enum KnowledgeSourceType {
   FAQ
   POLICY
   UPLOAD // future: an uploaded document (TXT/MD now; PDF/DOCX not yet — see report)
+  PACKAGE // indexed copy of a published Itinerary — its days, stays and inclusions
+  DESTINATION // indexed copy of a Destination — its description and highlights
 }
 
 enum KnowledgeStatus {

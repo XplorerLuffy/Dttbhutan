@@ -28,6 +28,33 @@ import { explainGeminiStatus } from "@/lib/ai/geminiKey";
  * load-bearing, not defensive. Both `?key=` and the `x-goog-api-key` header
  * authenticate; the query string is used here to match providers/gemini.ts.
  */
+/** Statuses that mean "not now" rather than "not ever" — same reasoning as the
+ * chat provider in providers/gemini.ts. */
+const RETRYABLE_STATUS = new Set([429, 500, 503]);
+
+/**
+ * Two retry budgets, because the two callers have opposite constraints.
+ *
+ * Ingestion embeds a whole site in a loop and will hit the free tier's
+ * per-minute window every time (verified: a 57-document sync exhausted it at
+ * 100 requests and left 39 chunks unvectorised). Google's own 429 says "retry
+ * in ~10s", so the document budget is long enough to cross that boundary — a
+ * slow sync that finishes beats a fast one that half-embeds.
+ *
+ * A query embedding is inside a visitor's chat turn, which has a wall-clock
+ * budget and a person waiting. There, one quick retry is the most that is
+ * worth spending; past that, retrieval's text-search fallback is a better
+ * answer than a longer silence.
+ */
+const RETRY_DELAYS_MS: Record<"document" | "query", number[]> = {
+  document: [1_500, 6_000, 12_000],
+  query: [600],
+};
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class GeminiEmbeddingProvider implements EmbeddingProvider {
   private readonly apiKey: string;
   private readonly model: string;
@@ -48,37 +75,56 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
       `https://generativelanguage.googleapis.com/v1beta/models/${this.model}` +
       `:embedContent?key=${this.apiKey}`;
 
-    let res: Response;
-    try {
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: `models/${this.model}`,
-          content: { parts: [{ text }] },
-          // Asymmetric retrieval: a stored passage and the question asked of
-          // it are embedded for different jobs, and saying which measurably
-          // improves the match. Ollama has no equivalent and ignores this.
-          taskType: task === "query" ? "RETRIEVAL_QUERY" : "RETRIEVAL_DOCUMENT",
-          // Ask for the width this system stores rather than the model's
-          // native 3072, so the existing vector(768) column and its HNSW
-          // index keep working without a migration and a full re-embed.
-          outputDimensionality: EMBEDDING_DIMENSIONS,
-        }),
-      });
-    } catch (err) {
-      throw new EmbeddingProviderUnavailableError(
-        `Could not reach the Gemini embedding API: ${err instanceof Error ? err.message : String(err)}`
-      );
-    }
+    const body = JSON.stringify({
+      model: `models/${this.model}`,
+      content: { parts: [{ text }] },
+      // Asymmetric retrieval: a stored passage and the question asked of it
+      // are embedded for different jobs, and saying which measurably improves
+      // the match. Ollama has no equivalent and ignores this.
+      taskType: task === "query" ? "RETRIEVAL_QUERY" : "RETRIEVAL_DOCUMENT",
+      // Ask for the width this system stores rather than the model's native
+      // 3072, so the existing vector(768) column and its HNSW index keep
+      // working without a migration and a full re-embed.
+      outputDimensionality: EMBEDDING_DIMENSIONS,
+    });
 
-    if (!res.ok) {
+    const delays = RETRY_DELAYS_MS[task === "query" ? "query" : "document"];
+    let res: Response | null = null;
+    let lastTransient = "";
+
+    for (let attempt = 0; attempt < delays.length + 1; attempt++) {
+      if (attempt > 0) await sleep(delays[attempt - 1]);
+
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+        });
+      } catch (err) {
+        throw new EmbeddingProviderUnavailableError(
+          `Could not reach the Gemini embedding API: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+
+      if (res.ok) break;
+
       const detail = await res.text().catch(() => "");
       // The key is in the query string, so it would otherwise ride along in
       // any error text Google echoes back — and from there into logs.
-      throw new EmbeddingProviderResponseError(
+      const safe =
         `Gemini embeddings responded ${res.status}: ${redactKey(detail, this.apiKey).slice(0, 500)}` +
-          (explainGeminiStatus(res.status) ?? "")
+        (explainGeminiStatus(res.status) ?? "");
+
+      if (!RETRYABLE_STATUS.has(res.status)) throw new EmbeddingProviderResponseError(safe);
+
+      lastTransient = safe;
+      res = null;
+    }
+
+    if (!res) {
+      throw new EmbeddingProviderResponseError(
+        `${lastTransient} (gave up after ${delays.length + 1} attempts)`
       );
     }
 

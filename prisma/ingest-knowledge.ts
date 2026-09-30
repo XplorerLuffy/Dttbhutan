@@ -1,15 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 import { ingestDocument } from "@/lib/ai/ingestion";
+import { syncSiteKnowledge } from "@/lib/ai/siteKnowledge";
 import { KNOWLEDGE_SEED } from "./data/knowledgeSeed";
 
 /**
  * Builds the knowledge base for one agency. Run with: npm run ai:ingest
  *
  * Two sources, deliberately:
- *   1. Published Articles — content that already lives in Postgres. These
- *      are INDEXED here, not copied: the Article stays the source of truth
- *      for the website's travel-guide pages, and re-running this refreshes
- *      the searchable copy rather than forking it.
+ *   1. The website's own content — published packages, destinations and
+ *      articles. These are INDEXED, not copied: those rows stay the source of
+ *      truth the site renders from, and re-running refreshes the searchable
+ *      copy rather than forking it. See src/lib/ai/siteKnowledge.ts, which the
+ *      admin "refresh" button shares with this script.
  *   2. prisma/data/knowledgeSeed.ts — text that has no database home today
  *      (FAQ answers and policies currently hardcoded as JSX).
  *
@@ -98,30 +100,14 @@ async function main() {
     );
   }
 
-  const articles = await prisma.article.findMany({
-    where: { status: "PUBLISHED" },
-    select: { slug: true, title: true, category: true, excerpt: true, content: true },
-  });
-
-  for (const article of articles) {
-    const result = await ingestDocument({
-      agencyId: agency.id,
-      title: article.title,
-      // Excerpt first: it's the article's own summary, which makes the
-      // opening chunk a better standalone answer than a bare first
-      // paragraph would be.
-      content: `${article.excerpt}\n\n${article.content}`,
-      sourceType: "ARTICLE",
-      sourceRef: article.slug,
-      category: article.category,
-      visibility: "PUBLIC",
-      status: "PUBLISHED",
-    });
-    totalChunks += result.chunkCount;
-    totalEmbedded += result.embeddedCount;
-    if (result.embeddingSkippedReason) skipReasons.add(result.embeddingSkippedReason);
-    console.log(`  [PUBLIC] (article) ${article.title} — ${result.chunkCount} chunks, ${result.embeddedCount} embedded`);
-  }
+  const site = await syncSiteKnowledge(agency.id);
+  totalChunks += site.chunks;
+  totalEmbedded += site.embedded;
+  if (site.embeddingSkippedReason) skipReasons.add(site.embeddingSkippedReason);
+  console.log(
+    `  [PUBLIC] site content — ${site.packages} packages, ${site.destinations} destinations, ` +
+      `${site.articles} articles (${site.chunks} chunks, ${site.embedded} embedded)`
+  );
 
   console.log(`\n${totalChunks} chunks stored, ${totalEmbedded} embedded.`);
   if (skipReasons.size > 0) {
