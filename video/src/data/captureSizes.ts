@@ -77,6 +77,26 @@ export const CAPTURE_SIZES: Record<string, { width: number; height: number }> = 
     "width": 1800,
     "height": 1125
   },
+  "client-answer-full": {
+    "width": 2880,
+    "height": 3538
+  },
+  "client-answer": {
+    "width": 2880,
+    "height": 1800
+  },
+  "client-thinking": {
+    "width": 2880,
+    "height": 1800
+  },
+  "client-typing": {
+    "width": 2880,
+    "height": 1800
+  },
+  "client-widget-answer": {
+    "width": 2880,
+    "height": 1800
+  },
   "contact": {
     "width": 1800,
     "height": 1125
@@ -170,6 +190,10 @@ export const CAPTURE_SIZES: Record<string, { width: number; height: number }> = 
     "height": 8379
   },
   "p-assistant": {
+    "width": 1170,
+    "height": 2532
+  },
+  "p-client-widget-answer": {
     "width": 1170,
     "height": 2532
   },

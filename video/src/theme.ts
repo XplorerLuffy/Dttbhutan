@@ -37,6 +37,13 @@ export const FONTS = {
   display: "'Fraunces', Georgia, serif",
   body: "'Plus Jakarta Sans', system-ui, sans-serif",
   mono: "'JetBrains Mono', 'SF Mono', Menlo, monospace",
+
+  // The same two faces with Noto Color Emoji ahead of the generic fallbacks.
+  // The client's shot list puts a Bhutanese flag in the opening line, and
+  // without this the render browser resolves the emoji through system-ui and
+  // draws a blank box — which would be the first frame of the film.
+  displayEmoji: "'Fraunces', 'Noto Color Emoji', Georgia, serif",
+  bodyEmoji: "'Plus Jakarta Sans', 'Noto Color Emoji', system-ui, sans-serif",
 } as const;
 
 /** 30fps throughout — every duration in the scenes is written in seconds and

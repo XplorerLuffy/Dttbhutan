@@ -45,6 +45,25 @@ export const PLAN_REPLY: ProductionReply = {
   conversationId: "cmuo2onod0004js04ajlv6ecz",
 };
 
+/**
+ * The exchange the client-story film shows.
+ *
+ * One question, asked the way a traveller would ask it, and the answer
+ * production gave on 2026-09-30 — verbatim, down to the double space after
+ * "exciting!" and the two spaces production left at the end of its list items.
+ * The assistant does not guess an itinerary from seven days alone; it asks what
+ * the trip is for first, which is the behaviour worth showing.
+ */
+export const SEVEN_DAY_REPLY: ProductionReply = {
+  question: "I'm visiting Bhutan for 7 days. What should I see?",
+  answer:
+    "Sounds exciting!  To help you pin down a great 7\u2011day itinerary, could you share a bit more:\n\n" +
+    "1. Do you already have dates in mind for your trip?  \n" +
+    "2. What kind of experiences are most important to you? (e.g., cultural sites, trekking, festivals, wildlife, relaxation, photography)  \n\n" +
+    "That\u2019ll let me suggest a mix that fits both your schedule and your interests.",
+  conversationId: "cmuobgior0000jy04gneoj6oc",
+};
+
 /** The grounded refusal. Asked for a 7-day whole-country cultural tour, the
  * assistant checked the real catalogue and said there isn't one. */
 export const GROUNDED_REPLY: ProductionReply = {

@@ -2,6 +2,7 @@ import React from "react";
 import { Composition, continueRender, delayRender, staticFile } from "remotion";
 import { DttBhutanBuildStory, TOTAL_FRAMES } from "./compositions/DttBhutanBuildStory";
 import { TikTokCut, VERTICAL_FRAMES } from "./vertical/TikTokCut";
+import { ClientStory, TOTAL_FRAMES as CLIENT_FRAMES } from "./client/ClientStory";
 import { FPS } from "./theme";
 
 /**
@@ -58,6 +59,17 @@ export const RemotionRoot: React.FC = () => (
       fps={FPS}
       width={1080}
       height={1920}
+    />
+
+    {/* The 72-second client story for jambayang.com — the client's own shot
+        list, in their voice. See client/ClientStory.tsx. */}
+    <Composition
+      id="ClientStory"
+      component={ClientStory}
+      durationInFrames={CLIENT_FRAMES}
+      fps={FPS}
+      width={1920}
+      height={1080}
     />
   </>
 );
