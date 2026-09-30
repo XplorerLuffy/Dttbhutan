@@ -298,6 +298,7 @@ export default async function PackageDetailPage({
         categoryLabel={CATEGORY_LABEL[itinerary.category]}
         categoryHref={`/packages?category=${itinerary.category}`}
         imageUrl={itinerary.coverPhotoUrl}
+        galleryHref={itinerary.photos.length > 0 ? "#gallery" : null}
         stats={{
           durationDays: itinerary.durationDays,
           difficulty: itinerary.difficulty,
@@ -328,10 +329,12 @@ export default async function PackageDetailPage({
         >
 
         <section id="overview" className="scroll-mt-24 pt-8">
-          <h2 className="font-display text-3xl font-bold text-stone-900">{itinerary.title}</h2>
-          <p className="mt-4 max-w-4xl text-lg leading-relaxed text-stone-700">
-            {itinerary.summary}
-          </p>
+          {/* Visually hidden: the masthead already carries the trip's name as
+              the h1, and printing it again here was the same words twice in a
+              row on a phone. The heading stays in the tree so the section is a
+              labelled landmark and the sub-nav has something to point at. */}
+          <h2 className="sr-only">Overview</h2>
+          <p className="max-w-4xl text-lg leading-relaxed text-stone-700">{itinerary.summary}</p>
           {itinerary.description && (
             <p className="mt-4 max-w-4xl leading-relaxed text-stone-700">
               {itinerary.description}
@@ -542,6 +545,12 @@ export default async function PackageDetailPage({
           </Container>
         </div>
       )}
+
+      {/* The booking bar is fixed to the bottom of the viewport on phones, so
+          without this the last of the page sits underneath it. Sized from the
+          height the bar publishes, so it is exactly zero once the bar is gone
+          at md and above. */}
+      <div aria-hidden style={{ height: "var(--trip-bar-height, 0px)" }} />
     </div>
   );
 }

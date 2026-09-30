@@ -17,19 +17,24 @@ const DIFFICULTY_LABEL: Record<TripDifficulty, string> = {
 };
 
 /**
- * The masthead of a trip page: breadcrumb, category, rating, the trip's name,
- * the four facts people scan for, then the photograph.
+ * The masthead of a trip page: breadcrumb, the photograph, then the category,
+ * the trip's name, and the four facts people scan for.
  *
- * The title sits above the photo rather than over it. Text on an unvetted
- * photograph is a contrast gamble — every new cover image is a chance for the
- * headline to land on a white sky — and holding the type on white also lets
- * the photograph run full-bleed without a scrim dulling it.
+ * The photograph comes first because it is what the page is selling — on a
+ * phone the title and the four stats were pushing it a screen and a half down,
+ * so the page opened on a wall of text and the trip itself was below the fold.
+ *
+ * The title still sits on white *under* the photo rather than over it. Text on
+ * an unvetted photograph is a contrast gamble — every new cover image is a
+ * chance for the headline to land on a white sky — and keeping the type off it
+ * also lets the photograph run full-bleed without a scrim dulling it.
  */
 export default function TripPageHeader({
   title,
   categoryLabel,
   categoryHref,
   imageUrl,
+  galleryHref,
   stats,
   ratingAverage,
   ratingCount,
@@ -38,6 +43,9 @@ export default function TripPageHeader({
   categoryLabel: string;
   categoryHref: string;
   imageUrl?: string | null;
+  /** Anchor for the "View gallery" button over the photo. Omitted when the
+   * trip has no gallery photos, so the button never leads to an empty section. */
+  galleryHref?: string | null;
   stats: TripHeaderStats;
   ratingAverage: number | null;
   ratingCount: number;
@@ -88,14 +96,28 @@ export default function TripPageHeader({
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 pb-6 pt-10 sm:px-6">
+      <div className="relative h-[38vh] min-h-[260px] w-full bg-gradient-to-br from-brand-600 to-brand-950 sm:h-[54vh]">
+        {imageUrl && (
+          <Image src={imageUrl} alt={title} fill priority unoptimized className="object-cover" />
+        )}
+        {galleryHref && (
+          <a
+            href={galleryHref}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/95 px-5 py-2.5 text-sm font-semibold text-stone-900 shadow-md backdrop-blur transition-colors hover:bg-white"
+          >
+            View gallery
+          </a>
+        )}
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 pb-5 pt-7 sm:px-6 sm:pb-6 sm:pt-10">
         <h1 className="text-center font-display text-3xl font-bold leading-tight text-stone-900 sm:text-5xl">
           {title}
         </h1>
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <dl className="grid gap-x-6 gap-y-4 border-y border-stone-200 py-5 sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="grid gap-x-6 gap-y-3 border-y border-stone-200 py-4 sm:gap-y-4 sm:py-5 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={<ClockIcon />} label="Trip length">
             {stats.durationDays} days{nights > 0 && ` • ${nights} nights`}
           </Stat>
@@ -111,11 +133,6 @@ export default function TripPageHeader({
         </dl>
       </div>
 
-      <div className="relative mt-6 h-[42vh] min-h-[280px] w-full bg-gradient-to-br from-brand-600 to-brand-950 sm:h-[54vh]">
-        {imageUrl && (
-          <Image src={imageUrl} alt={title} fill priority unoptimized className="object-cover" />
-        )}
-      </div>
     </header>
   );
 }
@@ -153,7 +170,7 @@ const ICON = {
 
 function ClockIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" {...ICON}>
+    <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-6 sm:w-6" {...ICON}>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
     </svg>
@@ -162,7 +179,7 @@ function ClockIcon() {
 
 function GaugeIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" {...ICON}>
+    <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-6 sm:w-6" {...ICON}>
       <path d="M4 18a8 8 0 1 1 16 0" />
       <path d="M12 18l4-5" />
     </svg>
@@ -171,7 +188,7 @@ function GaugeIcon() {
 
 function GroupIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" {...ICON}>
+    <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-6 sm:w-6" {...ICON}>
       <circle cx="9" cy="8" r="3.2" />
       <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
       <path d="M16 6.2a3.2 3.2 0 0 1 0 6.1M17.5 19a5.6 5.6 0 0 0-2-4.3" />
@@ -181,7 +198,7 @@ function GroupIcon() {
 
 function CalendarIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" {...ICON}>
+    <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-6 sm:w-6" {...ICON}>
       <rect x="3.5" y="5.5" width="17" height="15" rx="2" />
       <path d="M3.5 10h17M8 3.5v4M16 3.5v4" />
     </svg>

@@ -12,6 +12,11 @@ export type TripSubNavSection = {
  * Sticky nav for a trip page: tabs into the trip's own sections, the
  * from-price, and the button that swaps the body over to the dates.
  *
+ * On a phone the price and that button move to a bar pinned to the bottom of
+ * the screen, because there is no room for them beside the tabs — they were
+ * simply hidden below `md`, which left phone visitors with no price and no way
+ * to reach the dates except by scrolling to the foot of the page.
+ *
  * Purely presentational — the parent owns which view is showing (see
  * TripViewSwitch), because the dates are a different view of the page
  * rather than another section to scroll to.
@@ -96,9 +101,37 @@ export default function TripSubNav({
     strip.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [active, datesOpen]);
 
+  // The bar is fixed to the bottom of the viewport, where the chat launcher
+  // also lives. Publishing its height lets that button lift by exactly this
+  // much instead of the two guessing at each other's size — and because it is
+  // cleared on unmount, pages without a bar are unaffected.
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = barRef.current;
+    const root = document.documentElement;
+    if (!el) return;
+
+    const publish = () => {
+      // getBoundingClientRect, not offsetHeight: the bar is display:none above
+      // the md breakpoint, where it must publish 0 rather than its phone height.
+      root.style.setProperty("--trip-bar-height", `${Math.round(el.getBoundingClientRect().height)}px`);
+    };
+    publish();
+
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    window.addEventListener("resize", publish);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", publish);
+      root.style.removeProperty("--trip-bar-height");
+    };
+  }, []);
+
   if (sections.length === 0) return null;
 
   return (
+    <>
     <nav
       aria-label="Trip sections"
       /* Opaque, not translucent: content scrolling underneath shows through a
@@ -106,7 +139,7 @@ export default function TripSubNav({
       className="sticky top-0 z-30 -mx-4 mb-6 rounded-b-xl border-b border-stone-200 bg-white px-4 shadow-[0_2px_10px_-4px_rgba(10,49,89,0.25)] sm:-mx-6 sm:px-6"
     >
       <div className="flex items-center gap-4">
-        <div ref={tabsRef} className="no-scrollbar -mb-px flex flex-1 gap-6 overflow-x-auto">
+        <div ref={tabsRef} className="no-scrollbar -mb-px flex flex-1 gap-4 overflow-x-auto sm:gap-6">
           {sections.map((section) => {
             const isActive = !datesOpen && active === section.id;
             return (
@@ -125,7 +158,7 @@ export default function TripSubNav({
                   event.stopPropagation();
                   onSelectSection(section.id);
                 }}
-                className={`shrink-0 whitespace-nowrap border-b-[3px] py-4 font-display text-sm font-bold transition-colors ${
+                className={`shrink-0 whitespace-nowrap border-b-[3px] py-4 font-display text-[13px] font-bold transition-colors sm:text-sm ${
                   isActive
                     ? "border-brand-800 text-brand-900"
                     : "border-transparent text-stone-600 hover:text-stone-900"
@@ -163,5 +196,38 @@ export default function TripSubNav({
         </div>
       </div>
     </nav>
+
+      {/* The phone counterpart of the price block above, which is md:flex. */}
+      <div
+        ref={barRef}
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white px-4 py-3 shadow-[0_-2px_12px_-4px_rgba(10,49,89,0.3)] md:hidden"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 leading-tight">
+            <p className="font-display text-base font-bold text-brand-900">
+              <span className="font-sans text-xs font-semibold text-stone-600">From </span>
+              {price}
+              <span className="font-sans text-xs font-medium text-stone-500">/person</span>
+            </p>
+            {priceNote && <p className="mt-0.5 line-clamp-2 text-[11px] text-stone-500">{priceNote}</p>}
+          </div>
+          {onViewDates && (
+            <button
+              type="button"
+              onClick={onViewDates}
+              aria-pressed={datesOpen}
+              className={`shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition-colors ${
+                datesOpen
+                  ? "border-2 border-brand-800 text-brand-900"
+                  : "bg-brand-800 text-white"
+              }`}
+            >
+              {datesOpen ? "Back to trip" : "View Dates"}
+            </button>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

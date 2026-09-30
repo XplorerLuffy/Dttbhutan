@@ -209,7 +209,11 @@ export default function AiChatWidget() {
             aria-label="Open the trip planning assistant"
             aria-haspopup="dialog"
             aria-expanded={open}
-            className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-700 text-white shadow-lg hover:bg-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 sm:bottom-6 sm:right-6"
+            className="fixed right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-700 text-white shadow-lg hover:bg-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 sm:right-6"
+            /* Sits above a trip page's pinned booking bar, which publishes its
+               height as --trip-bar-height; 0 everywhere else, so this is the
+               usual bottom-5/bottom-6 on every other page. */
+            style={{ bottom: "calc(1.25rem + var(--trip-bar-height, 0px))" }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={
               prefersReducedMotion
