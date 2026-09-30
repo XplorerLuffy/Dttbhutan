@@ -56,13 +56,40 @@ async function searchDestinations(args: { query?: string }) {
 // Package tours (Itinerary)
 // ---------------------------------------------------------------------------
 
-async function searchPackages(args: { destinationName?: string; maxDurationDays?: number }) {
+/**
+ * `query` exists because of a real failure in production. Asked about the
+ * "Jomolhari Base Camp Trek" — a package that is published, listed on
+ * /packages, and bookable — the assistant answered "I'm not seeing a Jomolhari
+ * Base Camp Trek listed in our current catalogue." It had called this tool with
+ * destinationName: "Jomolhari", which matches no Destination row (destinations
+ * are dzongkhags: Paro, Thimphu, Bumthang), got found: false, and relayed it
+ * faithfully.
+ *
+ * The tool was the problem, not the model: there was no way to search packages
+ * by their own name, which is how a traveller who has read a trek's name asks
+ * about it. Telling a visitor a real, bookable trip doesn't exist is the worst
+ * failure this tool can have — far worse than returning too many matches — so
+ * the query spans title and summary.
+ */
+async function searchPackages(args: {
+  query?: string;
+  destinationName?: string;
+  maxDurationDays?: number;
+}) {
   const packages = await prisma.itinerary.findMany({
     where: {
       status: "PUBLISHED",
       ...(args.maxDurationDays ? { durationDays: { lte: args.maxDurationDays } } : {}),
       ...(args.destinationName
         ? { days: { some: { destination: { name: { contains: args.destinationName, mode: "insensitive" } } } } }
+        : {}),
+      ...(args.query
+        ? {
+            OR: [
+              { title: { contains: args.query, mode: "insensitive" as const } },
+              { summary: { contains: args.query, mode: "insensitive" as const } },
+            ],
+          }
         : {}),
     },
     select: {
@@ -80,7 +107,16 @@ async function searchPackages(args: { destinationName?: string; maxDurationDays?
   });
 
   if (packages.length === 0) {
-    return { found: false, reason: "No published package tour matched those filters." };
+    return {
+      found: false,
+      // Spelled out, because the model previously turned an empty filtered
+      // result into "that trek is not in our catalogue" about a trek that is.
+      reason:
+        "No published package matched those filters. This does NOT mean the trip does not exist — " +
+        "a trek or tour name is not a destination name, so try search_packages again with `query` " +
+        "set to the name the traveller used, or get_package_details with that name. Only say a trip " +
+        "is unavailable once a name search has also come back empty.",
+    };
   }
 
   return {
@@ -359,16 +395,25 @@ export const AI_TOOLS: ToolEntry[] = [
     definition: {
       name: "search_packages",
       description:
-        "Search published package tours, optionally filtered by destination or maximum duration. Returns real prices per person in BTN.",
+        "Search published package tours by name or by filter. Returns real prices per person in BTN. " +
+        "Use `query` when the traveller names a trip, trek or tour (e.g. \"Jomolhari Base Camp Trek\", " +
+        "\"Snowman Trek\", \"honeymoon\"); use `destinationName` only for a place (a dzongkhag such as " +
+        "Paro or Bumthang). A trek's name is not a place.",
       parameters: {
         type: "object",
         properties: {
-          destinationName: { type: "string", description: "Filter to packages visiting this destination." },
+          query: {
+            type: "string",
+            description:
+              "Free text matched against the package's own title and summary. Use this for a named trip.",
+          },
+          destinationName: { type: "string", description: "Filter to packages visiting this destination (a dzongkhag)." },
           maxDurationDays: { type: "number", description: "Only packages this many days or shorter." },
         },
       },
     },
-    execute: (args) => searchPackages(args as { destinationName?: string; maxDurationDays?: number }),
+    execute: (args) =>
+      searchPackages(args as { query?: string; destinationName?: string; maxDurationDays?: number }),
   },
   {
     definition: {

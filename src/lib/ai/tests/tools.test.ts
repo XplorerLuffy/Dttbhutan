@@ -138,7 +138,55 @@ async function main() {
     }
   }
 
-  // --- Test 6: unknown tool name fails closed, not silently ---
+  // --- Test 6: a named trip is findable by its own name ---
+  // Regression. In production the assistant was asked about the "Jomolhari Base
+  // Camp Trek" — published, listed, bookable — and answered "I'm not seeing a
+  // Jomolhari Base Camp Trek listed in our current catalogue." It had called
+  // search_packages with destinationName: "Jomolhari", which matches no
+  // Destination row, and relayed the empty result honestly. Telling a visitor a
+  // real trip doesn't exist is the worst thing this tool can do, so both halves
+  // are pinned: the name search finds it, and the empty result tells the model
+  // not to conclude non-existence.
+  const namedTrip = await prisma.itinerary.findFirst({
+    where: { status: "PUBLISHED" },
+    select: { title: true },
+    orderBy: { title: "asc" },
+  });
+
+  if (!namedTrip) {
+    console.log("SKIP  no published package to search by name — run npm run db:seed");
+  } else {
+    const byName = (await executeTool("search_packages", { query: namedTrip.title })) as {
+      found: boolean;
+      packages?: { title: string }[];
+    };
+    check(
+      "a published package is findable by its own title",
+      byName.found === true && Boolean(byName.packages?.some((p) => p.title === namedTrip.title)),
+      `searched "${namedTrip.title}", got ${JSON.stringify(byName).slice(0, 160)}`
+    );
+
+    const byWord = (await executeTool("search_packages", {
+      query: namedTrip.title.split(/\s+/)[0],
+    })) as { found: boolean; packages?: { title: string }[] };
+    check(
+      "and by one word of it",
+      byWord.found === true && (byWord.packages?.length ?? 0) > 0,
+      JSON.stringify(byWord).slice(0, 160)
+    );
+  }
+
+  const emptySearch = (await executeTool("search_packages", {
+    query: "zzz-no-such-trip-zzz",
+  })) as { found: boolean; reason?: string };
+  check("a genuinely empty search still reports not-found", emptySearch.found === false);
+  check(
+    "and tells the model not to conclude the trip does not exist",
+    (emptySearch.reason ?? "").includes("does NOT mean"),
+    emptySearch.reason
+  );
+
+  // --- Test 7: unknown tool name fails closed, not silently ---
   const unknownTool = await executeTool("delete_all_bookings", {});
   check(
     "executeTool refuses an unknown tool name rather than doing nothing silently",
