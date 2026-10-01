@@ -3,6 +3,11 @@ import PDFDocument from "pdfkit";
 import { format, startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/content";
+// The site's public address, shared with the sitemap, canonical links and
+// emails. This file used to work it out itself and fell back to VERCEL_URL —
+// the address of one particular deployment, which changes on every push — so
+// the PDF told travellers to visit a link that would stop working.
+import { absoluteUrl } from "@/lib/seo";
 
 /**
  * The trip's day-by-day itinerary as a PDF, the thing a traveller forwards
@@ -323,13 +328,35 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   ]
     .filter(Boolean)
     .join("   |   ");
-  if (contact) body(contact);
+  if (contact) {
+    body(contact);
+  } else {
+    // No phone, WhatsApp or email has been entered in Site content yet, and a
+    // "Talk to us" heading with no way to do so is a dead end in a document
+    // that gets forwarded around. The contact page always exists.
+    const contactUrl = absoluteUrl("/contact");
+    body("Send us a message through our website:");
+    doc
+      .fillColor(NAVY)
+      .font("Helvetica-Bold")
+      .fontSize(10.5)
+      .text(text(contactUrl), { width: W, link: contactUrl, underline: true });
+  }
   body(company.officeHours, { color: MUTED, size: 9.5 });
   doc.moveDown(0.6);
   body(
-    `Prepared ${format(new Date(), "d MMMM yyyy")}. Prices and departures can change — the current version is always at ${siteUrlFor(slug)}.`,
+    `Prepared ${format(new Date(), "d MMMM yyyy")}. Prices and departures can change — the current version is always at:`,
     { color: MUTED, size: 9 }
   );
+  // On a line of its own, and a live link. A URL has no spaces for the text
+  // to wrap at, so run on from the sentence above it was clipped at the page
+  // edge mid-word.
+  const tripUrl = absoluteUrl(`/packages/${slug}`);
+  doc
+    .fillColor(NAVY)
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .text(text(tripUrl), { width: W, link: tripUrl, underline: true });
 
   doc.end();
   const pdf = await done;
@@ -348,13 +375,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
 /** DATE columns are read back in UTC so a 4 October departure isn't the 3rd. */
 function fmt(date: Date) {
   return format(new Date(`${date.toISOString().slice(0, 10)}T12:00:00`), "d MMM yyyy");
-}
-
-function siteUrlFor(slug: string) {
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
-  return `${base}/packages/${slug}`;
 }
 
 /** Content-Disposition filenames travel badly once they leave ASCII. */
