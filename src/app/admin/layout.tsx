@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/travel-guide", label: "Travel guide" },
   { href: "/admin/knowledge", label: "DRUKA knowledge" },
   { href: "/admin/exchange-rates", label: "Exchange rates" },
+  { href: "/admin/account", label: "Your account" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

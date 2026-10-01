@@ -26,7 +26,8 @@
     "test:ai:ollama": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/ollamaAuth.test.ts",
     "test:ai:knowledge": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/knowledgeAdmin.test.ts",
     "check:ai:semantic": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/semanticRetrieval.check.ts",
-    "check:ai:live": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/liveAssistant.check.ts"
+    "check:ai:live": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/liveAssistant.check.ts",
+    "test:admin:account": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/tests/adminAccount.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",

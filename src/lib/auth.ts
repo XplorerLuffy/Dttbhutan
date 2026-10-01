@@ -16,10 +16,17 @@ function getSecretKey() {
   return new TextEncoder().encode(secret);
 }
 
+/** What goes into a session token. */
 export type SessionPayload = {
   userId: string;
   role: Role;
 };
+
+/** What comes back out of one. `issuedAt` is jose's `iat`, in seconds since
+ * the epoch, and is set when the token is signed rather than by the caller —
+ * which is what lets getCurrentUser refuse tokens minted before the account's
+ * password changed. */
+export type Session = SessionPayload & { issuedAt: number };
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 10);
@@ -52,15 +59,15 @@ export async function clearSessionCookie() {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
+export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
   try {
     const { payload } = await jwtVerify(token, getSecretKey());
-    if (!payload.sub || !payload.role) return null;
-    return { userId: payload.sub, role: payload.role as Role };
+    if (!payload.sub || !payload.role || typeof payload.iat !== "number") return null;
+    return { userId: payload.sub, role: payload.role as Role, issuedAt: payload.iat };
   } catch {
     return null;
   }
@@ -69,7 +76,35 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function getCurrentUser() {
   const session = await getSession();
   if (!session) return null;
-  return prisma.user.findUnique({ where: { id: session.userId } });
+
+  const user = await prisma.user.findUnique({ where: { id: session.userId } });
+  if (!user) return null;
+
+  if (isSessionStale(session.issuedAt, user.passwordChangedAt)) return null;
+
+  return user;
+}
+
+/**
+ * Whether a token predates the account's current password.
+ *
+ * A session minted before the password changed is no longer a session. There
+ * is no server-side store to delete from — the cookie is a signed JWT good for
+ * fourteen days — so changing a password would otherwise leave whoever knew
+ * the old one signed in until it expired. That matters most for exactly the
+ * case this was written for: an admin account whose password was a published
+ * default.
+ *
+ * `iat` has one-second resolution and is rounded down, so a token minted in
+ * the same second as the change can read as older than it. The second of slack
+ * keeps the person doing the changing signed in; it cannot save an older
+ * session, which is further out than that either way.
+ *
+ * Its own function so it can be tested without a database or a cookie jar.
+ */
+export function isSessionStale(issuedAt: number, passwordChangedAt: Date | null): boolean {
+  if (!passwordChangedAt) return false;
+  return issuedAt + 1 < Math.floor(passwordChangedAt.getTime() / 1000);
 }
 
 export async function requireUser() {

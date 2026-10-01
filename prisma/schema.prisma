@@ -50,6 +50,15 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  /// When this account's password last changed. Sessions are stateless JWTs,
+  /// so there is nothing to delete server-side when someone changes their
+  /// password — without this, a token minted under the old password keeps
+  /// working for the rest of its fourteen days. getCurrentUser compares the
+  /// token's issued-at against this and refuses anything older, which is what
+  /// makes "change the password" actually end the sessions that knew it.
+  /// Null means it has never been changed, and every token is accepted.
+  passwordChangedAt DateTime?
+
   guideProfile       GuideProfile?
   hotel              Hotel?
   transportOperator  TransportOperator?

@@ -13,6 +13,49 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+/**
+ * What an admin may change about their own sign-in.
+ *
+ * `currentPassword` is required for either change, not just the password one:
+ * moving the account to a new address is as good as taking it over, so an
+ * unattended logged-in browser should not be enough to do it.
+ *
+ * The password rules are deliberately about shape rather than length alone.
+ * The account this was written for was live on "password123" — twelve
+ * characters, which a bare minimum-length rule would wave through — so a
+ * password must also draw on three of the four kinds of character. That
+ * rejects the long-but-obvious ones without demanding anything unmemorable.
+ */
+const CHARACTER_CLASSES = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/];
+
+export const strongPasswordSchema = z
+  .string()
+  // bcrypt only reads the first 72 bytes, so anything longer is a silent lie
+  // about how strong the password is.
+  .min(10, "Use at least 10 characters")
+  .max(72, "Use at most 72 characters")
+  .refine(
+    (value) => CHARACTER_CLASSES.filter((re) => re.test(value)).length >= 3,
+    "Use at least three of: lower case, upper case, numbers, symbols"
+  );
+
+export const adminAccountSchema = z
+  .object({
+    email: z.string().email("Enter a valid email address").max(200),
+    currentPassword: z.string().min(1, "Enter your current password"),
+    /** Omitted or empty when only the address is changing. */
+    newPassword: strongPasswordSchema.optional(),
+    confirmPassword: z.string().optional(),
+  })
+  .refine((data) => !data.newPassword || data.newPassword === data.confirmPassword, {
+    message: "The two new passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => !data.newPassword || data.newPassword !== data.currentPassword, {
+    message: "The new password is the same as the current one",
+    path: ["newPassword"],
+  });
+
 export const guideProfileSchema = z.object({
   licenseNumber: z.string().min(3).max(50),
   languages: z.array(z.string().min(1)).min(1),

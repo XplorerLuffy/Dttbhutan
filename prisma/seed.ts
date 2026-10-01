@@ -36,6 +36,22 @@ const PARO = { lat: 27.4305, lng: 89.4133 };
 const THIMPHU = { lat: 27.4712, lng: 89.6339 };
 const PUNAKHA = { lat: 27.5921, lng: 89.8797 };
 
+/**
+ * The admin account's password on a fresh database.
+ *
+ * Every other seeded account is a demo login and "password123" is fine for
+ * them. The admin is not: it can read every booking with its customer's
+ * contact details, rewrite the site's copy and retrain DRUKA, and this file is
+ * public, so seeding a real deployment with the default puts a published
+ * password on the one account that matters. Set SEED_ADMIN_PASSWORD when
+ * seeding anything that is not a developer's laptop.
+ *
+ * Existing users are never touched — upsertUser's update is {} — so this only
+ * applies the first time, and re-seeding cannot undo a password changed later
+ * from /admin/account.
+ */
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+
 async function upsertUser(email: string, name: string, role: "TRAVELER" | "GUIDE" | "HOTEL_OPERATOR" | "TRANSPORT_OPERATOR" | "ADMIN", password = "password123") {
   const passwordHash = await bcrypt.hash(password, 10);
   return prisma.user.upsert({
@@ -48,7 +64,20 @@ async function upsertUser(email: string, name: string, role: "TRAVELER" | "GUIDE
 async function main() {
   console.log("Seeding...");
 
-  const admin = await upsertUser("admin@droelma.bt", "Agency Admin", "ADMIN");
+  if (!SEED_ADMIN_PASSWORD) {
+    console.warn(
+      "\n  ! SEED_ADMIN_PASSWORD is not set, so a new admin account would be\n" +
+        "    created with the password in this file, which is public. Fine on a\n" +
+        "    laptop; set it for anything else, or change the password straight\n" +
+        "    away at /admin/account.\n"
+    );
+  }
+  const admin = await upsertUser(
+    "admin@droelma.bt",
+    "Agency Admin",
+    "ADMIN",
+    SEED_ADMIN_PASSWORD
+  );
   const traveler = await upsertUser("traveler@example.com", "Sonam Wangmo", "TRAVELER");
 
   // --- Destinations: all 20 dzongkhags -----------------------------------
