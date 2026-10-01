@@ -1,4 +1,7 @@
+import { redirect } from "next/navigation";
 import DashboardShell, { type DashboardNavItem } from "@/components/dashboard/DashboardShell";
+import { getCurrentUser } from "@/lib/auth";
+import { dashboardPathForRole } from "@/lib/roles";
 import { getAdminWorkload } from "@/lib/admin/workload";
 
 /**
@@ -13,6 +16,14 @@ import { getAdminWorkload } from "@/lib/admin/workload";
 export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // The gate belongs here, before anything renders. Each admin page also
+  // checks, but a layout renders before its page: left to the pages, an
+  // anonymous visitor's request ran the workload queries and began streaming
+  // the admin sidebar before the page's redirect caught up with it.
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+
   const work = await getAdminWorkload();
 
   const nav: DashboardNavItem[] = [
