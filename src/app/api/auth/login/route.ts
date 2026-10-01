@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createSupabaseServerClient, isSupabaseAuthConfigured } from "@/lib/supabase/server";
 import { loginSchema } from "@/lib/validation";
+import { migrateLegacyAccount } from "@/lib/authMigration";
 
 /**
  * Signs in against Supabase Auth and hands back the role, which is what the
@@ -29,10 +30,23 @@ export async function POST(req: NextRequest) {
   const email = parsed.data.email.trim().toLowerCase();
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
+  let { data, error } = await supabase.auth.signInWithPassword({
     email,
     password: parsed.data.password,
   });
+
+  // Supabase does not know this person yet — every account that predates the
+  // switch to Supabase Auth. If the password matches the hash we already
+  // hold, move the account over now and sign in. See authMigration.ts.
+  if (error || !data.user) {
+    const outcome = await migrateLegacyAccount(email, parsed.data.password);
+    if (outcome === "migrated") {
+      ({ data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: parsed.data.password,
+      }));
+    }
+  }
 
   // One message for a wrong password and for an address with no account:
   // telling them apart turns the form into a way to find out who has an
