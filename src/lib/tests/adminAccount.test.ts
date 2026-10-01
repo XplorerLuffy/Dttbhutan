@@ -1,14 +1,19 @@
 /**
  * The rules behind "change your password and sign-in address".
  *
- * Two things worth testing without a database: what the schema will accept,
- * and whether an old session survives a password change. Both are the kind of
- * rule that is easy to weaken by accident later and silent when it is.
+ * What the schema will accept, tested without a database or a network. These
+ * are the kind of rule that is easy to weaken by accident later and silent
+ * when it is.
+ *
+ * Session revocation on a password change used to be tested here too, back
+ * when sessions were our own JWTs and we had to refuse the stale ones
+ * ourselves. Supabase Auth owns that now, so there is no predicate of ours
+ * left to test — only Supabase's behaviour, which belongs in an end-to-end run
+ * against a real project rather than here.
  *
  *   npm run test:admin:account
  */
 import { adminAccountSchema, strongPasswordSchema } from "@/lib/validation";
-import { isSessionStale } from "@/lib/auth";
 
 let failures = 0;
 let total = 0;
@@ -50,7 +55,7 @@ check(
 check(
   "an address-only change is not judged against the password rules",
   adminAccountSchema.safeParse({ email: EMAIL, currentPassword: "short" }).success,
-  "currentPassword is checked against the stored hash, not for strength"
+  "currentPassword is checked against Supabase, not for strength"
 );
 
 check(
@@ -92,36 +97,6 @@ check(
   "a malformed address is refused",
   !adminAccountSchema.safeParse({ email: "admin@", currentPassword: "old" }).success
 );
-
-// ── sessions outliving a password change ──────────────────────────────────
-const noon = new Date("2026-10-01T12:00:00Z");
-const atNoon = Math.floor(noon.getTime() / 1000);
-
-check(
-  "an account whose password never changed accepts any token",
-  !isSessionStale(atNoon - 60 * 60 * 24 * 13, null)
-);
-check(
-  // Two seconds, not one: one second is the slack the rule deliberately
-  // allows, and is covered by its own check below.
-  "a token from before the change is refused",
-  isSessionStale(atNoon - 2, noon)
-);
-check(
-  "a token from long before the change is refused",
-  isSessionStale(atNoon - 60 * 60 * 24, noon)
-);
-check(
-  "the token minted by the change itself survives it",
-  !isSessionStale(atNoon, noon),
-  "iat is whole seconds and rounds down, so this is the same instant"
-);
-check(
-  "a token minted a second before the change survives, by design",
-  !isSessionStale(atNoon - 1, noon),
-  "iat rounds down, so this can be the same instant seen from the other side"
-);
-check("a token from after the change is fine", !isSessionStale(atNoon + 5, noon));
 
 console.log(
   failures === 0

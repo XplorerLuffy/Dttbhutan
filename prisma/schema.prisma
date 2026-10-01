@@ -43,12 +43,32 @@ enum VendorStatus {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  passwordHash String
+  /// The bcrypt hash from before Supabase Auth owned passwords.
+  ///
+  /// Kept, not dropped: it is what the import script feeds to Supabase so the
+  /// existing accounts keep their current passwords instead of everyone being
+  /// made to reset. Nothing reads it to sign anyone in any more. Safe to drop
+  /// in a later migration once every row has an authId and the import has not
+  /// needed re-running for a while.
+  passwordHash String?
   name         String
   phone        String?
   role         Role     @default(TRAVELER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  /// This account's row in Supabase's `auth.users`.
+  ///
+  /// The profile stays here rather than moving into auth.users, because
+  /// User.id is a cuid that ten tables already point at with live data —
+  /// bookings, reviews, guide profiles, messages. Re-keying all of them to
+  /// Supabase's uuids would be a large migration that bought nothing. So
+  /// Supabase owns the credentials and the session, this row owns who the
+  /// person is to the agency, and authId is the join between them.
+  ///
+  /// Nullable only so the column could be added to a table that already had
+  /// rows; every account gets one when it is imported or registered.
+  authId String? @unique @db.Uuid
 
   /// When this account's password last changed. Sessions are stateless JWTs,
   /// so there is nothing to delete server-side when someone changes their

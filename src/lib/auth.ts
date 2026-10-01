@@ -1,110 +1,52 @@
 import "server-only";
-import bcrypt from "bcryptjs";
-import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { createSupabaseServerClient, isSupabaseAuthConfigured } from "@/lib/supabase/server";
 import type { Role } from "@prisma/client";
 
-const SESSION_COOKIE = "dtt_session";
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 14; // 14 days
-
-function getSecretKey() {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    throw new Error("AUTH_SECRET is not set");
-  }
-  return new TextEncoder().encode(secret);
-}
-
-/** What goes into a session token. */
+/**
+ * Who is signed in, and what they are allowed to do.
+ *
+ * Supabase Auth owns the credentials and the session; this file owns the
+ * answer to "which of our users is that, and what is their role". The two are
+ * joined by User.authId — see the comment on it in schema.prisma for why the
+ * profile stayed in our own table rather than moving into auth.users.
+ *
+ * Roles deliberately live in the profile row rather than in the token's
+ * app_metadata. A guide's role changes the moment an admin approves them, and
+ * a role baked into a JWT stays wrong until that token is refreshed — up to an
+ * hour of someone seeing the wrong dashboard. Reading it here costs nothing
+ * extra, because every caller needs the profile row anyway.
+ *
+ * The call that matters is `getUser()`, not `getSession()`: getSession only
+ * decodes the cookie, which anyone can write. getUser verifies the token.
+ */
 export type SessionPayload = {
   userId: string;
   role: Role;
 };
 
-/** What comes back out of one. `issuedAt` is jose's `iat`, in seconds since
- * the epoch, and is set when the token is signed rather than by the caller —
- * which is what lets getCurrentUser refuse tokens minted before the account's
- * password changed. */
-export type Session = SessionPayload & { issuedAt: number };
-
-export async function hashPassword(password: string) {
-  return bcrypt.hash(password, 10);
-}
-
-export async function verifyPassword(password: string, hash: string) {
-  return bcrypt.compare(password, hash);
-}
-
-export async function createSessionCookie(payload: SessionPayload) {
-  const token = await new SignJWT({ role: payload.role })
-    .setProtectedHeader({ alg: "HS256" })
-    .setSubject(payload.userId)
-    .setIssuedAt()
-    .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
-    .sign(getSecretKey());
-
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_TTL_SECONDS,
-  });
-}
-
-export async function clearSessionCookie() {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
-}
-
-export async function getSession(): Promise<Session | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
-
-  try {
-    const { payload } = await jwtVerify(token, getSecretKey());
-    if (!payload.sub || !payload.role || typeof payload.iat !== "number") return null;
-    return { userId: payload.sub, role: payload.role as Role, issuedAt: payload.iat };
-  } catch {
-    return null;
-  }
-}
-
 export async function getCurrentUser() {
-  const session = await getSession();
-  if (!session) return null;
+  // Unconfigured reads as "nobody is signed in" rather than throwing. Every
+  // protected page then redirects to the login screen, which is a page that
+  // explains itself; the alternative is a 500 on every dashboard in the site.
+  // It fails closed either way — no configuration can grant access.
+  if (!isSupabaseAuthConfigured()) return null;
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } });
-  if (!user) return null;
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (!authUser) return null;
 
-  if (isSessionStale(session.issuedAt, user.passwordChangedAt)) return null;
-
-  return user;
+  // No profile for a verified auth user means the two stores have drifted —
+  // an account created directly in Supabase, or a profile deleted without its
+  // auth user. Treat it as not signed in rather than inventing a role.
+  return prisma.user.findUnique({ where: { authId: authUser.id } });
 }
 
-/**
- * Whether a token predates the account's current password.
- *
- * A session minted before the password changed is no longer a session. There
- * is no server-side store to delete from — the cookie is a signed JWT good for
- * fourteen days — so changing a password would otherwise leave whoever knew
- * the old one signed in until it expired. That matters most for exactly the
- * case this was written for: an admin account whose password was a published
- * default.
- *
- * `iat` has one-second resolution and is rounded down, so a token minted in
- * the same second as the change can read as older than it. The second of slack
- * keeps the person doing the changing signed in; it cannot save an older
- * session, which is further out than that either way.
- *
- * Its own function so it can be tested without a database or a cookie jar.
- */
-export function isSessionStale(issuedAt: number, passwordChangedAt: Date | null): boolean {
-  if (!passwordChangedAt) return false;
-  return issuedAt + 1 < Math.floor(passwordChangedAt.getTime() / 1000);
+export async function getSession(): Promise<SessionPayload | null> {
+  const user = await getCurrentUser();
+  return user ? { userId: user.id, role: user.role } : null;
 }
 
 export async function requireUser() {
@@ -119,6 +61,18 @@ export async function requireRole(...roles: Role[]) {
     throw new AuthError("Not authorized");
   }
   return user;
+}
+
+/**
+ * Ends the current session.
+ *
+ * `scope: "global"` so signing out of one browser signs out of all of them,
+ * which is what people expect of a "log out everywhere" and costs nothing
+ * here.
+ */
+export async function signOut() {
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut({ scope: "global" });
 }
 
 export class AuthError extends Error {}

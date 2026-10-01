@@ -55,6 +55,15 @@ const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
 /** Only used when the database has no admin at all. */
 const SEED_ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@dttbhutan.bt";
 
+/**
+ * Writes a profile row with a bcrypt hash and no authId.
+ *
+ * That is deliberately not a complete account: Supabase Auth owns sign-in now,
+ * and this script cannot create auth users (it has no service role key, and
+ * should not need one to seed a laptop). `npm run auth:migrate-users` turns
+ * these rows into accounts that can actually sign in, carrying the hash over —
+ * see docs/supabase-auth.md.
+ */
 async function upsertUser(email: string, name: string, role: "TRAVELER" | "GUIDE" | "HOTEL_OPERATOR" | "TRANSPORT_OPERATOR" | "ADMIN", password = "password123") {
   const passwordHash = await bcrypt.hash(password, 10);
   return prisma.user.upsert({
@@ -1187,6 +1196,10 @@ If your dates are flexible, ask us about aligning your trip with a specific dzon
   });
 
   console.log("Seed complete.");
+  console.log(
+    "\n  Next: npm run auth:migrate-users — the rows above have no Supabase\n" +
+      "  auth user yet, so nobody can sign in until it has run.\n"
+  );
   console.log("Admin login:", admin.email, "/ password123");
   console.log("Traveler login:", traveler.email, "/ password123");
   console.log("Guide login:", guideUser1.email, "/ password123");
