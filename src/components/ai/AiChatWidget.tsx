@@ -135,8 +135,13 @@ export default function AiChatWidget({ copy }: { copy: WidgetCopy }) {
         className="fixed right-5 z-40 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-1 ring-stone-200 transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 focus-visible:ring-offset-2 sm:right-6"
         /* Sits above a trip page's pinned booking bar, which publishes its
            height as --trip-bar-height; 0 everywhere else, so this is the usual
-           offset on every other page. */
-        style={{ bottom: "calc(1.25rem + var(--trip-bar-height, 0px))" }}
+           offset on every other page. --viewport-bottom-inset clears mobile
+           Safari's toolbar, which otherwise covers anything pinned to the
+           bottom of the layout viewport — see ViewportInset. */
+        style={{
+          bottom:
+            "calc(1.25rem + var(--trip-bar-height, 0px) + var(--viewport-bottom-inset, 0px))",
+        }}
       >
         {open ? (
           <svg viewBox="0 0 24 24" className="h-5 w-5 text-stone-700" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">

@@ -4,6 +4,7 @@ import "./globals.css";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
+import ViewportInset from "@/components/ViewportInset";
 import PageTransition from "@/components/PageTransition";
 import { CurrencyProvider } from "@/components/CurrencyProvider";
 import { getCurrentRates } from "@/lib/fx";
@@ -76,6 +77,7 @@ export default async function RootLayout({
         />
         <CurrencyProvider rates={rates}>
           <SmoothScroll />
+          <ViewportInset />
           <SiteChrome nav={<NavBar />} footer={<Footer />} chat={
               <AiChatWidget
                 copy={{

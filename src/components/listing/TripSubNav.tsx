@@ -200,8 +200,14 @@ export default function TripSubNav({
       {/* The phone counterpart of the price block above, which is md:flex. */}
       <div
         ref={barRef}
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white px-4 py-3 shadow-[0_-2px_12px_-4px_rgba(10,49,89,0.3)] md:hidden"
-        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        className="fixed inset-x-0 z-40 border-t border-stone-200 bg-white px-4 py-3 shadow-[0_-2px_12px_-4px_rgba(10,49,89,0.3)] md:hidden"
+        style={{
+          // Not bottom-0: on mobile Safari the bottom of the layout viewport
+          // is underneath the toolbar whenever it is expanded, so a bar pinned
+          // there disappears on every scroll-up. See ViewportInset.
+          bottom: "var(--viewport-bottom-inset, 0px)",
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+        }}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 leading-tight">
