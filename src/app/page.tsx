@@ -170,6 +170,12 @@ export default async function HomePage() {
         posterUrl={content("home.hero.posterUrl")}
       />
 
+      {collections.length > 0 && (
+        <Container className="py-20 sm:py-24">
+          <FeaturedCollections content={content} collections={collections} />
+        </Container>
+      )}
+
       <div>
         <ValueBand
           content={content}
@@ -180,14 +186,8 @@ export default async function HomePage() {
         />
       </div>
 
-      {collections.length > 0 && (
-        <Container className="py-20 sm:py-24">
-          <FeaturedCollections content={content} collections={collections} />
-        </Container>
-      )}
-
       {featured.length > 0 && (
-        <Container className="pb-20 sm:pb-24">
+        <Container className="py-20 sm:py-24">
           <SectionHeading
             title={content("home.packages.heading")}
             subtitle={content("home.packages.subtitle")}

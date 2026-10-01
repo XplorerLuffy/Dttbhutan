@@ -151,7 +151,7 @@ export const CAPTURE_SIZES: Record<string, { width: number; height: number }> = 
   },
   "home-full": {
     "width": 1800,
-    "height": 12422
+    "height": 12543
   },
   "home": {
     "width": 1800,
@@ -231,7 +231,7 @@ export const CAPTURE_SIZES: Record<string, { width: number; height: number }> = 
   },
   "p-home-full": {
     "width": 1170,
-    "height": 56001
+    "height": 56241
   },
   "p-home": {
     "width": 1170,

@@ -15,20 +15,29 @@ import { SectionTitle } from "../components/SectionTitle";
  * continuous pan over a page nine and a half thousand pixels tall is a blur,
  * and it also lets a label name something the window has already left.
  *
- * `pan` is measured off the running homepage, not guessed: the page is 9,938px
- * tall at 1440 wide in an 894px viewport, so a section beginning at y sits at
- * (y − 80) / 9,044 of the travel.
+ * `pan` is measured off the running homepage, not guessed: the page is 10,034px
+ * tall at 1440 wide in a 900px viewport, so a section beginning at y sits at
+ * (y − 80) / 9,134 of the travel. Re-measure with
+ * `node video/recapture-home.mjs`, which writes the offsets it finds to
+ * public/captures/home-sections.json — a label that names a section the window
+ * has already left is the failure this guards against, and reordering the
+ * homepage is exactly what causes it.
  *
- *     0   header & nav       853  Bhutan, Arranged Properly    6314  Twenty Dzongkhags
- *   133   hero              1777  Featured Collections         8507  Before You Go
+ *     0   header & nav       949  Featured Collections   2532  Journeys Worth the Flight
+ *   377   hero              1704  Bhutan, Arranged…      6410  Twenty Dzongkhags
+ *                                                        8603  Before You Go
+ *
+ * Six stops, because the scene's slot in the cut is six stops long. The value
+ * band is the one left out: it argues rather than shows, and the five that
+ * remain are the ones worth watching.
  */
 const STOPS: { label: string; pan: number }[] = [
   { label: "Header & navigation", pan: 0 },
-  { label: "Hero", pan: 0.006 },
-  { label: "Why book with us", pan: 0.086 },
-  { label: "Featured tours", pan: 0.188 },
-  { label: "Destinations", pan: 0.692 },
-  { label: "Travel guide & footer", pan: 0.936 },
+  { label: "Hero", pan: 0.01 },
+  { label: "Featured collections", pan: 0.095 },
+  { label: "Featured tours", pan: 0.269 },
+  { label: "Destinations", pan: 0.693 },
+  { label: "Travel guide & footer", pan: 0.933 },
 ];
 
 /** When the window arrives at each stop, and how long it rests there. */
