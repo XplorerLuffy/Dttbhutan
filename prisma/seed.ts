@@ -52,6 +52,9 @@ const PUNAKHA = { lat: 27.5921, lng: 89.8797 };
  */
 const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
 
+/** Only used when the database has no admin at all. */
+const SEED_ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@dttbhutan.bt";
+
 async function upsertUser(email: string, name: string, role: "TRAVELER" | "GUIDE" | "HOTEL_OPERATOR" | "TRANSPORT_OPERATOR" | "ADMIN", password = "password123") {
   const passwordHash = await bcrypt.hash(password, 10);
   return prisma.user.upsert({
@@ -64,20 +67,32 @@ async function upsertUser(email: string, name: string, role: "TRAVELER" | "GUIDE
 async function main() {
   console.log("Seeding...");
 
-  if (!SEED_ADMIN_PASSWORD) {
-    console.warn(
-      "\n  ! SEED_ADMIN_PASSWORD is not set, so a new admin account would be\n" +
-        "    created with the password in this file, which is public. Fine on a\n" +
-        "    laptop; set it for anything else, or change the password straight\n" +
-        "    away at /admin/account.\n"
+  // Make an admin only when there is no admin at all. Upserting a fixed
+  // address instead means renaming the account from /admin/account, or
+  // deleting a spare one, is undone the next time anyone seeds: the address
+  // the seed knows is simply recreated, on the password in this file. What the
+  // seed actually needs to guarantee is that *an* admin exists to sign in
+  // with, which is what this does.
+  let admin = await prisma.user.findFirst({ where: { role: "ADMIN" }, orderBy: { createdAt: "asc" } });
+  if (!admin) {
+    if (!SEED_ADMIN_PASSWORD) {
+      console.warn(
+        "\n  ! SEED_ADMIN_PASSWORD is not set, so the admin account is being\n" +
+          "    created with the password in this file, which is public. Fine on a\n" +
+          "    laptop; set it for anything else, or change the password straight\n" +
+          "    away at /admin/account.\n"
+      );
+    }
+    admin = await upsertUser(
+      SEED_ADMIN_EMAIL,
+      "Agency Admin",
+      "ADMIN",
+      SEED_ADMIN_PASSWORD
     );
+    console.log(`  created the admin account ${admin.email}`);
+  } else {
+    console.log(`  admin already exists (${admin.email}) — left alone`);
   }
-  const admin = await upsertUser(
-    "admin@droelma.bt",
-    "Agency Admin",
-    "ADMIN",
-    SEED_ADMIN_PASSWORD
-  );
   const traveler = await upsertUser("traveler@example.com", "Sonam Wangmo", "TRAVELER");
 
   // --- Destinations: all 20 dzongkhags -----------------------------------
