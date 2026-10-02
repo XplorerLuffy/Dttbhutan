@@ -92,7 +92,7 @@ export default function AiChatWidget({ copy }: { copy: WidgetCopy }) {
             </button>
           </header>
 
-          <div aria-live="polite" className="flex-1 overflow-y-auto bg-stone-50 px-3 py-4">
+          <div aria-live="polite" className="flex-1 overflow-y-auto overscroll-contain bg-stone-50 px-3 py-4">
             <AssistantThread messages={messages} busy={busy} greeting={copy.greeting} compact />
 
             {/* Openers, until the conversation has started — the panel's

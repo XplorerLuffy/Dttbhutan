@@ -50,10 +50,12 @@ export default async function NavBar() {
   return (
     <header className="bg-brand-900 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex items-center justify-between gap-4 py-3">
-          <Link href="/" className="flex shrink-0 items-center gap-3">
-            <LogoMarkReverse className="h-12 w-auto shrink-0" />
-            <span className="font-display text-lg font-semibold tracking-wide text-white sm:text-xl">
+        <div className="flex items-center justify-between gap-3 py-3 sm:gap-4">
+          {/* min-w-0 so the name gives way on the narrowest phones (320px)
+              instead of pushing the menu button off the screen. */}
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <LogoMarkReverse className="h-10 w-auto shrink-0 sm:h-12" />
+            <span className="font-display text-base font-semibold leading-tight tracking-wide text-white min-[380px]:text-lg sm:text-xl">
               {company.name}
             </span>
           </Link>

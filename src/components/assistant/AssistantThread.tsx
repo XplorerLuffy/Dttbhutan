@@ -26,12 +26,21 @@ export default function AssistantThread({
   compact?: boolean;
 }) {
   const end = useRef<HTMLDivElement>(null);
+  const latest = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Nothing to follow before the first exchange — on the page, scrolling on
     // mount would skip the hero, which is the first thing to see.
     if (messages.length === 0) return;
-    end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const last = messages[messages.length - 1];
+    if (!busy && last.role === "assistant") {
+      // A reply opens at its first line. Following the end instead would land
+      // a phone visitor below the package cards, scrolling back up to find
+      // where the answer starts.
+      latest.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
   }, [messages, busy]);
 
   return (
@@ -40,9 +49,10 @@ export default function AssistantThread({
         <AssistantRichText text={greeting} />
       </Bubble>
 
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <Bubble
           key={message.id}
+          anchor={index === messages.length - 1 ? latest : undefined}
           role={message.role}
           at={message.at}
           failed={message.failed}
@@ -75,7 +85,10 @@ export default function AssistantThread({
         </Bubble>
       )}
 
-      <div ref={end} />
+      {/* Clear of the composer, which is pinned over the bottom of the
+          screen on the page; scrolling "to the end" should not tuck the
+          newest line underneath it. */}
+      <div ref={end} className={compact ? "" : "scroll-mb-28"} />
     </div>
   );
 }
@@ -89,8 +102,10 @@ function Bubble({
   at,
   failed,
   compact,
+  anchor,
   children,
 }: {
+  anchor?: React.Ref<HTMLDivElement>;
   role: "user" | "assistant";
   at: Date | null;
   failed?: boolean;
@@ -98,10 +113,13 @@ function Bubble({
   children: React.ReactNode;
 }) {
   const isUser = role === "user";
-  const avatar = compact ? "h-7 w-7" : "h-9 w-9";
+  const avatar = compact ? "h-7 w-7" : "h-7 w-7 sm:h-9 sm:w-9";
 
   return (
-    <div className={`flex items-start gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}>
+    <div
+      ref={anchor}
+      className={`flex scroll-mt-4 items-start gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}
+    >
       <span
         aria-hidden
         className={`mt-1 flex shrink-0 items-center justify-center overflow-hidden rounded-full ${avatar} ${
@@ -118,10 +136,18 @@ function Bubble({
         )}
       </span>
 
-      <div className={`min-w-0 ${compact ? "max-w-[85%]" : "max-w-[46rem]"} ${isUser ? "text-right" : ""}`}>
+      {/* A reply can carry a URL or a long unbroken name, which as an
+          inline-block would size the bubble to its own width and push the
+          page sideways on a phone. max-w-full plus overflow-wrap:anywhere
+          keeps every bubble inside its column. */}
+      <div
+        className={`min-w-0 ${
+          compact ? "max-w-[85%]" : isUser ? "max-w-[85%] sm:max-w-[46rem]" : "flex-1 sm:max-w-[46rem]"
+        } ${isUser ? "text-right" : ""}`}
+      >
         <div
-          className={`inline-block rounded-2xl text-left leading-relaxed ${
-            compact ? "px-3 py-2 text-[13px]" : "px-4 py-3 text-sm"
+          className={`inline-block max-w-full rounded-2xl text-left leading-relaxed [overflow-wrap:anywhere] ${
+            compact ? "px-3 py-2 text-[13px]" : "px-3.5 py-2.5 text-sm sm:px-4 sm:py-3"
           } ${
             isUser
               ? "bg-brass-100/70 text-stone-800"

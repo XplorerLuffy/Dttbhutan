@@ -40,12 +40,18 @@ export type AssistantCopy = {
 };
 
 export default function AssistantWorkspace({ copy }: { copy: AssistantCopy }) {
-  const { messages, busy, send } = useAssistantChat();
+  const { messages, busy, send, started } = useAssistantChat();
 
   return (
     <div className="bg-stone-100/70">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-5 p-4 pb-28 sm:p-6 sm:pb-28 xl:flex-row xl:pb-6">
-        <div className="flex min-w-0 flex-1 flex-col">
+      {/* Below xl the chat column is `display: contents`, so the hero, the
+          thread, the composer and the rail are all children of this one
+          column. That is what lets the composer be `sticky` against the whole
+          page body — it stays pinned to the bottom of the screen while the
+          visitor reads the thread or the rail, and comes to rest at the end
+          instead of floating over the footer the way a `fixed` bar did. */}
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 pt-4 sm:gap-5 sm:px-6 sm:pt-6 xl:flex-row xl:p-6">
+        <div className="contents xl:flex xl:min-w-0 xl:flex-1 xl:flex-col">
           <section className="relative overflow-hidden rounded-2xl bg-ink-900">
             {copy.heroImageUrl && (
               // A content-editable URL that may sit outside the next.config
@@ -58,11 +64,11 @@ export default function AssistantWorkspace({ copy }: { copy: AssistantCopy }) {
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-ink-950/85 via-ink-950/55 to-transparent" />
-            <div className="relative px-6 py-10 sm:px-10 sm:py-14">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
+            <div className="relative px-5 py-7 sm:px-10 sm:py-14">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-white/70 sm:text-[11px]">
                 {copy.heroEyebrow}
               </p>
-              <h1 className="mt-2 max-w-md font-display text-3xl font-bold leading-tight text-white sm:text-5xl">
+              <h1 className="mt-2 max-w-md font-display text-[1.75rem] font-bold leading-tight text-white sm:text-5xl">
                 {copy.heroHeadline}
               </h1>
               <p className="mt-3 max-w-md whitespace-pre-line text-sm leading-relaxed text-white/85">
@@ -71,15 +77,34 @@ export default function AssistantWorkspace({ copy }: { copy: AssistantCopy }) {
             </div>
           </section>
 
-          <div className="mt-5 flex-1">
+          <div className="min-w-0 xl:mt-5 xl:flex-1">
             <AssistantThread messages={messages} busy={busy} greeting={copy.greeting} />
+
+            {/* On a phone the rail — and its popular questions — sits below
+                the whole conversation, a long scroll away from the greeting.
+                These chips put the openers where the visitor is looking; from
+                xl the rail is beside the thread and does that job itself. */}
+            {!started && copy.questions.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2 pl-[2.375rem] sm:pl-[2.875rem] xl:hidden">
+                {copy.questions.map((question) => (
+                  <button
+                    key={question}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => send(question)}
+                    className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs text-stone-700 transition-colors hover:border-brass-300 hover:bg-brass-50 disabled:opacity-60"
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Pinned to the viewport on phones, where the rail follows the
-              conversation in the stack and a merely sticky composer would
-              scroll away above it. From xl the columns sit side by side and
-              sticky-within-column is the right behaviour. */}
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-stone-100/95 p-3 backdrop-blur xl:sticky xl:inset-x-auto xl:bottom-4 xl:mt-6 xl:border-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-none">
+          {/* --viewport-bottom-inset lifts it clear of mobile Safari's
+              toolbar, which otherwise covers anything pinned to the bottom of
+              the layout viewport — see ViewportInset. */}
+          <div className="sticky bottom-[var(--viewport-bottom-inset,0px)] z-30 order-last -mx-4 border-t border-stone-200 bg-stone-100/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:-mx-6 sm:px-6 xl:order-none xl:bottom-4 xl:mx-0 xl:mt-6 xl:border-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-none">
             <AssistantComposer placeholder={copy.placeholder} busy={busy} onSend={send} />
           </div>
         </div>
