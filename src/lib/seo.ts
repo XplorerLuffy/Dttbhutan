@@ -1,10 +1,32 @@
 import { formatAddress, type CompanyDetails } from "@/lib/content";
 
-/** Absolute base URL for canonical links, sitemap entries and OG tags. */
+/**
+ * The site's public address — used by canonical links, the sitemap, Open
+ * Graph tags, the itinerary PDF and every email. The one place it is decided.
+ *
+ * In order:
+ *
+ *   1. NEXT_PUBLIC_SITE_URL, if set — an explicit override.
+ *   2. VERCEL_PROJECT_PRODUCTION_URL, which Vercel sets to the project's
+ *      shortest production domain: dttbhutan.vercel.app until a custom domain
+ *      is connected, then dttbhutan.com. So connecting the domain moves every
+ *      link over on the next deploy, with nothing to edit. It is the same on
+ *      preview deployments, which is right — a preview's canonical links
+ *      should point at production, not at itself.
+ *   3. dttbhutan.vercel.app, for anywhere that is not Vercel at all.
+ *
+ * Never VERCEL_URL: that is one particular deployment's address, which
+ * changes on every push. The itinerary PDF used it once and printed a link
+ * that would have stopped working within the day.
+ */
 export function siteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://dttbhutan.vercel.app"
-  ).replace(/\/$/, "");
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+
+  const production = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (production) return `https://${production.replace(/^https?:\/\//, "")}`.replace(/\/$/, "");
+
+  return "https://dttbhutan.vercel.app";
 }
 
 export function absoluteUrl(path: string): string {

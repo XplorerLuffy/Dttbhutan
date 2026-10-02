@@ -1,4 +1,5 @@
 import "server-only";
+import { siteUrl } from "@/lib/seo";
 
 /**
  * Email content. Every template returns a subject plus both an HTML and a
@@ -15,9 +16,9 @@ const INK = "#1c1917";
 const MUTED = "#78716c";
 const BORDER = "#e7e5e4";
 
-export function siteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://dttbhutan.vercel.app").replace(/\/$/, "");
-}
+// The same address the sitemap and the PDF use, so an email can never link
+// somewhere the rest of the site does not. Re-exported for existing callers.
+export { siteUrl };
 
 export function formatBTN(amount: number | { toString(): string }): string {
   return `Nu. ${Number(amount).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
