@@ -60,9 +60,6 @@ function winAnsi(text: string): string {
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const query = new URL(req.url).searchParams;
-  // `?view=inline` is for the itinerary panel on the trip page, which shows
-  // the document in the page; an attachment there would just download it.
-  const inline = query.get("view") === "inline";
 
   const [itinerary, company] = await Promise.all([
     prisma.itinerary.findUnique({
@@ -380,7 +377,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     headers: {
       "Content-Type": "application/pdf",
       "Content-Length": String(pdf.length),
-      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="${asciiFilename(itinerary.slug)}-itinerary.pdf"`,
+      "Content-Disposition": `attachment; filename="${asciiFilename(itinerary.slug)}-itinerary.pdf"`,
       // Short: the document embeds today's date and the live departure list.
       "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
     },

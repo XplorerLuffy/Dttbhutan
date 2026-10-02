@@ -5,16 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { absoluteUrl } from "@/lib/seo";
 import { notifyItineraryRequested } from "@/lib/email/notify";
+import type { SendResult } from "@/lib/email/send";
 
 /**
  * "Download Itinerary" on a trip page: the visitor leaves an email (and,
- * optionally, the departure they're eyeing), gets the itinerary shown in the
- * page straight away, and a copy by email.
+ * optionally, the departure they're eyeing) and the itinerary is emailed to
+ * them. It is deliberately not handed back to the page — the inbox is the
+ * delivery, which is what makes the address worth something to the agency.
  *
- * The PDF itself stays public at /packages/[slug]/itinerary.pdf — this is a
- * way to start a conversation, not a lock on the document. So a failure to
- * store or email must never stop the visitor seeing it: the response always
- * carries the link once the trip is known to exist.
+ * Because the email is the only way they get it, the response says whether
+ * it actually went out (`emailed`). When it didn't, the request is still
+ * stored as an enquiry and the page tells them the team will send it by
+ * hand, rather than promising an email that is never coming.
  *
  * Unauthenticated and stranger-reachable, like /api/contact — hence the same
  * honeypot, per-IP rate limit and length caps.
@@ -96,13 +98,13 @@ export async function POST(req: NextRequest) {
     : null;
 
   const pdfPath = `/packages/${trip.slug}/itinerary.pdf${departure ? `?departure=${departure.id}` : ""}`;
-  const result = { ok: true, pdfUrl: pdfPath };
 
   // Honeypot tripped: same answer a person gets, nothing stored or sent.
-  if (website) return NextResponse.json(result, { status: 201 });
+  if (website) return NextResponse.json({ ok: true, emailed: true }, { status: 201 });
 
   const departureLabel = departure ? `${day(departure.startDate)} to ${day(departure.endDate)}` : null;
 
+  let contactId: string;
   try {
     const user = await getCurrentUser().catch(() => null);
     const contact = await prisma.contactMessage.create({
@@ -120,18 +122,39 @@ export async function POST(req: NextRequest) {
         departureId: departure?.id ?? null,
       },
     });
-
-    await notifyItineraryRequested({
-      messageId: contact.id,
-      tripTitle: trip.title,
-      departure: departureLabel,
-      pdfUrl: absoluteUrl(pdfPath),
-      tripUrl: absoluteUrl(`/packages/${trip.slug}`),
-    });
+    contactId = contact.id;
   } catch (err) {
-    // Logged, not surfaced: the visitor still gets their itinerary.
-    console.error("[itinerary-request] could not record or email the request", err);
+    // Not stored means nobody would follow up either, so this one is a real
+    // failure for the visitor to retry.
+    console.error("[itinerary-request] could not record the request", err);
+    return NextResponse.json(
+      { error: "Something went wrong on our side. Please try again in a moment." },
+      { status: 500 }
+    );
   }
 
-  return NextResponse.json(result, { status: 201 });
+  const sent = await notifyItineraryRequested({
+    messageId: contactId,
+    tripTitle: trip.title,
+    departure: departureLabel,
+    pdfUrl: absoluteUrl(pdfPath),
+    tripUrl: absoluteUrl(`/packages/${trip.slug}`),
+  }).catch((err): SendResult => {
+    console.error("[itinerary-request] could not email the itinerary", err);
+    return { ok: false, error: "notify failed" };
+  });
+
+  return NextResponse.json({ ok: true, emailed: wasDelivered(sent) }, { status: 201 });
+}
+
+/**
+ * Whether the traveller can expect the email. A send skipped for missing
+ * configuration only counts off Vercel — locally the email is printed to the
+ * console, which is the point of the skip; on a deployment it means nothing
+ * reached them.
+ */
+function wasDelivered(result: SendResult): boolean {
+  if (!result.ok) return false;
+  if ("id" in result) return true;
+  return !process.env.VERCEL;
 }

@@ -8,16 +8,18 @@ export type DrawerDeparture = { id: string; label: string };
 type Phase =
   | { kind: "form" }
   | { kind: "sending" }
-  | { kind: "ready"; pdfUrl: string; email: string };
+  /** `emailed` is false when the request was saved but the email couldn't go
+   * out — the team sends it by hand from the enquiry instead. */
+  | { kind: "sent"; email: string; emailed: boolean };
 
 /**
  * "Download Itinerary" on a trip page, as a panel that slides in over the
  * page instead of a bare file download.
  *
  * The visitor picks a departure if they have one in mind and leaves an
- * email; the itinerary then opens inside the panel, with a download button,
- * and a copy goes to their inbox. For the agency that turns an anonymous
- * download into an enquiry it can follow up.
+ * email, and the itinerary is sent to that inbox — it is not shown in the
+ * page, so the address given has to be a real one. For the agency that turns
+ * an anonymous download into an enquiry with a working email to follow up.
  *
  * Each trigger owns its panel, so the page can offer it in more than one
  * place (the overview button and the sidebar link) without a shared store.
@@ -49,6 +51,9 @@ export default function ItineraryRequestDrawer({
 
   const close = useCallback(() => {
     setOpen(false);
+    // Opening it again after a send starts a fresh request rather than
+    // reshowing the confirmation.
+    setPhase((p) => (p.kind === "sent" ? { kind: "form" } : p));
     triggerRef.current?.focus();
   }, []);
 
@@ -93,10 +98,11 @@ export default function ItineraryRequestDrawer({
         }),
       });
       const data = (await res.json().catch(() => ({}))) as {
-        pdfUrl?: string;
+        ok?: boolean;
+        emailed?: boolean;
         error?: string | { fieldErrors?: Record<string, string[]> };
       };
-      if (!res.ok || !data.pdfUrl) {
+      if (!res.ok || !data.ok) {
         const message =
           typeof data.error === "string"
             ? data.error
@@ -106,7 +112,7 @@ export default function ItineraryRequestDrawer({
         setPhase({ kind: "form" });
         return;
       }
-      setPhase({ kind: "ready", pdfUrl: data.pdfUrl, email });
+      setPhase({ kind: "sent", email, emailed: data.emailed !== false });
     } catch {
       setError(
         "We couldn't reach the server. Please check your connection and try again.",
@@ -114,9 +120,6 @@ export default function ItineraryRequestDrawer({
       setPhase({ kind: "form" });
     }
   }
-
-  const viewUrl =
-    phase.kind === "ready" ? withQuery(phase.pdfUrl, "view", "inline") : "";
 
   return (
     <>
@@ -156,8 +159,10 @@ export default function ItineraryRequestDrawer({
                   id={titleId}
                   className="font-display text-2xl font-bold text-stone-900 sm:text-[1.75rem]"
                 >
-                  {phase.kind === "ready"
-                    ? "Your itinerary is ready"
+                  {phase.kind === "sent"
+                    ? phase.emailed
+                      ? "Check your inbox"
+                      : "Request received"
                     : "Request a Sample Itinerary"}
                 </h2>
                 <button
@@ -180,61 +185,69 @@ export default function ItineraryRequestDrawer({
                 </button>
               </div>
 
-              {phase.kind === "ready" ? (
-                <div className="flex flex-1 flex-col px-6 py-6 sm:px-10">
-                  <p className="text-stone-700">
-                    Here&apos;s the full itinerary for{" "}
-                    <strong>{tripTitle}</strong>. We&apos;ve also emailed a copy
-                    to <strong className="break-all">{phase.email}</strong>.
-                  </p>
-
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <a
-                      href={phase.pdfUrl}
-                      download
-                      className="inline-flex items-center gap-2 rounded-full bg-brand-900 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-800"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
-                      </svg>
-                      Download PDF
-                    </a>
-                    <a
-                      href={viewUrl}
-                      target="_blank"
-                      rel="noopener"
-                      className="inline-flex items-center rounded-full border-2 border-brand-800 px-6 py-2.5 font-semibold text-brand-900 transition-colors hover:bg-brand-50"
-                    >
-                      <span className="sm:hidden">View itinerary</span>
-                      <span className="hidden sm:inline">Open full screen</span>
-                    </a>
-                  </div>
-
-                  {/* The document itself, in the page — from tablet width up.
-                    Phone browsers have no in-page PDF viewer (Android shows a
-                    blank frame, iOS a single static page), so there the
-                    buttons above open it in the phone's own viewer instead. */}
-                  <iframe
-                    src={viewUrl}
-                    title={`${tripTitle} — itinerary`}
-                    className="mt-6 hidden min-h-[60vh] w-full flex-1 rounded-xl border border-stone-200 bg-stone-50 sm:block"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setPhase({ kind: "form" })}
-                    className="mt-4 self-start text-sm font-semibold text-brand-700 hover:underline"
+              {phase.kind === "sent" ? (
+                <div className="flex flex-1 flex-col px-6 py-8 sm:px-10">
+                  <span
+                    aria-hidden
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-800"
                   >
-                    Choose a different departure
-                  </button>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-7 w-7"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.7}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="5" width="18" height="14" rx="2" />
+                      <path d="m3.5 6.5 8.5 6.5 8.5-6.5" />
+                    </svg>
+                  </span>
+
+                  {phase.emailed ? (
+                    <>
+                      <p className="mt-5 text-lg leading-relaxed text-stone-800">
+                        We&apos;ve sent the itinerary for{" "}
+                        <strong>{tripTitle}</strong> to{" "}
+                        <strong className="break-all">{phase.email}</strong>.
+                      </p>
+                      <p className="mt-3 leading-relaxed text-stone-600">
+                        It usually arrives within a few minutes. If you
+                        can&apos;t see it, check your spam or promotions folder.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-5 text-lg leading-relaxed text-stone-800">
+                        Thanks — we&apos;ve got your request for{" "}
+                        <strong>{tripTitle}</strong>.
+                      </p>
+                      <p className="mt-3 leading-relaxed text-stone-600">
+                        We couldn&apos;t send the email automatically just now,
+                        so our team will email the itinerary to{" "}
+                        <strong className="break-all">{phase.email}</strong>{" "}
+                        within one working day.
+                      </p>
+                    </>
+                  )}
+
+                  <div className="mt-8 flex flex-wrap items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={close}
+                      className="rounded-full bg-brand-900 px-8 py-3 font-semibold text-white transition-colors hover:bg-brand-800"
+                    >
+                      Done
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPhase({ kind: "form" })}
+                      className="text-sm font-semibold text-brand-700 hover:underline"
+                    >
+                      Send to a different email
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form
@@ -250,8 +263,8 @@ export default function ItineraryRequestDrawer({
                   </p>
                   <p className="mt-5 leading-relaxed text-stone-700">
                     {departures.length > 0
-                      ? "Not sure of your travel date? Select any departure to view a sample itinerary. We'll also email it to you so you can read it at your leisure."
-                      : "This trip runs privately on dates that suit you. We'll show you the itinerary now and email you a copy to read at your leisure."}
+                      ? "Not sure of your travel date? Select any departure and we'll email you a sample itinerary to read at your leisure."
+                      : "This trip runs privately on dates that suit you. Leave your email and we'll send you the full itinerary to read at your leisure."}
                   </p>
 
                   {departures.length > 0 && (
@@ -360,7 +373,7 @@ export default function ItineraryRequestDrawer({
                       disabled={phase.kind === "sending"}
                       className="w-full max-w-xs rounded-full bg-brand-900 px-8 py-3.5 text-lg font-semibold text-white transition-colors hover:bg-brand-800 disabled:cursor-wait disabled:opacity-70"
                     >
-                      {phase.kind === "sending" ? "Preparing…" : "Submit"}
+                      {phase.kind === "sending" ? "Sending…" : "Submit"}
                     </button>
                   </div>
                 </form>
@@ -371,8 +384,4 @@ export default function ItineraryRequestDrawer({
         )}
     </>
   );
-}
-
-function withQuery(path: string, key: string, value: string): string {
-  return `${path}${path.includes("?") ? "&" : "?"}${key}=${value}`;
 }

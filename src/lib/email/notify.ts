@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { agencyInbox, sendEmails, type EmailMessage } from "@/lib/email/send";
+import { agencyInbox, sendEmail, sendEmails, type EmailMessage, type SendResult } from "@/lib/email/send";
 import {
   bookingCancelledToVendor,
   bookingReceivedToTraveler,
@@ -297,9 +297,13 @@ export async function notifyContactMessage(messageId: string): Promise<void> {
 }
 
 /**
- * Someone asked for a trip's itinerary from the trip page: send them the link
+ * Someone asked for a trip's itinerary from the trip page: send it to them
  * and let the agency know there's a warm lead. The enquiry itself is already
  * stored as a ContactMessage, so it shows in /admin/enquiries like any other.
+ *
+ * Unlike the other notifications, this one reports how the traveller's email
+ * went: it is the only way they receive the itinerary, so the page has to
+ * say so honestly when it didn't go out.
  */
 export async function notifyItineraryRequested(input: {
   messageId: string;
@@ -307,24 +311,40 @@ export async function notifyItineraryRequested(input: {
   departure: string | null;
   pdfUrl: string;
   tripUrl: string;
-}): Promise<void> {
+}): Promise<SendResult> {
   const contact = await prisma.contactMessage.findUnique({
     where: { id: input.messageId },
     include: { traveler: { select: { email: true, role: true } } },
   });
-  if (!contact) return;
+  if (!contact) return { ok: false, error: "enquiry not found" };
 
-  await dispatch([
-    to(
-      contact.email,
-      itineraryToTraveler({
-        tripTitle: input.tripTitle,
-        departure: input.departure,
-        pdfUrl: input.pdfUrl,
-        tripUrl: input.tripUrl,
-      }),
-      agencyInbox() ?? undefined
-    ),
+  const toTraveler = to(
+    contact.email,
+    itineraryToTraveler({
+      tripTitle: input.tripTitle,
+      departure: input.departure,
+      pdfUrl: input.pdfUrl,
+      tripUrl: input.tripUrl,
+    }),
+    agencyInbox() ?? undefined
+  );
+
+  const [travelerResult] = await Promise.all([
+    toTraveler ? sendEmail(toTraveler) : Promise.resolve<SendResult>({ ok: false, error: "no address" }),
+    notifyAgencyOfItineraryRequest(contact),
+  ]);
+  return travelerResult;
+}
+
+function notifyAgencyOfItineraryRequest(contact: {
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string | null;
+  message: string;
+  traveler: { email: string; role: string } | null;
+}): Promise<void> {
+  return dispatch([
     to(
       agencyInbox(),
       contactToAgency({
