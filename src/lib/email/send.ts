@@ -1,17 +1,22 @@
 import "server-only";
+import nodemailer, { type Transporter } from "nodemailer";
 
 /**
- * Transactional email via Resend's HTTP API.
+ * Transactional email, through whichever sender is configured:
  *
- * Deliberately a plain `fetch` rather than the `resend` SDK — the API is a
- * single POST, and this keeps the dependency out of the bundle.
+ *   1. SMTP — SMTP_USER + SMTP_PASS (host/port default to Gmail). The simple
+ *      option for a small agency: the site sends through the owner's own
+ *      Gmail account with a Google "app password", no email service to sign
+ *      up for. Gmail sends as that account whatever EMAIL_FROM says.
+ *   2. Resend's HTTP API — RESEND_API_KEY + EMAIL_FROM, for sending from an
+ *      address on the agency's own domain at volume. A plain `fetch` rather
+ *      than the SDK: the API is a single POST.
+ *   3. Neither — the message is logged instead, so local dev and any
+ *      not-yet-configured deploy still work and show what would have gone out.
  *
- * Two hard rules, because every caller sits on a path where something more
+ * One hard rule, because every caller sits on a path where something more
  * important already succeeded (a booking was taken, an enquiry was filed):
- *   1. This never throws. A send failure is logged and swallowed.
- *   2. With no RESEND_API_KEY configured it logs instead of sending, so
- *      local dev and any not-yet-configured deploy still work — and you can
- *      see exactly what would have gone out.
+ * this never throws. A send failure is logged and swallowed.
  */
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
@@ -34,7 +39,49 @@ function fromAddress(): string | null {
   return process.env.EMAIL_FROM?.trim() || null;
 }
 
+function smtpConfig() {
+  const user = process.env.SMTP_USER?.trim();
+  // Google shows app passwords in groups of four ("abcd efgh ijkl mnop");
+  // pasted that way the spaces would make the login fail.
+  const pass = process.env.SMTP_PASS?.replace(/\s+/g, "");
+  if (!user || !pass) return null;
+  const port = Number(process.env.SMTP_PORT) || 465;
+  return {
+    host: process.env.SMTP_HOST?.trim() || "smtp.gmail.com",
+    port,
+    // 465 is TLS from the first byte; 587 upgrades with STARTTLS.
+    secure: port === 465,
+    auth: { user, pass },
+  };
+}
+
+let smtpTransport: Transporter | null = null;
+
+async function sendViaSmtp(
+  message: EmailMessage,
+  config: NonNullable<ReturnType<typeof smtpConfig>>
+): Promise<SendResult> {
+  smtpTransport ??= nodemailer.createTransport(config);
+  try {
+    const info = await smtpTransport.sendMail({
+      from: fromAddress() ?? `"Droelma Tours & Travels" <${config.auth.user}>`,
+      to: message.to,
+      subject: message.subject,
+      html: message.html,
+      text: message.text,
+      ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+    });
+    return { ok: true, id: info.messageId };
+  } catch (err) {
+    console.error(`[email] SMTP failed to send "${message.subject}" to ${message.to}`, err);
+    return { ok: false, error: err instanceof Error ? err.message : "SMTP error" };
+  }
+}
+
 export async function sendEmail(message: EmailMessage): Promise<SendResult> {
+  const smtp = smtpConfig();
+  if (smtp) return sendViaSmtp(message, smtp);
+
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = fromAddress();
 

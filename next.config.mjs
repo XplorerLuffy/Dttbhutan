@@ -2,7 +2,7 @@
 const nextConfig = {
   experimental: {
     // pdfkit is loaded from node_modules at runtime rather than bundled.
-    serverComponentsExternalPackages: ["pdfkit"],
+    serverComponentsExternalPackages: ["pdfkit", "nodemailer"],
 
     // ...but that alone is not enough, and the itinerary download 500'd in
     // production with "Cannot find module .../pdfkit/js/standard-fonts/
