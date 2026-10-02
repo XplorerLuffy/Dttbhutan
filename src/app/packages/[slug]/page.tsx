@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { startOfToday } from "date-fns";
+import { format, startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import DepartureList, { type DepartureView } from "@/components/booking/DepartureList";
 import TripPageHeader from "@/components/listing/TripPageHeader";
@@ -16,6 +16,9 @@ import TripReviews, { type TripReview } from "@/components/listing/TripReviews";
 import TripCard, { CATEGORY_LABEL } from "@/components/listing/TripCard";
 import TripLodging, { type LodgingView } from "@/components/listing/TripLodging";
 import Money from "@/components/Money";
+import ItineraryRequestDrawer, {
+  type DrawerDeparture,
+} from "@/components/listing/ItineraryRequestDrawer";
 import type { DepartureStatus } from "@prisma/client";
 import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
@@ -118,6 +121,15 @@ export default async function PackageDetailPage({
     status: d.status,
     note: d.note,
   }));
+
+  // Plain text for the itinerary panel's date picker, which is a native
+  // <select>: dates only, plus a word when a departure is nearly or fully
+  // booked. Read at midday so a DATE column can't slip a day in any zone.
+  const drawerDepartures: DrawerDeparture[] = departures.map((d) => {
+    const day = (iso: string) => format(new Date(`${iso}T12:00:00`), "d MMM yyyy");
+    const flag = d.status === "SOLD_OUT" ? " · Sold out" : d.status === "LIMITED" ? " · Limited space" : "";
+    return { id: d.id, label: `${day(d.startDate)} – ${day(d.endDate)}${flag}` };
+  });
 
   const days: ItineraryDayView[] = itinerary.days.map((d) => {
     const hasHike =
@@ -266,12 +278,13 @@ export default async function PackageDetailPage({
               included and the dates it runs. Easy to share with whoever you&apos;re travelling
               with.
             </p>
-            <a
-              href={`/packages/${itinerary.slug}/itinerary.pdf`}
-              className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
-            >
-              Download &amp; share (PDF)
-            </a>
+            <ItineraryRequestDrawer
+              slug={itinerary.slug}
+              tripTitle={itinerary.title}
+              departures={drawerDepartures}
+              triggerLabel="Download & share (PDF)"
+              triggerClassName="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
+            />
           </div>
 
           <div className="rounded-xl border border-stone-200 bg-white p-6">
@@ -370,12 +383,13 @@ export default async function PackageDetailPage({
             </p>
           )}
 
-          <a
-            href={`/packages/${itinerary.slug}/itinerary.pdf`}
-            className="mt-8 inline-block rounded-full border-2 border-brand-800 px-7 py-3 font-display font-semibold text-brand-900 transition-colors hover:bg-brand-50"
-          >
-            Download Itinerary
-          </a>
+          <ItineraryRequestDrawer
+            slug={itinerary.slug}
+            tripTitle={itinerary.title}
+            departures={drawerDepartures}
+            triggerLabel="Download Itinerary"
+            triggerClassName="mt-8 inline-block rounded-full border-2 border-brand-800 px-7 py-3 font-display font-semibold text-brand-900 transition-colors hover:bg-brand-50"
+          />
 
           {/* Without highlights the map takes the whole width rather than
               sitting in a column with nothing beside it. */}

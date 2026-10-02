@@ -375,6 +375,26 @@ export function contactToAgency(input: {
   });
 }
 
+export function itineraryToTraveler(input: {
+  tripTitle: string;
+  departure: string | null;
+  pdfUrl: string;
+  tripUrl: string;
+}): RenderedEmail {
+  return render(`Your itinerary: ${input.tripTitle}`, {
+    heading: "Here's your itinerary",
+    intro: `Thanks for your interest in ${input.tripTitle}. The full day-by-day itinerary — where you stay, what's included and the dates it runs — is a click away.`,
+    rows: [
+      { label: "Trip", value: input.tripTitle },
+      ...(input.departure ? [{ label: "Departure you picked", value: input.departure }] : []),
+      { label: "Trip page", value: input.tripUrl },
+    ],
+    cta: { label: "Download the itinerary (PDF)", href: input.pdfUrl },
+    outro:
+      "Trip details can vary by departure; we confirm the final plan in writing before you pay anything. Questions? Just reply to this email.",
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Vendor approvals
 // ---------------------------------------------------------------------------

@@ -57,8 +57,12 @@ function winAnsi(text: string): string {
     .replace(/[^\u0000-ÿ]/g, "");
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const query = new URL(req.url).searchParams;
+  // `?view=inline` is for the itinerary panel on the trip page, which shows
+  // the document in the page; an attachment there would just download it.
+  const inline = query.get("view") === "inline";
 
   const [itinerary, company] = await Promise.all([
     prisma.itinerary.findUnique({
@@ -81,6 +85,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   if (!itinerary || itinerary.status !== "PUBLISHED") {
     return new NextResponse("Not found", { status: 404 });
   }
+
+  // The date the traveller picked when requesting it, if any. Matched against
+  // this trip's own upcoming departures, so an edited or stale id simply
+  // gives the general version.
+  const selected = itinerary.departures.find((d) => d.id === query.get("departure")) ?? null;
 
   // Formatted here rather than via formatCurrency, which wants a live rate
   // map: BTN needs no conversion, and passing it a rate at all invites
@@ -147,10 +156,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   doc.moveDown(1);
 
   const facts: [string, string][] = [
+    ...(selected
+      ? ([["Your departure", `${fmt(selected.startDate)} to ${fmt(selected.endDate)}`]] as [string, string][])
+      : []),
     ["Trip length", `${itinerary.durationDays} days${itinerary.durationDays > 1 ? ` / ${itinerary.durationDays - 1} nights` : ""}`],
     ["Activity level", DIFFICULTY_LABEL[itinerary.difficulty] ?? itinerary.difficulty],
     ["Group size", itinerary.maxGroupSize ? `Up to ${itinerary.maxGroupSize}` : "Small group"],
-    ["From", `${money(Number(itinerary.pricePerPerson))} per person`],
+    selected
+      ? ["Price", `${money(Number(selected.priceOverride ?? itinerary.pricePerPerson))} per person`]
+      : ["From", `${money(Number(itinerary.pricePerPerson))} per person`],
     ["Style", CATEGORY_LABEL[itinerary.category] ?? itinerary.category],
   ];
 
@@ -293,18 +307,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       const price = money(Number(d.priceOverride ?? itinerary.pricePerPerson));
       const status =
         d.status === "SOLD_OUT" ? "Sold out" : d.status === "LIMITED" ? "Limited space" : "Available";
+      const mine = d.id === selected?.id;
       const cells: [string, string][] = [
         [`${fmt(d.startDate)} to ${fmt(d.endDate)}`, INK],
         [price, INK],
         [status, d.status === "OPEN" ? MUTED : INK],
-        [d.note ?? "", MUTED],
+        mine ? ["Your selected date", NAVY] : [d.note ?? "", MUTED],
       ];
       let tallest = 0;
       cells.forEach(([value, color], i) => {
         if (!value) return;
         doc
           .fillColor(color)
-          .font("Helvetica")
+          .font(mine ? "Helvetica-Bold" : "Helvetica")
           .fontSize(9.5)
           .text(text(value), left + cols[i].x, y, { width: cols[i].w, lineBreak: false });
         tallest = Math.max(tallest, doc.y - y);
@@ -365,7 +380,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     headers: {
       "Content-Type": "application/pdf",
       "Content-Length": String(pdf.length),
-      "Content-Disposition": `attachment; filename="${asciiFilename(itinerary.slug)}-itinerary.pdf"`,
+      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="${asciiFilename(itinerary.slug)}-itinerary.pdf"`,
       // Short: the document embeds today's date and the live departure list.
       "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
     },

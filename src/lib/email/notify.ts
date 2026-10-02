@@ -11,6 +11,7 @@ import {
   customTourToAgency,
   formatBTN,
   formatDateRange,
+  itineraryToTraveler,
   newBookingToAgency,
   newBookingToVendor,
   vendorStatusToVendor,
@@ -290,6 +291,52 @@ export async function notifyContactMessage(messageId: string): Promise<void> {
           : "Not signed in — no account",
       }),
       // Replying to the alert reaches the person who asked, not our own inbox.
+      contact.email
+    ),
+  ]);
+}
+
+/**
+ * Someone asked for a trip's itinerary from the trip page: send them the link
+ * and let the agency know there's a warm lead. The enquiry itself is already
+ * stored as a ContactMessage, so it shows in /admin/enquiries like any other.
+ */
+export async function notifyItineraryRequested(input: {
+  messageId: string;
+  tripTitle: string;
+  departure: string | null;
+  pdfUrl: string;
+  tripUrl: string;
+}): Promise<void> {
+  const contact = await prisma.contactMessage.findUnique({
+    where: { id: input.messageId },
+    include: { traveler: { select: { email: true, role: true } } },
+  });
+  if (!contact) return;
+
+  await dispatch([
+    to(
+      contact.email,
+      itineraryToTraveler({
+        tripTitle: input.tripTitle,
+        departure: input.departure,
+        pdfUrl: input.pdfUrl,
+        tripUrl: input.tripUrl,
+      }),
+      agencyInbox() ?? undefined
+    ),
+    to(
+      agencyInbox(),
+      contactToAgency({
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        subject: contact.subject,
+        message: contact.message,
+        accountNote: contact.traveler
+          ? `Signed in as ${contact.traveler.email} (${contact.traveler.role})`
+          : "Not signed in — no account",
+      }),
       contact.email
     ),
   ]);
