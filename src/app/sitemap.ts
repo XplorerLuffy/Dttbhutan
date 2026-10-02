@@ -23,6 +23,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/flights`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/custom-tour`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/travel-guide`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/assistant`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${base}/gallery`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/about`, changeFrequency: "yearly", priority: 0.6 },
     { url: `${base}/contact`, changeFrequency: "yearly", priority: 0.7 },
     { url: `${base}/faq`, changeFrequency: "monthly", priority: 0.7 },
@@ -32,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [destinations, packages, articles, guides, hotels] = await Promise.all([
+    const [destinations, packages, articles, guides, hotels, vehicles] = await Promise.all([
       prisma.destination.findMany({ select: { slug: true } }),
       prisma.itinerary.findMany({
         where: { status: "PUBLISHED" },
@@ -47,6 +49,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { id: true, updatedAt: true },
       }),
       prisma.hotel.findMany({
+        where: { status: "APPROVED" },
+        select: { id: true, updatedAt: true },
+      }),
+      // Same filter as /vehicles and /vehicles/[id], which 404 anything not
+      // approved — the sitemap must never list a page the site refuses.
+      prisma.vehicle.findMany({
         where: { status: "APPROVED" },
         select: { id: true, updatedAt: true },
       }),
@@ -82,6 +90,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: h.updatedAt,
         changeFrequency: "weekly" as const,
         priority: 0.6,
+      })),
+      ...vehicles.map((v) => ({
+        url: `${base}/vehicles/${v.id}`,
+        lastModified: v.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.5,
       })),
     ];
   } catch (err) {
