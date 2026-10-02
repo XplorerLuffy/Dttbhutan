@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import LogoMark from "@/components/Logo";
+import { LogoLockup } from "@/components/Logo";
 import CompanyFact from "@/components/company/CompanyFact";
 import { getSiteContent, companyFrom, formatAddress, paragraphs } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "About us",
+  title: "About Us — Bhutan Tour Operator",
   description:
-    "Droelma Tours & Travels is a Bhutan-based tour operator arranging licensed guides, hotels, transport and custom itineraries across all 20 dzongkhags.",
+    "Droelma Tours & Travels (DTT) is a Bhutan-based tour operator arranging licensed guides, hotels, transport and custom itineraries across all 20 dzongkhags.",
+  alternates: { canonical: "/about" },
 };
 
 /** The four cards under "What we do". Numbered rather than named so the
@@ -32,7 +33,7 @@ export default async function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-10 flex flex-col items-center text-center">
-        <LogoMark className="mb-4 h-16 w-auto" />
+        <LogoLockup className="mb-6 h-auto w-60 sm:w-72" />
         <h1 className="font-display text-3xl font-bold text-stone-900">About {company.name}</h1>
         {content("about.intro") && <p className="mt-3 text-stone-600">{content("about.intro")}</p>}
       </div>

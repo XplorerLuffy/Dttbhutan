@@ -19,14 +19,17 @@ import type { Testimonial } from "@/components/home/TestimonialCarousel";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Bhutan Tours, Local Guides & Custom Trips",
+  // The home page is the one most likely to rank for the head terms, so it
+  // leads with them rather than with the brand, which the template would
+  // otherwise repeat.
+  title: { absolute: "Bhutan Tour Packages & Travel Agency | Droelma Tours & Travels (DTT)" },
   description:
-    "Discover Bhutan, your way — explore tour packages, meet verified local guides, or build a custom trip with Droelma Tours & Travels and book directly online.",
+    "Plan your Bhutan trip with Droelma Tours & Travels (DTT), a licensed Bhutanese tour operator — tour packages, treks, festival tours, local guides, hotels and custom trips, booked directly online.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Droelma Tours & Travels | Bhutan Tours, Local Guides & Custom Trips",
+    title: "Droelma Tours & Travels (DTT) | Bhutan Tour Packages & Custom Trips",
     description:
-      "Discover Bhutan, your way — explore tour packages, meet verified local guides, or build a custom trip and book directly online.",
+      "Discover Bhutan, your way — tour packages, treks, festival tours, verified local guides and custom trips, booked directly online.",
     url: "/",
   },
 };

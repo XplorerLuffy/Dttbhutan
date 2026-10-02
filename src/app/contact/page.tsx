@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Contact us",
   description:
     "Get in touch with Droelma Tours & Travels about a trip to Bhutan — no account needed. We usually reply within one working day.",
+  alternates: { canonical: "/contact" },
 };
 
 export default async function ContactPage({

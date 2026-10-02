@@ -3,11 +3,14 @@ import Link from "next/link";
 import { getCompany } from "@/lib/content";
 import { getSections } from "@/lib/content/sections";
 import RichText from "@/components/RichText";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, faqJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Frequently asked questions",
+  title: "Bhutan Travel FAQ: Visas, SDF, Guides & Booking",
   description:
     "Common questions about visiting Bhutan: visas, the Sustainable Development Fee, guides, booking, payment and cancellations.",
+  alternates: { canonical: "/faq" },
 };
 
 /**
@@ -33,6 +36,7 @@ export default async function FaqPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <JsonLd data={[faqJsonLd(sections), breadcrumbJsonLd([{ name: "FAQ", path: "/faq" }])]} />
       <h1 className="mb-1 font-display text-3xl font-bold text-stone-900">
         Frequently asked questions
       </h1>

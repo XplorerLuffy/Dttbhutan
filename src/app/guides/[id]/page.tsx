@@ -5,6 +5,50 @@ import ReviewList from "@/components/ReviewList";
 import RatingBadge from "@/components/listing/RatingBadge";
 import DetailGallery from "@/components/listing/DetailGallery";
 import Money from "@/components/Money";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const guide = await prisma.guideProfile.findUnique({
+    where: { id },
+    select: {
+      status: true,
+      bio: true,
+      languages: true,
+      specialties: true,
+      yearsExperience: true,
+      photoUrl: true,
+      user: { select: { name: true } },
+    },
+  });
+  if (!guide || guide.status !== "APPROVED") return { title: "Guide not found" };
+
+  const title = `${guide.user.name} — Licensed Bhutan Tour Guide`;
+  const description = (
+    guide.bio?.trim() ||
+    `Licensed Bhutanese tour guide with ${guide.yearsExperience} years' experience` +
+      (guide.specialties.length ? ` in ${guide.specialties.join(", ").toLowerCase()} tours` : "") +
+      (guide.languages.length ? `. Speaks ${guide.languages.join(", ")}.` : ".")
+  ).slice(0, 160);
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/guides/${id}` },
+    openGraph: {
+      title,
+      description,
+      url: `/guides/${id}`,
+      images: [guide.photoUrl ?? DEFAULT_OG_IMAGE],
+    },
+  };
+}
 
 export default async function GuideDetailPage({
   params,
@@ -35,6 +79,12 @@ export default async function GuideDetailPage({
 
   return (
     <div>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Tour guides", path: "/guides" },
+          { name: guide.user.name, path: `/guides/${guide.id}` },
+        ])}
+      />
       <DetailGallery photos={[guide.photoUrl]} label={guide.user.name} />
 
       <div className="grid gap-6 lg:grid-cols-3">

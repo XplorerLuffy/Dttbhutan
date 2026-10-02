@@ -5,6 +5,8 @@ import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import Money from "@/components/Money";
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, DEFAULT_OG_IMAGE, touristDestinationJsonLd } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -18,15 +20,19 @@ export async function generateMetadata({
   const description =
     destination.description?.slice(0, 155) ??
     `Plan a trip to ${destination.name}, Bhutan — hotels, licensed guides and package tours.`;
+  // "Things to do" and "tours" are how people search for a place they are
+  // thinking of visiting; the bare name competes with every encyclopedia.
+  const title = `${destination.name}, Bhutan: Things to Do & Tours`;
 
   return {
-    title: `${destination.name}, Bhutan`,
+    title,
     description,
     alternates: { canonical: `/destinations/${destination.slug}` },
     openGraph: {
-      title: `${destination.name}, Bhutan`,
+      title,
       description,
       url: `/destinations/${destination.slug}`,
+      images: [destination.photoUrl ?? DEFAULT_OG_IMAGE],
     },
   };
 }
@@ -57,6 +63,15 @@ export default async function DestinationDetailPage({
 
   return (
     <div>
+      <JsonLd
+        data={[
+          touristDestinationJsonLd(destination),
+          breadcrumbJsonLd([
+            { name: "Destinations", path: "/destinations" },
+            { name: destination.name, path: `/destinations/${destination.slug}` },
+          ]),
+        ]}
+      />
       <p className="text-sm font-medium uppercase tracking-wide text-gold-700">Bhutan</p>
       <h1 className="mt-1 text-3xl font-bold">{destination.name}</h1>
       {destination.description && <p className="mt-3 max-w-2xl text-stone-700">{destination.description}</p>}

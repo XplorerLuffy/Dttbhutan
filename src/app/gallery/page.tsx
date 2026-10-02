@@ -5,7 +5,7 @@ import { getSiteContent } from "@/lib/content";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Photo gallery",
+  title: "Bhutan Photo Gallery",
   description: "A look at Bhutan's destinations, tour packages, hotels, and guides on Droelma Tours & Travels.",
   alternates: { canonical: "/gallery" },
 };

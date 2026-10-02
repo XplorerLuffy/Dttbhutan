@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { LogoMarkReverse } from "@/components/Logo";
+import { LogoLockupReverse } from "@/components/Logo";
 import DestinationsMenu from "@/components/nav/DestinationsMenu";
 import PackagesMenu from "@/components/nav/PackagesMenu";
 import MobileMenu from "@/components/nav/MobileMenu";
@@ -51,13 +51,12 @@ export default async function NavBar() {
     <header className="bg-brand-900 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex items-center justify-between gap-3 py-3 sm:gap-4">
-          {/* min-w-0 so the name gives way on the narrowest phones (320px)
-              instead of pushing the menu button off the screen. */}
-          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <LogoMarkReverse className="h-10 w-auto shrink-0 sm:h-12" />
-            <span className="font-display text-base font-semibold leading-tight tracking-wide text-white min-[380px]:text-lg sm:text-xl">
-              {company.name}
-            </span>
+          {/* The logo carries the agency name itself, so there is no separate
+              text beside it; the link's label keeps the name for screen
+              readers and search engines. min-w-0 lets it give way on the
+              narrowest phones instead of pushing the menu button off screen. */}
+          <Link href="/" aria-label={`${company.name} — home`} className="flex min-w-0 items-center">
+            <LogoLockupReverse className="h-11 w-auto max-w-full sm:h-14" />
           </Link>
 
           <div className="hidden items-center gap-6 text-sm lg:flex">

@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center py-10">
       <Link href="/" className="mb-6 flex flex-col items-center">
-        <LogoLockup className="h-40 w-auto" />
+        <LogoLockup className="h-auto w-64 sm:w-72" />
       </Link>
 
       <div className="w-full max-w-md">{children}</div>

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Cancellation & refund policy",
   description:
     "How cancellations, date changes and refunds work, including the refund tiers by notice period.",
+  alternates: { canonical: "/cancellation" },
 };
 
 export default async function CancellationPage() {

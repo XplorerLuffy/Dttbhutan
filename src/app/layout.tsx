@@ -10,7 +10,8 @@ import { CurrencyProvider } from "@/components/CurrencyProvider";
 import { getCurrentRates } from "@/lib/fx";
 import SiteChrome from "@/components/SiteChrome";
 import AiChatWidget from "@/components/ai/AiChatWidget";
-import { organizationJsonLd, siteUrl } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { organizationJsonLd, siteUrl, SITE_DESCRIPTION, websiteJsonLd } from "@/lib/seo";
 import { getCompany, getSiteContent } from "@/lib/content";
 
 const display = Fraunces({
@@ -26,33 +27,52 @@ const body = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-const DESCRIPTION =
-  "Book licensed tour guides, hotels, transport and flights for your Bhutan trip, with GPS-verified trip mileage and live tracking.";
-
 export const metadata: Metadata = {
   // Makes every relative canonical/OG URL below resolve absolutely.
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "Droelma Tours & Travels | Guides, Hotels, Transport & Flights",
+    default: "Bhutan Tour Packages & Travel Agency | Droelma Tours & Travels",
     // Page-level titles become "About us | Droelma Tours & Travels".
     template: "%s | Droelma Tours & Travels",
   },
-  description: DESCRIPTION,
-  alternates: { canonical: "/" },
+  description: SITE_DESCRIPTION,
+  applicationName: "Droelma Tours & Travels",
+  // Ignored by Google, still read by some other engines and directories.
+  keywords: [
+    "Bhutan tour packages",
+    "Bhutan tours",
+    "Bhutan travel agency",
+    "Bhutan tour operator",
+    "Bhutan trekking",
+    "Bhutan festival tours",
+    "Bhutan travel",
+    "DTT Bhutan",
+    "Droelma Tours and Travels",
+  ],
+  category: "travel",
+  // No site-wide canonical here: a child page that forgot its own would
+  // inherit "/" and tell search engines it is a duplicate of the home page.
+  // Each page declares its own; the home page's is in app/page.tsx.
   openGraph: {
     type: "website",
     siteName: "Droelma Tours & Travels",
-    title: "Droelma Tours & Travels | Bhutan trips, properly arranged",
-    description: DESCRIPTION,
+    title: "Droelma Tours & Travels | Bhutan Tour Packages & Custom Trips",
+    description: SITE_DESCRIPTION,
     locale: "en_US",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Droelma Tours & Travels",
-    description: DESCRIPTION,
+    title: "Droelma Tours & Travels | Bhutan Tour Packages & Custom Trips",
+    description: SITE_DESCRIPTION,
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    // Allow full-size image previews and unlimited snippets in results —
+    // Google's default is more conservative without these.
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
 };
 
 export default async function RootLayout({
@@ -71,10 +91,7 @@ export default async function RootLayout({
       <body
         className={`${display.variable} ${body.variable} min-h-screen bg-stone-50 font-sans text-stone-900 antialiased`}
       >
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd(company)) }}
-        />
+        <JsonLd data={[organizationJsonLd(company), websiteJsonLd(company)]} />
         <CurrencyProvider rates={rates}>
           <SmoothScroll />
           <ViewportInset />

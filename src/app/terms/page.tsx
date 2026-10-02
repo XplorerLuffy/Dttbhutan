@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Terms & conditions",
   description:
     "The terms that apply when booking guides, accommodation, transport, flights and package tours.",
+  alternates: { canonical: "/terms" },
 };
 
 export default async function TermsPage() {

@@ -6,6 +6,46 @@ import ReviewList from "@/components/ReviewList";
 import RatingBadge from "@/components/listing/RatingBadge";
 import DetailGallery from "@/components/listing/DetailGallery";
 import Money from "@/components/Money";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const hotel = await prisma.hotel.findUnique({
+    where: { id },
+    select: {
+      status: true,
+      name: true,
+      description: true,
+      photoUrls: true,
+      destination: { select: { name: true } },
+    },
+  });
+  if (!hotel || hotel.status !== "APPROVED") return { title: "Hotel not found" };
+
+  const title = `${hotel.name}, ${hotel.destination.name}, Bhutan`;
+  const description = (
+    hotel.description?.trim() ||
+    `Stay at ${hotel.name} in ${hotel.destination.name}, Bhutan. See rooms and prices and book directly with Droelma Tours & Travels.`
+  ).slice(0, 160);
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/hotels/${id}` },
+    openGraph: {
+      title,
+      description,
+      url: `/hotels/${id}`,
+      images: [hotel.photoUrls[0] ?? DEFAULT_OG_IMAGE],
+    },
+  };
+}
 
 export default async function HotelDetailPage({
   params,
@@ -36,6 +76,12 @@ export default async function HotelDetailPage({
 
   return (
     <div>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Hotels", path: "/hotels" },
+          { name: hotel.name, path: `/hotels/${hotel.id}` },
+        ])}
+      />
       <DetailGallery photos={hotel.photoUrls} label={hotel.name} />
 
       <div className="grid gap-6 lg:grid-cols-3">

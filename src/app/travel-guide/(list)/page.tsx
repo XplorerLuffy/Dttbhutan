@@ -6,7 +6,7 @@ import { getSiteContent } from "@/lib/content";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Bhutan travel guide",
+  title: "Bhutan Travel Guide: Visas, SDF & Best Time to Visit",
   description:
     "Practical answers about visiting Bhutan — visas, the Sustainable Development Fee, when to go, and what to expect on the ground.",
   alternates: { canonical: "/travel-guide" },

@@ -5,6 +5,40 @@ import ReviewList from "@/components/ReviewList";
 import RatingBadge from "@/components/listing/RatingBadge";
 import DetailGallery from "@/components/listing/DetailGallery";
 import Money from "@/components/Money";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import type { Metadata } from "next";
+
+const VEHICLE_NAME: Record<string, string> = {
+  SEDAN: "Sedan",
+  SUV: "SUV",
+  VAN: "Van",
+  BUS: "Coaster bus",
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const vehicle = await prisma.vehicle.findUnique({
+    where: { id },
+    select: { status: true, type: true, capacity: true, operator: { select: { businessName: true } } },
+  });
+  if (!vehicle || vehicle.status !== "APPROVED") return { title: "Vehicle not found" };
+
+  const name = VEHICLE_NAME[vehicle.type] ?? vehicle.type;
+  const title = `${name} Hire with Driver in Bhutan`;
+  const description = `Hire a ${name.toLowerCase()} with a licensed driver for your Bhutan trip — seats ${vehicle.capacity}, operated by ${vehicle.operator.businessName}. Book online with Droelma Tours & Travels.`.slice(0, 160);
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/vehicles/${id}` },
+    openGraph: { title, description, url: `/vehicles/${id}`, images: [DEFAULT_OG_IMAGE] },
+  };
+}
 
 export default async function VehicleDetailPage({
   params,
@@ -35,6 +69,12 @@ export default async function VehicleDetailPage({
 
   return (
     <div>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Transport", path: "/vehicles" },
+          { name: `${VEHICLE_NAME[vehicle.type] ?? vehicle.type} · ${vehicle.operator.businessName}`, path: `/vehicles/${vehicle.id}` },
+        ])}
+      />
       <DetailGallery photos={[]} label={vehicle.type} />
 
       <div className="grid gap-6 lg:grid-cols-3">

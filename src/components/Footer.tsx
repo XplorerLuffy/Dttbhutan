@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoLockup } from "@/components/Logo";
 import CompanyFact from "@/components/company/CompanyFact";
 import { getSiteContent, companyFrom } from "@/lib/content";
 
@@ -14,7 +15,9 @@ export default async function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            <p className="font-display text-lg font-semibold text-brand-800">{company.name}</p>
+            <Link href="/" aria-label={`${company.name} — home`} className="inline-block">
+              <LogoLockup className="h-auto w-44" />
+            </Link>
             <p className="mt-2 text-sm text-stone-500">{content("footer.tagline")}</p>
           </div>
           <FooterColumn

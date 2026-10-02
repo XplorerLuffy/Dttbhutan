@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+import { articleJsonLd, breadcrumbJsonLd, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -24,7 +26,7 @@ export async function generateMetadata({
       url: `/travel-guide/${article.slug}`,
       publishedTime: article.createdAt.toISOString(),
       modifiedTime: article.updatedAt.toISOString(),
-      ...(article.coverPhotoUrl ? { images: [article.coverPhotoUrl] } : {}),
+      images: [article.coverPhotoUrl ?? DEFAULT_OG_IMAGE],
     },
   };
 }
@@ -43,6 +45,15 @@ export default async function ArticleDetailPage({
 
   return (
     <article className="mx-auto max-w-2xl">
+      <JsonLd
+        data={[
+          articleJsonLd(article),
+          breadcrumbJsonLd([
+            { name: "Travel guide", path: "/travel-guide" },
+            { name: article.title, path: `/travel-guide/${article.slug}` },
+          ]),
+        ]}
+      />
       <Link href="/travel-guide" className="text-sm text-brand-700 hover:underline">
         ← Travel Guide
       </Link>

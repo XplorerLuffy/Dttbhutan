@@ -7,7 +7,7 @@ import { getSiteContent } from "@/lib/content";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "All 20 dzongkhags of Bhutan",
+  title: "Bhutan Destinations: Places to Visit in All 20 Dzongkhags",
   description:
     "Explore all 20 dzongkhags (districts) of Bhutan — where to stay, which guides cover each region, and the tours that visit them.",
   alternates: { canonical: "/destinations" },

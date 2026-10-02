@@ -18,6 +18,8 @@ import TripLodging, { type LodgingView } from "@/components/listing/TripLodging"
 import Money from "@/components/Money";
 import type { DepartureStatus } from "@prisma/client";
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, DEFAULT_OG_IMAGE, touristTripJsonLd } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -31,14 +33,16 @@ export async function generateMetadata({
   const description = `${itinerary.durationDays}-day Bhutan tour. ${itinerary.summary}`.slice(0, 160);
 
   return {
-    title: itinerary.title,
+    // "Bhutan tour package" is what people search for, and it is not always in
+    // the trip's own name ("Druk Path Trek").
+    title: /bhutan/i.test(itinerary.title) ? itinerary.title : `${itinerary.title} — Bhutan Tour Package`,
     description,
     alternates: { canonical: `/packages/${itinerary.slug}` },
     openGraph: {
       title: itinerary.title,
       description,
       url: `/packages/${itinerary.slug}`,
-      ...(itinerary.coverPhotoUrl ? { images: [itinerary.coverPhotoUrl] } : {}),
+      images: [itinerary.coverPhotoUrl ?? DEFAULT_OG_IMAGE],
     },
   };
 }
@@ -293,6 +297,31 @@ export default async function PackageDetailPage({
 
   return (
     <div>
+      <JsonLd
+        data={[
+          touristTripJsonLd({
+            slug: itinerary.slug,
+            title: itinerary.title,
+            summary: itinerary.summary,
+            durationDays: itinerary.durationDays,
+            pricePerPersonBTN: basePrice,
+            coverPhotoUrl: itinerary.coverPhotoUrl,
+            days: itinerary.days.map((d) => ({
+              dayNumber: d.dayNumber,
+              title: d.title,
+              destination: d.destination?.name ?? null,
+            })),
+            rating:
+              reviewStats._count.rating > 0 && reviewStats._avg.rating !== null
+                ? { average: reviewStats._avg.rating, count: reviewStats._count.rating }
+                : null,
+          }),
+          breadcrumbJsonLd([
+            { name: "Tour packages", path: "/packages" },
+            { name: itinerary.title, path: `/packages/${itinerary.slug}` },
+          ]),
+        ]}
+      />
       <TripPageHeader
         title={itinerary.title}
         categoryLabel={CATEGORY_LABEL[itinerary.category]}
