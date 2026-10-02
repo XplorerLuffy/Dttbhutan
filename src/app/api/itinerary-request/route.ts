@@ -5,18 +5,16 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { absoluteUrl } from "@/lib/seo";
 import { notifyItineraryRequested } from "@/lib/email/notify";
-import type { SendResult } from "@/lib/email/send";
 
 /**
  * "Download Itinerary" on a trip page: the visitor leaves an email (and,
- * optionally, the departure they're eyeing) and the itinerary is emailed to
- * them. It is deliberately not handed back to the page — the inbox is the
- * delivery, which is what makes the address worth something to the agency.
+ * optionally, the departure they're eyeing) and the agency's team emails the
+ * itinerary to them personally. Nothing is sent to the visitor automatically,
+ * and the PDF is not handed back to the page.
  *
- * Because the email is the only way they get it, the response says whether
- * it actually went out (`emailed`). When it didn't, the request is still
- * stored as an enquiry and the page tells them the team will send it by
- * hand, rather than promising an email that is never coming.
+ * The request is stored as an enquiry (Admin → Enquiries) and the agency
+ * inbox is alerted. Storing it is what matters — the alert is a convenience,
+ * so a failed alert never fails the request, but a failed save does.
  *
  * Unauthenticated and stranger-reachable, like /api/contact — hence the same
  * honeypot, per-IP rate limit and length caps.
@@ -100,29 +98,29 @@ export async function POST(req: NextRequest) {
   const pdfPath = `/packages/${trip.slug}/itinerary.pdf${departure ? `?departure=${departure.id}` : ""}`;
 
   // Honeypot tripped: same answer a person gets, nothing stored or sent.
-  if (website) return NextResponse.json({ ok: true, emailed: true }, { status: 201 });
+  if (website) return NextResponse.json({ ok: true }, { status: 201 });
 
   const departureLabel = departure ? `${day(departure.startDate)} to ${day(departure.endDate)}` : null;
 
-  let contactId: string;
   try {
     const user = await getCurrentUser().catch(() => null);
-    const contact = await prisma.contactMessage.create({
+    await prisma.contactMessage.create({
       data: {
         // The form asks for an email only — fewer fields, more people finish
         // it. The admin list needs a name, and this says plainly where the
         // enquiry came from rather than inventing one.
-        name: user?.name ?? "Itinerary download",
+        name: user?.name ?? "Itinerary request",
         email,
         subject: `Itinerary requested: ${trip.title}`,
-        message: departureLabel
-          ? `Downloaded the itinerary for ${trip.title} and picked the ${departureLabel} departure.`
-          : `Downloaded the itinerary for ${trip.title} (no departure date chosen yet).`,
+        message:
+          (departureLabel
+            ? `Asked for the itinerary for ${trip.title}, ${departureLabel} departure.`
+            : `Asked for the itinerary for ${trip.title} (no departure date chosen yet).`) +
+          ` Please email it to them — they were told our team would send it. PDF: ${absoluteUrl(pdfPath)}`,
         travelerId: user?.id ?? null,
         departureId: departure?.id ?? null,
       },
     });
-    contactId = contact.id;
   } catch (err) {
     // Not stored means nobody would follow up either, so this one is a real
     // failure for the visitor to retry.
@@ -133,28 +131,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const sent = await notifyItineraryRequested({
-    messageId: contactId,
+  await notifyItineraryRequested({
+    customerEmail: email,
     tripTitle: trip.title,
     departure: departureLabel,
     pdfUrl: absoluteUrl(pdfPath),
     tripUrl: absoluteUrl(`/packages/${trip.slug}`),
-  }).catch((err): SendResult => {
-    console.error("[itinerary-request] could not email the itinerary", err);
-    return { ok: false, error: "notify failed" };
-  });
+  }).catch((err) => console.error("[itinerary-request] could not alert the agency", err));
 
-  return NextResponse.json({ ok: true, emailed: wasDelivered(sent) }, { status: 201 });
-}
-
-/**
- * Whether the traveller can expect the email. A send skipped for missing
- * configuration only counts off Vercel — locally the email is printed to the
- * console, which is the point of the skip; on a deployment it means nothing
- * reached them.
- */
-function wasDelivered(result: SendResult): boolean {
-  if (!result.ok) return false;
-  if ("id" in result) return true;
-  return !process.env.VERCEL;
+  return NextResponse.json({ ok: true }, { status: 201 });
 }

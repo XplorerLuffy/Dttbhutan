@@ -8,18 +8,16 @@ export type DrawerDeparture = { id: string; label: string };
 type Phase =
   | { kind: "form" }
   | { kind: "sending" }
-  /** `emailed` is false when the request was saved but the email couldn't go
-   * out — the team sends it by hand from the enquiry instead. */
-  | { kind: "sent"; email: string; emailed: boolean };
+  | { kind: "sent"; email: string };
 
 /**
  * "Download Itinerary" on a trip page, as a panel that slides in over the
  * page instead of a bare file download.
  *
  * The visitor picks a departure if they have one in mind and leaves an
- * email, and the itinerary is sent to that inbox — it is not shown in the
- * page, so the address given has to be a real one. For the agency that turns
- * an anonymous download into an enquiry with a working email to follow up.
+ * email. Nothing is shown or sent automatically: the request reaches the
+ * agency, whose team emails the itinerary to the customer personally — so an
+ * anonymous download becomes an enquiry with a real person to talk to.
  *
  * Each trigger owns its panel, so the page can offer it in more than one
  * place (the overview button and the sidebar link) without a shared store.
@@ -99,7 +97,6 @@ export default function ItineraryRequestDrawer({
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
-        emailed?: boolean;
         error?: string | { fieldErrors?: Record<string, string[]> };
       };
       if (!res.ok || !data.ok) {
@@ -112,7 +109,7 @@ export default function ItineraryRequestDrawer({
         setPhase({ kind: "form" });
         return;
       }
-      setPhase({ kind: "sent", email, emailed: data.emailed !== false });
+      setPhase({ kind: "sent", email });
     } catch {
       setError(
         "We couldn't reach the server. Please check your connection and try again.",
@@ -160,9 +157,7 @@ export default function ItineraryRequestDrawer({
                   className="font-display text-2xl font-bold text-stone-900 sm:text-[1.75rem]"
                 >
                   {phase.kind === "sent"
-                    ? phase.emailed
-                      ? "Check your inbox"
-                      : "Request received"
+                    ? "Request received"
                     : "Request a Sample Itinerary"}
                 </h2>
                 <button
@@ -205,32 +200,16 @@ export default function ItineraryRequestDrawer({
                     </svg>
                   </span>
 
-                  {phase.emailed ? (
-                    <>
-                      <p className="mt-5 text-lg leading-relaxed text-stone-800">
-                        We&apos;ve sent the itinerary for{" "}
-                        <strong>{tripTitle}</strong> to{" "}
-                        <strong className="break-all">{phase.email}</strong>.
-                      </p>
-                      <p className="mt-3 leading-relaxed text-stone-600">
-                        It usually arrives within a few minutes. If you
-                        can&apos;t see it, check your spam or promotions folder.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mt-5 text-lg leading-relaxed text-stone-800">
-                        Thanks — we&apos;ve got your request for{" "}
-                        <strong>{tripTitle}</strong>.
-                      </p>
-                      <p className="mt-3 leading-relaxed text-stone-600">
-                        We couldn&apos;t send the email automatically just now,
-                        so our team will email the itinerary to{" "}
-                        <strong className="break-all">{phase.email}</strong>{" "}
-                        within one working day.
-                      </p>
-                    </>
-                  )}
+                  <p className="mt-5 text-lg leading-relaxed text-stone-800">
+                    Thank you! We&apos;ve received your request for{" "}
+                    <strong>{tripTitle}</strong>.
+                  </p>
+                  <p className="mt-3 leading-relaxed text-stone-600">
+                    Our team will email the itinerary to{" "}
+                    <strong className="break-all">{phase.email}</strong>,
+                    usually within one working day. Keep an eye on your spam or
+                    promotions folder in case it lands there.
+                  </p>
 
                   <div className="mt-8 flex flex-wrap items-center gap-4">
                     <button

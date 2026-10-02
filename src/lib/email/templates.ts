@@ -375,23 +375,31 @@ export function contactToAgency(input: {
   });
 }
 
-export function itineraryToTraveler(input: {
+/**
+ * A visitor asked for a trip's itinerary. It goes to the agency, not the
+ * visitor: staff send the itinerary themselves, so this carries everything
+ * they need to do that — who asked, for which trip and date, and the PDF.
+ */
+export function itineraryRequestToAgency(input: {
+  customerEmail: string;
   tripTitle: string;
   departure: string | null;
   pdfUrl: string;
   tripUrl: string;
 }): RenderedEmail {
-  return render(`Your itinerary: ${input.tripTitle}`, {
-    heading: "Here's your itinerary",
-    intro: `Thanks for your interest in ${input.tripTitle}. The full day-by-day itinerary — where you stay, what's included and the dates it runs — is a click away.`,
+  return render(`[Itinerary request] ${input.tripTitle} — ${input.customerEmail}`, {
+    heading: "Itinerary requested from the website",
+    intro: `${input.customerEmail} asked for the itinerary for ${input.tripTitle}. They have been told our team will email it to them, usually within one working day.`,
     rows: [
+      { label: "Customer email", value: input.customerEmail },
       { label: "Trip", value: input.tripTitle },
-      ...(input.departure ? [{ label: "Departure you picked", value: input.departure }] : []),
+      { label: "Departure", value: input.departure ?? "Not chosen yet" },
+      { label: "Itinerary PDF", value: input.pdfUrl },
       { label: "Trip page", value: input.tripUrl },
     ],
-    cta: { label: "Download the itinerary (PDF)", href: input.pdfUrl },
+    cta: { label: "Download the itinerary PDF", href: input.pdfUrl },
     outro:
-      "Trip details can vary by departure; we confirm the final plan in writing before you pay anything. Questions? Just reply to this email.",
+      "Reply to this email and your reply goes straight to the customer — attach the PDF, or paste the link above.",
   });
 }
 
