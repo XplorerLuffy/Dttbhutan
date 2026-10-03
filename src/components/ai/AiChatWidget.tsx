@@ -34,6 +34,7 @@ export default function AiChatWidget({ copy }: { copy: WidgetCopy }) {
   const { messages, busy, send, started } = useAssistantChat();
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const fit = usePhoneViewportFit(open);
 
   // Escape closes, and focus returns to the button that opened it rather than
   // being dropped at the top of the document.
@@ -56,6 +57,7 @@ export default function AiChatWidget({ copy }: { copy: WidgetCopy }) {
           ref={panelRef}
           role="dialog"
           aria-label={`${copy.name} — ${copy.role}`}
+          style={fit ?? undefined}
           className="fixed inset-0 z-50 flex flex-col bg-white sm:inset-auto sm:bottom-24 sm:right-6 sm:h-[min(38rem,calc(100vh-8rem))] sm:w-[23.5rem] sm:rounded-2xl sm:border sm:border-stone-200 sm:shadow-2xl"
         >
           <header className="flex shrink-0 items-center gap-3 rounded-t-none border-b border-stone-200 bg-ink-950 px-4 py-3 text-white sm:rounded-t-2xl">
@@ -153,4 +155,59 @@ export default function AiChatWidget({ copy }: { copy: WidgetCopy }) {
       </button>
     </>
   );
+}
+
+/**
+ * Keeps the full-screen panel on a phone inside the part of the screen the
+ * visitor can actually see.
+ *
+ * Mobile Safari does not shrink the page when the keyboard opens: it shrinks
+ * the *visual* viewport and scrolls the page underneath to bring the text box
+ * into view. A panel fixed to `inset: 0` is sized to the layout viewport, so
+ * the keyboard covered its bottom, the page scrolled it out from under the
+ * header, and the trip page showed through below the message box. Sizing the
+ * panel to the visual viewport — top and height, followed on every resize and
+ * scroll — puts the header at the top of what's visible and the composer
+ * right above the keyboard. While it is open the page behind is locked, so
+ * there is nothing underneath to scroll.
+ *
+ * Phones only (below the `sm` breakpoint, where the panel is full-screen); on
+ * wider screens it is a floating card and this returns null.
+ */
+function usePhoneViewportFit(open: boolean): React.CSSProperties | null {
+  const [fit, setFit] = useState<React.CSSProperties | null>(null);
+
+  useEffect(() => {
+    if (!open || !window.matchMedia("(max-width: 639px)").matches) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.__lenis?.stop();
+
+    const viewport = window.visualViewport;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      if (!viewport) return;
+      setFit({ top: viewport.offsetTop, height: viewport.height, bottom: "auto" });
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+
+    measure();
+    viewport?.addEventListener("resize", schedule);
+    viewport?.addEventListener("scroll", schedule);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      viewport?.removeEventListener("resize", schedule);
+      viewport?.removeEventListener("scroll", schedule);
+      document.body.style.overflow = previousOverflow;
+      window.__lenis?.start();
+      setFit(null);
+    };
+  }, [open]);
+
+  return fit;
 }

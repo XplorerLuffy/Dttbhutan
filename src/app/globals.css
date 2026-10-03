@@ -100,3 +100,14 @@ h3 {
     @apply card;
   }
 }
+
+/*
+ * Leaflet gives its tile and marker panes z-index 400 and its zoom controls
+ * 1000, and the map container creates no stacking context of its own — so
+ * those values compete with the whole page. On a trip page that drew the
+ * route map over the DRUKA chat panel (z-50) and the sticky booking bar.
+ * Isolating the container keeps every map's layers inside the map.
+ */
+.leaflet-container {
+  isolation: isolate;
+}
