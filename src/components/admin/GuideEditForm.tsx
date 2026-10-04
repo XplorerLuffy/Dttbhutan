@@ -8,13 +8,30 @@ import {
   splitList,
   nullableText,
 } from "@/components/admin/vendorFormFields";
+import PhotoUpload from "@/components/PhotoUpload";
+import VendorContactFields, { useVendorContact } from "@/components/admin/VendorContactFields";
 
+export const EMPTY_GUIDE = {
+  licenseNumber: "",
+  languages: [] as string[],
+  specialties: [] as string[],
+  yearsExperience: 0,
+  ratePerDay: "",
+  bio: "",
+  photoUrl: "",
+  destinationIds: [] as string[],
+};
+
+/**
+ * Edits a guide listing — or, with no `guideId`, adds a new one, which also
+ * asks who the guide is (the profile needs an account to belong to).
+ */
 export default function GuideEditForm({
   guideId,
   destinations,
   initial,
 }: {
-  guideId: string;
+  guideId?: string;
   destinations: { id: string; name: string }[];
   initial: {
     licenseNumber: string;
@@ -28,6 +45,8 @@ export default function GuideEditForm({
   };
 }) {
   const router = useRouter();
+  const creating = !guideId;
+  const contact = useVendorContact();
 
   const [licenseNumber, setLicenseNumber] = useState(initial.licenseNumber);
   const [languages, setLanguages] = useState(initial.languages.join(", "));
@@ -49,19 +68,20 @@ export default function GuideEditForm({
     setError(null);
     setIsSubmitting(true);
 
-    const res = await fetch(`/api/admin/guides/${guideId}`, {
-      method: "PATCH",
+    const details = {
+      licenseNumber,
+      languages: splitList(languages),
+      specialties: splitList(specialties),
+      yearsExperience,
+      ratePerDay,
+      bio: nullableText(bio),
+      photoUrl: nullableText(photoUrl),
+      destinationIds: coverage,
+    };
+    const res = await fetch(creating ? "/api/admin/guides" : `/api/admin/guides/${guideId}`, {
+      method: creating ? "POST" : "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        licenseNumber,
-        languages: splitList(languages),
-        specialties: splitList(specialties),
-        yearsExperience,
-        ratePerDay,
-        bio: nullableText(bio),
-        photoUrl: nullableText(photoUrl),
-        destinationIds: coverage,
-      }),
+      body: JSON.stringify(creating ? { contact: contact.value, guide: details } : details),
     });
 
     setIsSubmitting(false);
@@ -77,6 +97,8 @@ export default function GuideEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="card space-y-4">
+      {creating && <VendorContactFields kind="guide" contact={contact} />}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="TCB licence number">
           <input
@@ -124,16 +146,15 @@ export default function GuideEditForm({
         <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={5} className="input" />
       </Field>
 
-      <Field label="Photo URL">
+      <PhotoUpload
+        label="Guide photo"
+        initialUrl={trimmedPhoto || null}
+        onUploaded={(url) => setPhotoUrl(url)}
+      />
+
+      <Field label="…or paste a photo URL">
         <input value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} className="input" />
       </Field>
-
-      {trimmedPhoto && (
-        // Vendor- and admin-entered URLs, which may point at hosts outside the
-        // next.config image allowlist that next/image would reject.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={trimmedPhoto} alt="" className="h-32 w-32 rounded-full object-cover" />
-      )}
 
       <Field label="Dzongkhags covered">
         <div className="max-h-56 overflow-y-auto rounded-lg border border-stone-200 p-3">
@@ -155,7 +176,7 @@ export default function GuideEditForm({
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
-        {isSubmitting ? "Saving..." : "Save changes"}
+        {isSubmitting ? "Saving..." : creating ? "Add guide" : "Save changes"}
       </button>
     </form>
   );

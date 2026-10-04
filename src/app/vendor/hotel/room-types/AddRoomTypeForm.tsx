@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AddRoomTypeForm() {
+/** `endpoint` defaults to the owner's own route; the admin hotel page passes
+ * its own, for hotels the agency manages without an owner login. */
+export default function AddRoomTypeForm({
+  endpoint = "/api/vendors/hotel/room-types",
+}: {
+  endpoint?: string;
+} = {}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,7 +21,7 @@ export default function AddRoomTypeForm() {
     setIsSubmitting(true);
 
     const form = new FormData(e.currentTarget);
-    const res = await fetch("/api/vendors/hotel/room-types", {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

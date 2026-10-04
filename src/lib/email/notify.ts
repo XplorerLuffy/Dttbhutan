@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { agencyInbox, sendEmails, type EmailMessage } from "@/lib/email/send";
+import { isPlaceholderEmail } from "@/lib/adminVendor";
 import {
   bookingCancelledToVendor,
   bookingReceivedToTraveler,
@@ -44,7 +45,9 @@ async function dispatch(messages: (EmailMessage | null)[]): Promise<void> {
 }
 
 function to(address: string | null | undefined, rendered: RenderedEmail, replyTo?: string): EmailMessage | null {
-  if (!address) return null;
+  // A listing an admin added without an email has a placeholder address on
+  // the reserved .invalid domain — there is nobody to send to.
+  if (!address || isPlaceholderEmail(address)) return null;
   return { to: address, ...rendered, ...(replyTo ? { replyTo } : {}) };
 }
 

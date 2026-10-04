@@ -422,3 +422,32 @@ export const knowledgeAdminSchema = z.object({
   visibility: z.enum(["PUBLIC", "INTERNAL"]),
   status: z.enum(["DRAFT", "PUBLISHED"]),
 });
+
+/**
+ * Who a guide or hotel listing belongs to when an admin adds it directly,
+ * rather than the vendor signing up. Email and phone are optional: plenty of
+ * local guides and homestays are reached by phone, and a blank email simply
+ * means the listing is managed by the agency (see vendorAccountFor).
+ */
+export const vendorContactSchema = z.object({
+  name: z.string().trim().min(2, "Please enter a name").max(100),
+  email: z
+    .string()
+    .trim()
+    .email("That doesn't look like an email address")
+    .max(200)
+    .optional()
+    .or(z.literal("")),
+  phone: z.string().trim().max(40).optional().or(z.literal("")),
+});
+
+export const adminGuideCreateSchema = z.object({
+  contact: vendorContactSchema,
+  guide: guideAdminDetailsSchema,
+});
+
+export const adminHotelCreateSchema = z.object({
+  contact: vendorContactSchema,
+  hotel: hotelAdminDetailsSchema,
+  roomType: roomTypeSchema,
+});

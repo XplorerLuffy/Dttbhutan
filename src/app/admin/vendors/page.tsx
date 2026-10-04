@@ -25,13 +25,19 @@ export default async function AdminVendorsPage() {
       <div>
         <h1 className="text-2xl font-bold">Vendors</h1>
         <p className="mt-1 text-sm text-stone-600">
-          Approve or suspend a listing, and edit the details travelers see. Changing a status emails
-          the vendor; editing details does not.
+          Add guides and hotels you work with, approve or suspend a listing, and edit the details
+          travelers see. Changing a status emails the vendor (if they have an email); editing
+          details does not.
         </p>
       </div>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Tour guides</h2>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Tour guides</h2>
+          <Link href="/admin/vendors/guides/new" className="btn-primary">
+            + Add guide
+          </Link>
+        </div>
         <div className="space-y-3">
           {guides.map((g) => (
             <div key={g.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -59,7 +65,12 @@ export default async function AdminVendorsPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Hotels</h2>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Hotels</h2>
+          <Link href="/admin/vendors/hotels/new" className="btn-primary">
+            + Add hotel
+          </Link>
+        </div>
         <div className="space-y-3">
           {hotels.map((h) => (
             <div key={h.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
