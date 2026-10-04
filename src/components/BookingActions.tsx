@@ -1,31 +1,36 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useServerAction } from "@/components/useServerAction";
+
+function ActionError({ error }: { error: string | null }) {
+  return error ? (
+    <p role="alert" className="mt-1 max-w-xs text-sm text-red-600">
+      {error}
+    </p>
+  ) : null;
+}
 
 export function CancelBookingButton({ bookingId }: { bookingId: string }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { run, busy, error } = useServerAction();
 
   return (
-    <button
-      type="button"
-      disabled={isPending}
-      onClick={() => {
-        if (!confirm("Cancel this booking?")) return;
-        startTransition(async () => {
-          await fetch(`/api/bookings/${bookingId}`, {
+    <div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => {
+          if (!confirm("Cancel this booking?")) return;
+          void run(`/api/bookings/${bookingId}`, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: "CANCELLED" }),
           });
-          router.refresh();
-        });
-      }}
-      className="btn-secondary"
-    >
-      {isPending ? "Cancelling..." : "Cancel booking"}
-    </button>
+        }}
+        className="btn-secondary"
+      >
+        {busy ? "Cancelling..." : "Cancel booking"}
+      </button>
+      <ActionError error={error} />
+    </div>
   );
 }
 
@@ -38,26 +43,24 @@ export function SetBookingStatusButton({
   status: "CONFIRMED" | "COMPLETED" | "CANCELLED";
   label: string;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { run, busy, error } = useServerAction();
 
   return (
-    <button
-      type="button"
-      disabled={isPending}
-      onClick={() => {
-        startTransition(async () => {
-          await fetch(`/api/bookings/${bookingId}`, {
+    <div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() =>
+          void run(`/api/bookings/${bookingId}`, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status }),
-          });
-          router.refresh();
-        });
-      }}
-      className="btn-primary"
-    >
-      {isPending ? "Saving..." : label}
-    </button>
+          })
+        }
+        className="btn-primary"
+      >
+        {busy ? "Saving..." : label}
+      </button>
+      <ActionError error={error} />
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState } from "react";
+import { useServerAction } from "@/components/useServerAction";
 import type { DzongkhagRegion } from "@prisma/client";
 import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
 
@@ -12,32 +12,39 @@ export default function DestinationRegionSelect({
   destinationId: string;
   region: DzongkhagRegion;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { run, busy, error } = useServerAction();
+  // Shows the choice at once; reverts if the save fails.
+  const [value, setValue] = useState(region);
 
-  function handleChange(next: DzongkhagRegion) {
-    startTransition(async () => {
-      await fetch(`/api/admin/destinations/${destinationId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region: next }),
-      });
-      router.refresh();
+  async function handleChange(next: DzongkhagRegion) {
+    const previous = value;
+    setValue(next);
+    const ok = await run(`/api/admin/destinations/${destinationId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ region: next }),
     });
+    if (!ok) setValue(previous);
   }
 
   return (
-    <select
-      value={region}
-      disabled={isPending}
-      onChange={(e) => handleChange(e.target.value as DzongkhagRegion)}
-      className="input w-auto"
-    >
-      {REGION_ORDER.map((r) => (
-        <option key={r} value={r}>
-          {REGION_LABEL[r]}
-        </option>
-      ))}
-    </select>
+    <span className="inline-flex flex-col items-end gap-1">
+      <select
+        value={value}
+        disabled={busy}
+        onChange={(e) => handleChange(e.target.value as DzongkhagRegion)}
+        className="input w-auto"
+      >
+        {REGION_ORDER.map((r) => (
+          <option key={r} value={r}>
+            {REGION_LABEL[r]}
+          </option>
+        ))}
+      </select>
+      {error && (
+        <span role="alert" className="max-w-xs text-xs text-red-600">
+          {error}
+        </span>
+      )}
+    </span>
   );
 }

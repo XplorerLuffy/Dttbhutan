@@ -1,25 +1,25 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useServerAction } from "@/components/useServerAction";
 
 export default function RegenerateReportButton({ tripId }: { tripId: string }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { run, busy, error } = useServerAction();
 
   return (
-    <button
-      type="button"
-      disabled={isPending}
-      onClick={() => {
-        startTransition(async () => {
-          await fetch(`/api/admin/gps/trips/${tripId}/regenerate`, { method: "POST" });
-          router.refresh();
-        });
-      }}
-      className="btn-secondary"
-    >
-      {isPending ? "Recalculating..." : "Recalculate from GPS trail"}
-    </button>
+    <div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => void run(`/api/admin/gps/trips/${tripId}/regenerate`, { method: "POST" })}
+        className="btn-secondary"
+      >
+        {busy ? "Recalculating..." : "Recalculate from GPS trail"}
+      </button>
+      {error && (
+        <p role="alert" className="mt-1 text-sm text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

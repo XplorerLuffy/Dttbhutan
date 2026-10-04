@@ -52,6 +52,13 @@ function smtpConfig() {
     // 465 is TLS from the first byte; 587 upgrades with STARTTLS.
     secure: port === 465,
     auth: { user, pass },
+    // nodemailer's defaults wait up to 2 minutes to connect and 10 for a
+    // reply. Every send here sits inside a request someone is waiting on —
+    // an admin clicking Approve, a traveller booking — so a slow or blocked
+    // mail server must fail in seconds, not hold the button for minutes.
+    connectionTimeout: 8_000,
+    greetingTimeout: 8_000,
+    socketTimeout: 10_000,
   };
 }
 
@@ -119,6 +126,8 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
         ...(message.replyTo ? { reply_to: message.replyTo } : {}),
       }),
       cache: "no-store",
+      // Same reasoning as the SMTP timeouts: never let email hold a request.
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!res.ok) {

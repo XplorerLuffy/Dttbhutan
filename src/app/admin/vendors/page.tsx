@@ -56,7 +56,7 @@ export default async function AdminVendorsPage() {
                 <Link href={`/admin/vendors/guides/${g.id}/edit`} className="btn-secondary">
                   Edit
                 </Link>
-                <VendorApprovalControls apiPath={`/api/admin/guides/${g.id}`} />
+                <VendorApprovalControls apiPath={`/api/admin/guides/${g.id}`} status={g.status} />
               </div>
             </div>
           ))}
@@ -89,7 +89,7 @@ export default async function AdminVendorsPage() {
                 <Link href={`/admin/vendors/hotels/${h.id}/edit`} className="btn-secondary">
                   Edit
                 </Link>
-                <VendorApprovalControls apiPath={`/api/admin/hotels/${h.id}`} />
+                <VendorApprovalControls apiPath={`/api/admin/hotels/${h.id}`} status={h.status} />
               </div>
             </div>
           ))}
@@ -112,7 +112,7 @@ export default async function AdminVendorsPage() {
                     <p className="text-xs text-stone-400">Note: {op.adminNote}</p>
                   )}
                 </div>
-                <VendorApprovalControls apiPath={`/api/admin/transport/${op.id}`} />
+                <VendorApprovalControls apiPath={`/api/admin/transport/${op.id}`} status={op.status} />
               </div>
               {op.vehicles.length > 0 && (
                 <div className="mt-3 space-y-3 border-t border-stone-100 pt-3">
@@ -128,7 +128,7 @@ export default async function AdminVendorsPage() {
                         >
                           Edit
                         </Link>
-                        <VendorApprovalControls apiPath={`/api/admin/vehicles/${v.id}`} />
+                        <VendorApprovalControls apiPath={`/api/admin/vehicles/${v.id}`} status={v.status} />
                       </div>
                     </div>
                   ))}
