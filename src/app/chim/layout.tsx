@@ -27,20 +27,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // the admin sidebar before the page's redirect caught up with it.
   const user = await getCurrentUser();
   // /chim is the admin's way in: to anyone who isn't a signed-in admin it is
-  // the sign-in form, and signing in re-renders whichever admin page was
-  // asked for. A non-admin account is told which account they're on rather
-  // than being sent to that account's dashboard — a guide account with no
-  // listing yet lands on the guide sign-up form, which reads as /chim broken.
+  // the sign-in form and nothing else — no hint of who is signed in or what
+  // lies behind it — and signing in re-renders the admin page asked for.
+  // (Sending a non-admin to their own dashboard instead landed a guide
+  // account with no listing on the guide sign-up form.)
   if (!user || user.role !== "ADMIN") {
     return (
       <AuthLayout>
         <h1 className="mb-6 text-center text-2xl font-bold">Admin sign-in</h1>
-        {user && (
-          <p className="mb-4 rounded-md bg-stone-100 px-3 py-2 text-sm text-stone-700">
-            You&apos;re signed in as <strong>{user.email}</strong>, which isn&apos;t an admin
-            account. Log in with the admin account to continue.
-          </p>
-        )}
         <LoginForm admin />
       </AuthLayout>
     );
