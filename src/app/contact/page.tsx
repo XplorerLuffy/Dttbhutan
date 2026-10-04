@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ContactForm from "./ContactForm";
 import CompanyFact from "@/components/company/CompanyFact";
+import OpeningHours from "@/components/company/OpeningHours";
+import SocialLinks from "@/components/company/SocialLinks";
 import { getSiteContent, companyFrom, formatAddress } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -68,12 +70,30 @@ export default async function ContactPage({
                   <dd className="text-stone-900">{address}</dd>
                 </div>
               )}
-              <div>
-                <dt className="text-stone-500">Hours</dt>
-                <dd className="text-stone-900">{company.officeHours}</dd>
-              </div>
+              {!company.officeSchedule && company.officeHours && (
+                <div>
+                  <dt className="text-stone-500">Hours</dt>
+                  <dd className="text-stone-900">{company.officeHours}</dd>
+                </div>
+              )}
             </dl>
           </div>
+
+          {company.officeSchedule && (
+            <div className="card">
+              <h2 className="mb-3 font-display text-lg font-semibold text-stone-900">
+                Opening hours
+              </h2>
+              <OpeningHours schedule={company.officeSchedule} />
+            </div>
+          )}
+
+          {Object.values(company.social).some(Boolean) && (
+            <div className="card">
+              <h2 className="mb-3 font-display text-lg font-semibold text-stone-900">Follow us</h2>
+              <SocialLinks social={company.social} variant="labelled" />
+            </div>
+          )}
 
           {elsewhere.length > 0 && (
             <div className="card">

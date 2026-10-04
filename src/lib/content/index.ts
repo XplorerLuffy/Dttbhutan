@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { CONTENT_DEFAULTS, CONTENT_KEYS } from "./registry";
+import { parseSchedule, summariseSchedule, type Schedule } from "@/lib/officeHours";
 
 export type SiteContent = {
   /** Saved value, or the registry default when nothing is saved. */
@@ -62,11 +63,22 @@ export type CompanyDetails = {
   phone: string;
   whatsapp: string;
   email: string;
+  /** One line of text for places a table won't fit (the itinerary PDF). */
   officeHours: string;
-  social: { facebook: string; instagram: string; tripadvisor: string };
+  /** The weekly schedule, or null if the saved value is older plain text. */
+  officeSchedule: Schedule | null;
+  social: {
+    facebook: string;
+    instagram: string;
+    tripadvisor: string;
+    youtube: string;
+    tiktok: string;
+  };
 };
 
 export function companyFrom(content: SiteContent): CompanyDetails {
+  const hoursValue = content("company.officeHours");
+  const officeSchedule = parseSchedule(hoursValue);
   return {
     name: content("company.name"),
     legalName: content("company.legalName"),
@@ -81,13 +93,35 @@ export function companyFrom(content: SiteContent): CompanyDetails {
     phone: content("company.phone"),
     whatsapp: content("company.whatsapp"),
     email: content("company.email"),
-    officeHours: content("company.officeHours"),
+    // Hours saved as free text before the weekly editor existed still show.
+    officeHours: officeSchedule ? summariseSchedule(officeSchedule) : hoursValue,
+    officeSchedule,
     social: {
-      facebook: content("company.social.facebook"),
-      instagram: content("company.social.instagram"),
-      tripadvisor: content("company.social.tripadvisor"),
+      facebook: webAddress(content("company.social.facebook")),
+      instagram: webAddress(content("company.social.instagram")),
+      tripadvisor: webAddress(content("company.social.tripadvisor")),
+      youtube: webAddress(content("company.social.youtube")),
+      tiktok: webAddress(content("company.social.tiktok")),
     },
   };
+}
+
+/**
+ * A link target safe to put in an href: an http(s) address, or "" if the
+ * value isn't one. A bare "facebook.com/page" gets https:// in front. The
+ * admin form checks this too; this is the backstop for anything already
+ * saved, since `javascript:` in an href is a script.
+ */
+export function webAddress(value: string): string {
+  const v = value.trim();
+  if (!v) return "";
+  const withScheme = /^https?:\/\//i.test(v) ? v : /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(v) ? `https://${v}` : "";
+  try {
+    const url = new URL(withScheme);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
 }
 
 export async function getCompany(): Promise<CompanyDetails> {

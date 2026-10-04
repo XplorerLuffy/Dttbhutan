@@ -3,7 +3,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { CONTENT_KEYS } from "@/lib/content/registry";
+import { CONTENT_GROUPS, CONTENT_KEYS } from "@/lib/content/registry";
+import { webAddress } from "@/lib/content";
+import { parseSchedule, scheduleError } from "@/lib/officeHours";
+
+const FIELDS = new Map(CONTENT_GROUPS.flatMap((g) => g.fields).map((f) => [f.key, f]));
 
 /** Generous enough for a long paragraph, bounded so a single field can't be
  * used to push megabytes into the page. */
@@ -33,6 +37,25 @@ export async function PUT(req: NextRequest) {
         { error: `Unknown content keys: ${rejected.slice(0, 5).join(", ")}` },
         { status: 400 }
       );
+    }
+
+    // Fields with a format are checked on the way in, so a bad value is
+    // refused with a reason instead of being saved and quietly ignored.
+    for (const [key, value] of entries) {
+      const field = FIELDS.get(key);
+      if (!field || !value.trim()) continue; // blank = back to the default
+      if (field.type === "hours") {
+        const schedule = parseSchedule(value);
+        const problem = schedule ? scheduleError(schedule) : "Opening hours weren't understood.";
+        if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+      } else if (field.type === "url") {
+        if (!webAddress(value)) {
+          return NextResponse.json(
+            { error: `${field.label}: enter a web address, like https://facebook.com/yourpage` },
+            { status: 400 }
+          );
+        }
+      }
     }
 
     await prisma.$transaction(

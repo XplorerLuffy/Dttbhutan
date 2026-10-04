@@ -11,7 +11,11 @@
  * admin stores an override; clearing it falls back here again.
  */
 
-export type FieldType = "text" | "textarea" | "url" | "email" | "tel";
+import { DEFAULT_SCHEDULE, serializeSchedule } from "@/lib/officeHours";
+
+/** "hours" is the weekly opening-hours editor; its value is the JSON text of a
+ * Schedule (src/lib/officeHours.ts). */
+export type FieldType = "text" | "textarea" | "url" | "email" | "tel" | "hours";
 
 export type ContentField = {
   key: string;
@@ -48,10 +52,18 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "company.phone", label: "Phone", type: "tel", default: "" },
       { key: "company.whatsapp", label: "WhatsApp number", type: "tel", default: "" },
       { key: "company.email", label: "Public enquiries email", type: "email", default: "" },
-      { key: "company.officeHours", label: "Office hours", type: "text", default: "Monday – Friday, 9:00 – 17:00 (BST, UTC+6)" },
-      { key: "company.social.facebook", label: "Facebook URL", type: "url", default: "" },
-      { key: "company.social.instagram", label: "Instagram URL", type: "url", default: "" },
-      { key: "company.social.tripadvisor", label: "TripAdvisor URL", type: "url", default: "" },
+      {
+        key: "company.officeHours",
+        label: "Opening hours",
+        type: "hours",
+        default: serializeSchedule(DEFAULT_SCHEDULE),
+        help: "Shown on the Contact page with an \"Open now\" indicator, and given to Google as your business hours. Times are Bhutan time.",
+      },
+      { key: "company.social.facebook", label: "Facebook page", type: "url", default: "", help: "Paste the page's web address. Shown as an icon in the footer and on the Contact page; left out while blank." },
+      { key: "company.social.instagram", label: "Instagram profile", type: "url", default: "" },
+      { key: "company.social.tripadvisor", label: "TripAdvisor listing", type: "url", default: "" },
+      { key: "company.social.youtube", label: "YouTube channel", type: "url", default: "" },
+      { key: "company.social.tiktok", label: "TikTok profile", type: "url", default: "" },
     ],
   },
 

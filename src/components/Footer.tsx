@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogoLockup } from "@/components/Logo";
 import CompanyFact from "@/components/company/CompanyFact";
+import SocialLinks from "@/components/company/SocialLinks";
 import { getSiteContent, companyFrom } from "@/lib/content";
 
 export default async function Footer() {
@@ -19,6 +20,7 @@ export default async function Footer() {
               <LogoLockup className="h-auto w-44" />
             </Link>
             <p className="mt-2 text-sm text-stone-500">{content("footer.tagline")}</p>
+            <SocialLinks social={company.social} className="mt-4" />
           </div>
           <FooterColumn
             title="Explore"

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { ContentGroup } from "@/lib/content/registry";
+import OfficeHoursEditor from "@/components/admin/OfficeHoursEditor";
+import { parseSchedule, scheduleError } from "@/lib/officeHours";
 
 /**
  * Renders the whole content admin from the registry, so adding an editable
@@ -52,6 +54,17 @@ export default function ContentEditor({
 
   const group = groups.find((g) => g.id === activeGroup) ?? groups[0];
   const changed = Object.keys(values).filter((k) => values[k] !== initial[k]);
+
+  // An edited opening-hours field with a period that ends before it starts
+  // can't be saved; the editor says which day.
+  const hoursProblem = groups
+    .flatMap((g) => g.fields)
+    .filter((f) => f.type === "hours" && changed.includes(f.key) && values[f.key]?.trim())
+    .map((f) => {
+      const schedule = parseSchedule(values[f.key]);
+      return schedule ? scheduleError(schedule) : null;
+    })
+    .find(Boolean);
 
   // Bring back edits left unsaved in this tab (e.g. before signing in again).
   useEffect(() => {
@@ -175,11 +188,16 @@ export default function ContentEditor({
               const isDirty = values[f.key] !== initial[f.key];
               return (
                 <div key={f.key}>
-                  <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-stone-900">
+                  <label htmlFor={f.type === "hours" ? undefined : id} className="mb-1.5 block text-sm font-semibold text-stone-900">
                     {f.label}
                     {isDirty && <span className="ml-2 text-xs font-normal text-gold-700">edited</span>}
                   </label>
-                  {f.type === "textarea" ? (
+                  {f.type === "hours" ? (
+                    <OfficeHoursEditor
+                      value={values[f.key] ?? ""}
+                      onChange={(next) => setValues((v) => ({ ...v, [f.key]: next }))}
+                    />
+                  ) : f.type === "textarea" ? (
                     <textarea
                       id={id}
                       rows={3}
@@ -207,7 +225,7 @@ export default function ContentEditor({
           <button
             type="button"
             onClick={save}
-            disabled={changed.length === 0 || status === "saving"}
+            disabled={changed.length === 0 || status === "saving" || Boolean(hoursProblem)}
             className="btn-primary"
           >
             {status === "saving" ? "Saving…" : `Save ${changed.length || ""} change${changed.length === 1 ? "" : "s"}`.trim()}

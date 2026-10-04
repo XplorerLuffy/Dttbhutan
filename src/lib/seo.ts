@@ -1,4 +1,5 @@
 import { formatAddress, type CompanyDetails } from "@/lib/content";
+import { openingHoursJsonLd } from "@/lib/officeHours";
 
 /**
  * The site's public address — used by canonical links, the sitemap, Open
@@ -78,6 +79,9 @@ export function organizationJsonLd(company: CompanyDetails) {
     ...(company.phone ? { telephone: company.phone } : {}),
     ...(company.email ? { email: company.email } : {}),
     ...(sameAs.length > 0 ? { sameAs } : {}),
+    ...(company.officeSchedule
+      ? { openingHoursSpecification: openingHoursJsonLd(company.officeSchedule) }
+      : {}),
     ...(formatAddress(company)
       ? {
           address: {
