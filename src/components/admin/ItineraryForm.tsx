@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImageListUpload from "@/components/admin/ImageListUpload";
 
 type Day = {
   dayNumber: number;
@@ -69,7 +70,6 @@ const EMPTY_DAY: Day = {
 };
 
 const EMPTY_LODGING: Lodging = { name: "", location: "", description: "", photoUrl: "" };
-const EMPTY_PHOTO: Photo = { url: "", caption: "" };
 
 /** Blank number inputs stay blank rather than becoming 0. */
 function num(value: string): number | "" {
@@ -149,24 +149,6 @@ export default function ItineraryForm({
         return d;
       })
     );
-  }
-
-  function addPhoto() {
-    setPhotos((prev) => [...prev, { ...EMPTY_PHOTO }]);
-  }
-
-  function updatePhoto(index: number, patch: Partial<Photo>) {
-    setPhotos((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)));
-  }
-
-  function movePhoto(index: number, delta: number) {
-    setPhotos((prev) => {
-      const next = [...prev];
-      const target = index + delta;
-      if (target < 0 || target >= next.length) return prev;
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -331,109 +313,37 @@ export default function ItineraryForm({
           block, which is the main thing that makes a trip look unfinished.
         </p>
 
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
-          <Field label="Cover photo URL">
-            <input
-              value={coverPhotoUrl}
-              onChange={(e) => setCoverPhotoUrl(e.target.value)}
-              placeholder="https://…"
-              className="input"
-            />
-          </Field>
-
-          {/* Roughly the shape the banner crops to, so a portrait shot or a
-              subject near the edge shows its problem here rather than live. */}
-          <div className="w-full overflow-hidden rounded border border-stone-200 bg-stone-100 sm:w-64">
-            {coverPhotoUrl.trim() ? (
-              // A half-typed URL from an arbitrary host, re-rendered on every
-              // keystroke — next/image would want that host allow-listed and
-              // would optimise a preview nobody but an admin ever sees.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={coverPhotoUrl}
-                alt=""
-                className="aspect-[16/9] w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              <p className="flex aspect-[16/9] items-center justify-center px-3 text-center text-xs text-stone-500">
-                No cover photo
-              </p>
-            )}
-          </div>
-        </div>
+        {/* 16:9 is roughly what the banner crops to, so a portrait shot or a
+            subject near the edge shows its problem here rather than live. */}
+        <ImageListUpload
+          images={coverPhotoUrl.trim() ? [{ url: coverPhotoUrl.trim() }] : []}
+          onChange={(next) => setCoverPhotoUrl(next[0]?.url ?? "")}
+          folder="packages"
+          max={1}
+          label=""
+          aspect="aspect-[16/9]"
+        />
       </div>
 
       <div>
-        <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Gallery</h2>
-          <button type="button" onClick={addPhoto} className="btn-secondary">
-            + Add photo
-          </button>
-        </div>
+        <h2 className="mb-1 text-lg font-semibold">Gallery</h2>
         <p className="mb-3 text-sm text-stone-600">
           Photos for the trip page&apos;s Gallery tab, in this order — the first one gets the
           large cell. The tab only appears once there is at least one. This is separate from the
-          cover photo, which has to work cropped to a card.
+          cover photo, which has to work cropped to a card; any gallery photo can be made the
+          cover with &ldquo;Use as cover&rdquo;.
         </p>
 
-        <div className="space-y-2">
-          {photos.map((photo, i) => (
-            <div key={i} className="card grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-              <Field label={i === 0 ? "Photo URL (large cell)" : "Photo URL"}>
-                <input
-                  value={photo.url}
-                  onChange={(e) => updatePhoto(i, { url: e.target.value })}
-                  placeholder="https://…"
-                  className="input"
-                />
-              </Field>
-              <Field label="Caption (optional)">
-                <input
-                  value={photo.caption}
-                  onChange={(e) => updatePhoto(i, { caption: e.target.value })}
-                  placeholder="Prayer flags above Dochula Pass"
-                  className="input"
-                />
-              </Field>
-              <div className="mb-1 flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => movePhoto(i, -1)}
-                  disabled={i === 0}
-                  aria-label="Move photo earlier"
-                  className="rounded border border-stone-200 px-2 py-2 text-sm text-stone-600 hover:bg-stone-50 disabled:opacity-30"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => movePhoto(i, 1)}
-                  disabled={i === photos.length - 1}
-                  aria-label="Move photo later"
-                  className="rounded border border-stone-200 px-2 py-2 text-sm text-stone-600 hover:bg-stone-50 disabled:opacity-30"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPhotos((ps) => ps.filter((_, j) => j !== i))}
-                  aria-label="Remove photo"
-                  className="rounded border border-stone-200 px-2 py-2 text-sm text-stone-500 hover:bg-stone-50"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          ))}
-          {photos.length === 0 && (
-            <p className="text-sm text-stone-500">
-              No gallery photos yet, so the trip page shows no Gallery tab.
-            </p>
-          )}
-        </div>
+        <ImageListUpload
+          images={photos}
+          onChange={(next) => setPhotos(next.map((p) => ({ url: p.url, caption: p.caption ?? "" })))}
+          folder="packages"
+          max={60}
+          label="Gallery photos"
+          leadLabel="Large"
+          captions
+          action={{ label: "Use as cover", run: setCoverPhotoUrl }}
+        />
       </div>
 
       <div>
@@ -487,14 +397,13 @@ export default function ItineraryForm({
                   className="input"
                 />
               </Field>
-              <Field label="Photo URL (optional)">
-                <input
-                  value={lodging.photoUrl}
-                  onChange={(e) => updateLodging(i, { photoUrl: e.target.value })}
-                  placeholder="https://…"
-                  className="input"
-                />
-              </Field>
+              <ImageListUpload
+                images={lodging.photoUrl ? [{ url: lodging.photoUrl }] : []}
+                onChange={(next) => updateLodging(i, { photoUrl: next[0]?.url ?? "" })}
+                folder="packages"
+                max={1}
+                label="Photo (optional)"
+              />
             </div>
           ))}
           {lodgings.length === 0 && (

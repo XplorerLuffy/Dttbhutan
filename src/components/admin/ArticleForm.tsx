@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImageListUpload, { type ImageItem } from "@/components/admin/ImageListUpload";
 
 type InitialValues = {
   id?: string;
@@ -11,6 +12,7 @@ type InitialValues = {
   excerpt: string;
   content: string;
   coverPhotoUrl: string;
+  photoUrls: string[];
   readMinutes: number;
   status: "DRAFT" | "PUBLISHED";
 };
@@ -24,7 +26,13 @@ export default function ArticleForm({ initial }: { initial?: InitialValues }) {
   const [category, setCategory] = useState(initial?.category ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
-  const [coverPhotoUrl, setCoverPhotoUrl] = useState(initial?.coverPhotoUrl ?? "");
+  // One list in the form; the first photo is saved as the cover, the rest
+  // as the article's gallery.
+  const [photos, setPhotos] = useState<ImageItem[]>(() =>
+    [initial?.coverPhotoUrl, ...(initial?.photoUrls ?? [])]
+      .filter((url): url is string => Boolean(url))
+      .map((url) => ({ url }))
+  );
   const [readMinutes, setReadMinutes] = useState(initial?.readMinutes ?? 5);
   const [status, setStatus] = useState(initial?.status ?? "DRAFT");
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +49,9 @@ export default function ArticleForm({ initial }: { initial?: InitialValues }) {
       category,
       excerpt,
       content,
-      coverPhotoUrl: coverPhotoUrl || undefined,
+      // null, not undefined: removing every photo has to clear the cover.
+      coverPhotoUrl: photos[0]?.url ?? null,
+      photoUrls: photos.slice(1).map((p) => p.url),
       readMinutes,
       status,
     };
@@ -108,9 +118,14 @@ export default function ArticleForm({ initial }: { initial?: InitialValues }) {
         />
       </Field>
 
-      <Field label="Cover photo URL (optional)">
-        <input value={coverPhotoUrl} onChange={(e) => setCoverPhotoUrl(e.target.value)} className="input" />
-      </Field>
+      <ImageListUpload
+        images={photos}
+        onChange={setPhotos}
+        folder="articles"
+        label="Photos (optional)"
+        hint="The first photo is the cover — shown on the article's cards and at the top of the page. The others appear as a gallery under the text."
+        leadLabel="Cover"
+      />
 
       <Field label="Content">
         <textarea

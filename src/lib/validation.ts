@@ -268,7 +268,10 @@ export const articleAdminSchema = z.object({
   category: z.string().min(2).max(60),
   excerpt: z.string().min(2).max(300),
   content: z.string().min(2).max(20000),
-  coverPhotoUrl: z.string().optional(),
+  // nullish, not optional: an edit that removes the cover has to be able to
+  // clear the column, which an absent key would leave untouched.
+  coverPhotoUrl: z.string().max(500).nullish(),
+  photoUrls: z.array(z.string().min(1).max(500)).max(30).default([]),
   readMinutes: z.coerce.number().int().min(1).max(60),
   status: z.enum(["DRAFT", "PUBLISHED"]),
 });

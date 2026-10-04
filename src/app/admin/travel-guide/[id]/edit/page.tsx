@@ -29,6 +29,7 @@ export default async function EditArticlePage({
           excerpt: article.excerpt,
           content: article.content,
           coverPhotoUrl: article.coverPhotoUrl ?? "",
+          photoUrls: article.photoUrls,
           readMinutes: article.readMinutes,
           status: article.status,
         }}

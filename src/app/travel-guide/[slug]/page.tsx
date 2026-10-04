@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
+import TripGallery from "@/components/listing/TripGallery";
 import { articleJsonLd, breadcrumbJsonLd, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -79,6 +80,14 @@ export default async function ArticleDetailPage({
           </p>
         ))}
       </div>
+
+      {article.photoUrls.length > 0 && (
+        <section className="mt-8" aria-label="Photos">
+          <TripGallery
+            photos={article.photoUrls.map((url, i) => ({ id: `${i}`, url, caption: null }))}
+          />
+        </section>
+      )}
 
       <div className="mt-10 rounded-lg border border-stone-200 bg-stone-50 p-5 text-center">
         <p className="font-display text-lg font-semibold text-stone-900">Planning a trip to Bhutan?</p>
