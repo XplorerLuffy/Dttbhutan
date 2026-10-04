@@ -91,7 +91,7 @@ export default function GuideEditForm({
       setError(readError(await res.json().catch(() => ({}))));
       return;
     }
-    router.push("/admin/vendors");
+    router.push("/chim/vendors");
     router.refresh();
   }
 

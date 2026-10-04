@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Questions and categories are editable under /admin/content/pages.
+ * Questions and categories are editable under /chim/content/pages.
  *
  * The shipped defaults deliberately avoid quoting exact SDF and visa fee
  * amounts: those are set by the government, change from time to time, and

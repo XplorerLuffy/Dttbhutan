@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createSupabaseServerClient, isSupabaseAuthConfigured } from "@/lib/supabase/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { isSupabaseAuthConfigured } from "@/lib/supabase/server";
+import {
+  ADMIN_SESSION_COOKIE,
+  adminSessionCookieOptions,
+  asBrowserSessionCookie,
+  encodeAdminSession,
+} from "@/lib/adminSession";
 import { loginSchema } from "@/lib/validation";
 import { migrateLegacyAccount } from "@/lib/authMigration";
 
@@ -29,7 +36,40 @@ export async function POST(req: NextRequest) {
   }
   const email = parsed.data.email.trim().toLowerCase();
 
-  const supabase = await createSupabaseServerClient();
+  // The session cookies Supabase wants to write are held back until we know
+  // who signed in: an admin's are written without an expiry date, so they end
+  // with the browser session (see adminSession.ts).
+  const pendingCookies = new Map<string, { value: string; options: CookieOptions }>();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
+    {
+      cookies: {
+        getAll: () => req.cookies.getAll(),
+        setAll(toSet) {
+          for (const { name, value, options } of toSet) pendingCookies.set(name, { value, options });
+        },
+      },
+    }
+  );
+  const respond = async (body: unknown, init: { status?: number; admin?: string } = {}) => {
+    const res = NextResponse.json(body, { status: init.status ?? 200 });
+    pendingCookies.forEach(({ value, options }, name) => {
+      res.cookies.set(name, value, init.admin ? asBrowserSessionCookie(options) : options);
+    });
+    if (init.admin) {
+      const now = Date.now();
+      res.cookies.set(
+        ADMIN_SESSION_COOKIE,
+        await encodeAdminSession({ uid: init.admin, issuedAt: now, lastSeen: now }),
+        adminSessionCookieOptions
+      );
+    } else {
+      res.cookies.set(ADMIN_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+    }
+    return res;
+  };
+
   let { data, error } = await supabase.auth.signInWithPassword({
     email,
     password: parsed.data.password,
@@ -52,7 +92,7 @@ export async function POST(req: NextRequest) {
   // telling them apart turns the form into a way to find out who has an
   // account here.
   if (error || !data.user) {
-    return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+    return respond({ error: "Invalid email or password" }, { status: 401 });
   }
 
   const user = await prisma.user.findUnique({ where: { authId: data.user.id } });
@@ -61,11 +101,14 @@ export async function POST(req: NextRequest) {
     // drifted. Do not leave a usable session lying around for an account the
     // app cannot place.
     await supabase.auth.signOut();
-    return NextResponse.json(
+    return respond(
       { error: "That account is not set up yet. Please contact the team." },
       { status: 403 }
     );
   }
 
-  return NextResponse.json({ id: user.id, role: user.role });
+  return respond(
+    { id: user.id, role: user.role },
+    { admin: user.role === "ADMIN" ? data.user.id : undefined }
+  );
 }

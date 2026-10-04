@@ -213,7 +213,7 @@ export function newBookingToAgency(input: {
       { label: "Total", value: input.total },
       { label: "Status", value: input.status },
     ],
-    cta: { label: "Open admin bookings", href: `${siteUrl()}/admin/bookings` },
+    cta: { label: "Open admin bookings", href: `${siteUrl()}/chim/bookings` },
   });
 }
 
@@ -327,7 +327,7 @@ export function customTourToAgency(input: {
       ...(input.estimate ? [{ label: "System estimate", value: input.estimate }] : []),
       ...(input.notes ? [{ label: "Notes", value: input.notes }] : []),
     ],
-    cta: { label: "Open custom tour requests", href: `${siteUrl()}/admin/custom-tours` },
+    cta: { label: "Open custom tour requests", href: `${siteUrl()}/chim/custom-tours` },
   });
 }
 
@@ -370,7 +370,7 @@ export function contactToAgency(input: {
       { label: "Message", value: input.message },
       { label: "Account", value: input.accountNote },
     ],
-    cta: { label: "Open enquiries", href: `${siteUrl()}/admin/enquiries` },
+    cta: { label: "Open enquiries", href: `${siteUrl()}/chim/enquiries` },
     outro: "Reply to this email to answer them directly.",
   });
 }

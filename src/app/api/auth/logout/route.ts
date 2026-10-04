@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { signOut } from "@/lib/auth";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/server";
+import { ADMIN_SESSION_COOKIE } from "@/lib/adminSession";
 
 /**
  * Logging out must never fail.
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json({ ok: true });
+  res.cookies.set(ADMIN_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
   for (const { name } of req.cookies.getAll()) {
     // Supabase's cookies are sb-<project-ref>-auth-token, split into .0, .1…
     // chunks when the token is large.

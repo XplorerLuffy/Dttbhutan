@@ -303,7 +303,7 @@ export async function notifyContactMessage(messageId: string): Promise<void> {
  * Someone asked for a trip's itinerary from the trip page. Only the agency is
  * emailed — staff send the itinerary to the customer themselves, from their
  * own inbox. The request is also stored as a ContactMessage, so it shows in
- * /admin/enquiries even if this email never arrives.
+ * /chim/enquiries even if this email never arrives.
  */
 export async function notifyItineraryRequested(input: {
   customerEmail: string;

@@ -43,7 +43,7 @@ const SELECTOR = [
 ].join(",");
 
 /** App surfaces where reveals would be noise rather than polish. */
-const SKIP_PREFIXES = ["/admin", "/dashboard", "/login", "/register", "/track"];
+const SKIP_PREFIXES = ["/chim", "/dashboard", "/login", "/register", "/track"];
 
 export default function AutoReveal() {
   const pathname = usePathname();

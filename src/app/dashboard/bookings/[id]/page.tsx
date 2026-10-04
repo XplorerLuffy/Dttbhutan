@@ -169,7 +169,7 @@ export default async function BookingDetailPage({
             </Link>
             {isAdmin && booking.trip.status === "COMPLETED" && (
               <Link
-                href={`/admin/gps/trips/${booking.trip.id}`}
+                href={`/chim/gps/trips/${booking.trip.id}`}
                 className="mt-1 block text-sm text-stone-500 hover:underline"
               >
                 View mileage verification report →

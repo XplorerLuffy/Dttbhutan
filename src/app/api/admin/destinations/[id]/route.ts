@@ -7,7 +7,7 @@ import { destinationAdminSchema } from "@/lib/validation";
 
 /**
  * Parsed `.partial()` so both callers work off one schema: the inline region
- * select on /admin/destinations sends `{ region }` alone, while the edit form
+ * select on /chim/destinations sends `{ region }` alone, while the edit form
  * sends every field. An absent key then leaves that column untouched, which is
  * exactly what a partial update should do.
  */

@@ -214,7 +214,7 @@ export default function ItineraryForm({
       return;
     }
 
-    router.push("/admin/packages");
+    router.push("/chim/packages");
     router.refresh();
   }
 

@@ -7,7 +7,7 @@
  * seeded agency. Keeping it separate means the default suite stays runnable
  * without a database.
  *
- * What it covers is the part of /admin/knowledge that can go wrong quietly:
+ * What it covers is the part of /chim/knowledge that can go wrong quietly:
  *   - a document created from the dashboard is chunked, embedded, and actually
  *     retrievable afterwards — the whole point of the screen
  *   - an edit REPLACES its chunks rather than adding to them, and keeps the

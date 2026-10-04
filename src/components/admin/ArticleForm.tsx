@@ -70,7 +70,7 @@ export default function ArticleForm({ initial }: { initial?: InitialValues }) {
       return;
     }
 
-    router.push("/admin/travel-guide");
+    router.push("/chim/travel-guide");
     router.refresh();
   }
 

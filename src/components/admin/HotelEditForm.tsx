@@ -82,7 +82,7 @@ export default function HotelEditForm({
       setError(readError(await res.json().catch(() => ({}))));
       return;
     }
-    router.push("/admin/vendors");
+    router.push("/chim/vendors");
     router.refresh();
   }
 

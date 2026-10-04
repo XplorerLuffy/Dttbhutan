@@ -149,7 +149,7 @@ export type ReingestDocumentArgs = {
  *
  * Distinct from ingestDocument's replace-by-sourceRef, which deletes the old
  * row and creates a new one: an admin editing knowledge through the dashboard
- * is looking at /admin/knowledge/<id>/edit, and a new id would leave them on
+ * is looking at /chim/knowledge/<id>/edit, and a new id would leave them on
  * a dead URL after every save. Keeping the id also keeps the edit history
  * readable — one row whose updatedAt moves, rather than a fresh row each time.
  *

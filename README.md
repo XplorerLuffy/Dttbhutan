@@ -123,8 +123,8 @@ admin inbox — all without needing to create any of it manually.
 Two consumers share one pipeline (device → `GpsPosition` rows → derived
 views):
 
-- **Mileage verification** (admin-facing): `/admin/gps/trips` and
-  `/admin/gps/trips/[id]`. `src/lib/gps/report.ts` sums Haversine distance
+- **Mileage verification** (admin-facing): `/chim/gps/trips` and
+  `/chim/gps/trips/[id]`. `src/lib/gps/report.ts` sums Haversine distance
   across a trip's logged positions and compares it to the
   planned/quoted distance captured at booking time, flagging trips that
   deviate past a configurable threshold (`GPS_DEVIATION_FLAG_PERCENT`,
@@ -185,7 +185,7 @@ international-search feel instead, if the client prefers that.
 - **Package tours** (`Itinerary` / `ItineraryDay` models): fixed,
   agency-authored multi-day itineraries with a day-by-day breakdown (each
   day optionally tagged to a destination), a per-person price, and
-  includes/excludes lists. Admins author these at `/admin/packages` (a
+  includes/excludes lists. Admins author these at `/chim/packages` (a
   day-by-day builder, add/remove days freely) with a `DRAFT` status kept
   hidden from travelers until set to `PUBLISHED`. Travelers browse
   `/packages` and book at `/packages/[slug]` — an `ITINERARY`-type booking
@@ -196,7 +196,7 @@ international-search feel instead, if the client prefers that.
   want something a package doesn't cover. Not a booking — no fixed
   itinerary or price exists yet. A traveler picks destinations, dates,
   group size, and an optional budget at `/custom-tour`; the agency follows
-  up by hand (the admin inbox at `/admin/custom-tours` surfaces the
+  up by hand (the admin inbox at `/chim/custom-tours` surfaces the
   traveler's email/phone directly, since the actual quoting conversation
   happens off-platform) and tracks status (`NEW` → `IN_REVIEW` → `QUOTED` →
   `CLOSED`).
@@ -299,7 +299,7 @@ numbers match how the business actually works, flip `LEGAL_REVIEWED` in
   endpoint a stranger can reach, so it has a honeypot field, a per-IP rate
   limit (5 per 10 minutes) and length caps. A tripped honeypot gets the same
   201 a real submission does, so a bot learns nothing. Messages land in
-  `/admin/enquiries` and email the agency.
+  `/chim/enquiries` and email the agency.
 - **Every booking has a short reference** (`DTT-X7964V`) stored on the row,
   shown in dashboards and quoted in every email. The alphabet excludes
   easily-confused characters (no O/0, I/1/L, S/5, B/8) so a reference read

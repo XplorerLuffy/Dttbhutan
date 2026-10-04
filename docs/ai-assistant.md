@@ -144,7 +144,7 @@ Google Cloud project behind the key before the site takes real traffic.**
 - **`prisma/data/knowledgeSeed.ts`** — text with no database home yet:
   booking FAQ, the guide requirement, cancellation, payments, and one
   INTERNAL staff note.
-- **Hand-authored documents written in `/admin/knowledge`** — anything else
+- **Hand-authored documents written in `/chim/knowledge`** — anything else
   DRUKA should know, added without a developer. Same pipeline, no `sourceRef`.
 
 Visibility matters: the INTERNAL note is excluded from `/api/chat`, which
@@ -166,12 +166,12 @@ Without `--allow-production` it refuses any non-local `DATABASE_URL`.
 
 Editing an Article, package or destination does **not** update the knowledge
 base on its own. The searchable copy is refreshed either by the script above
-or by **Refresh from website content** on `/admin/knowledge` — a deliberate
+or by **Refresh from website content** on `/chim/knowledge` — a deliberate
 trade, so an admin saving a package never waits on an embedding API call.
 
 ### Editing knowledge from the admin dashboard
 
-`/admin/knowledge` lists every document and splits them by who owns the text.
+`/chim/knowledge` lists every document and splits them by who owns the text.
 
 **Written by you** — `MANUAL`, `FAQ`, `POLICY`, `UPLOAD`. Fully editable:
 create, edit, delete. Saving re-chunks and re-embeds through

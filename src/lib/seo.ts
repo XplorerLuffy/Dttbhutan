@@ -57,7 +57,7 @@ const websiteId = () => `${siteUrl()}/#website`;
  * Only emits fields that hold real values — an unset field is omitted
  * rather than published, because structured data asserting a fake licence
  * number or address to search engines is worse than saying nothing. Values
- * come from /admin/content → Company details.
+ * come from /chim/content → Company details.
  */
 export function organizationJsonLd(company: CompanyDetails) {
   const { street, city, country } = company.address;

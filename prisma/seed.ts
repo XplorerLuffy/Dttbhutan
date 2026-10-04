@@ -48,7 +48,7 @@ const PUNAKHA = { lat: 27.5921, lng: 89.8797 };
  *
  * Existing users are never touched — upsertUser's update is {} — so this only
  * applies the first time, and re-seeding cannot undo a password changed later
- * from /admin/account.
+ * from /chim/account.
  */
 const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
 
@@ -77,7 +77,7 @@ async function main() {
   console.log("Seeding...");
 
   // Make an admin only when there is no admin at all. Upserting a fixed
-  // address instead means renaming the account from /admin/account, or
+  // address instead means renaming the account from /chim/account, or
   // deleting a spare one, is undone the next time anyone seeds: the address
   // the seed knows is simply recreated, on the password in this file. What the
   // seed actually needs to guarantee is that *an* admin exists to sign in
@@ -89,7 +89,7 @@ async function main() {
         "\n  ! SEED_ADMIN_PASSWORD is not set, so the admin account is being\n" +
           "    created with the password in this file, which is public. Fine on a\n" +
           "    laptop; set it for anything else, or change the password straight\n" +
-          "    away at /admin/account.\n"
+          "    away at /chim/account.\n"
       );
     }
     admin = await upsertUser(
@@ -1206,7 +1206,7 @@ If your dates are flexible, ask us about aligning your trip with a specific dzon
   console.log("Hotel operator login:", hotelOwner1.email, "/ password123");
   console.log("Transport operator login:", transportOwner1.email, "/ password123");
   console.log(
-    `Dispute demo trip: /admin/gps/trips/${disputeTrip.id} (planned ${plannedDistanceKm}km vs actual ${actualDistanceKm.toFixed(1)}km)`
+    `Dispute demo trip: /chim/gps/trips/${disputeTrip.id} (planned ${plannedDistanceKm}km vs actual ${actualDistanceKm.toFixed(1)}km)`
   );
 }
 

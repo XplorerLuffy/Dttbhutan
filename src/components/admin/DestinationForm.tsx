@@ -85,7 +85,7 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
       return;
     }
 
-    router.push("/admin/destinations");
+    router.push("/chim/destinations");
     router.refresh();
   }
 

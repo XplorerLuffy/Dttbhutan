@@ -5,7 +5,7 @@ export const DASHBOARD_PATH_BY_ROLE: Record<Role, string> = {
   GUIDE: "/vendor/guide",
   HOTEL_OPERATOR: "/vendor/hotel",
   TRANSPORT_OPERATOR: "/vendor/transport",
-  ADMIN: "/admin",
+  ADMIN: "/chim",
 };
 
 export function dashboardPathForRole(role: Role) {

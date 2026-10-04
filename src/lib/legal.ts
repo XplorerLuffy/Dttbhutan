@@ -5,7 +5,7 @@
  * then those pages show a "draft" banner and highlight every value that
  * still needs confirming.
  *
- * This stays a code constant rather than moving to /admin/content with the
+ * This stays a code constant rather than moving to /chim/content with the
  * rest of the wording: it records that a human professional signed the
  * pages off, and that is not something an admin should be able to assert
  * by typing into a box.

@@ -90,7 +90,7 @@ export default function KnowledgeForm({ initial }: { initial?: KnowledgeInitial 
     // payload, so refreshing the page being left behind and then navigating
     // lands on a copy rendered before this document existed — the admin adds
     // something and doesn't see it.
-    router.push("/admin/knowledge");
+    router.push("/chim/knowledge");
     router.refresh();
   }
 
@@ -108,7 +108,7 @@ export default function KnowledgeForm({ initial }: { initial?: KnowledgeInitial 
       return;
     }
 
-    router.push("/admin/knowledge");
+    router.push("/chim/knowledge");
     router.refresh();
   }
 

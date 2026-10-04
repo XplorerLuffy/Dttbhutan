@@ -57,7 +57,7 @@ export default function VehicleEditForm({
       setError(readError(await res.json().catch(() => ({}))));
       return;
     }
-    router.push("/admin/vendors");
+    router.push("/chim/vendors");
     router.refresh();
   }
 

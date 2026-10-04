@@ -1,5 +1,7 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/adminSession";
 import { createSupabaseServerClient, isSupabaseAuthConfigured } from "@/lib/supabase/server";
 import type { Role } from "@prisma/client";
 
@@ -41,7 +43,21 @@ export async function getCurrentUser() {
   // No profile for a verified auth user means the two stores have drifted —
   // an account created directly in Supabase, or a profile deleted without its
   // auth user. Treat it as not signed in rather than inventing a role.
-  return prisma.user.findUnique({ where: { authId: authUser.id } });
+  const user = await prisma.user.findUnique({ where: { authId: authUser.id } });
+
+  // An admin also needs a live admin session — see adminSession.ts. Without
+  // one (browser closed, idle too long, signed in too long ago) the admin
+  // reads as signed out everywhere, not only on the admin pages, so nothing
+  // on the public site shows them as still logged in either.
+  if (user?.role === "ADMIN") {
+    const cookieStore = await cookies();
+    const session = await readAdminSession(
+      cookieStore.get(ADMIN_SESSION_COOKIE)?.value,
+      authUser.id
+    );
+    if (!session) return null;
+  }
+  return user;
 }
 
 export async function getSession(): Promise<SessionPayload | null> {

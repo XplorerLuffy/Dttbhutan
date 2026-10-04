@@ -5,9 +5,9 @@ import AutoReveal from "@/components/AutoReveal";
 
 /**
  * Hides the public NavBar/Footer (and the AI chat widget — see `chat`
- * below) on /admin routes (which have their own sidebar navigation), on
+ * below) on /chim routes (which have their own sidebar navigation), on
  * /login and /register (which have their own logo + copyright via
- * AuthLayout, and are the entry point into /admin for signed-out users —
+ * AuthLayout, and are the entry point into /chim for signed-out users —
  * so they need the same chrome-free treatment). /assistant keeps the header
  * and footer but not the chat widget — see NO_CHAT_PREFIXES below. NavBar/Footer/chat are
  * rendered server-side in the root layout and passed in as already-resolved
@@ -20,7 +20,7 @@ import AutoReveal from "@/components/AutoReveal";
  * `100vw` breakout trick overflows by the width of the scrollbar. Every
  * other route keeps the identical container it had before.
  */
-const NO_CHROME_PREFIXES = ["/admin", "/login", "/register"];
+const NO_CHROME_PREFIXES = ["/chim", "/login", "/register"];
 
 /** The assistant's own page keeps the site header and footer — it is a page of
  * the site, not a separate application — but not the floating panel, which
