@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import StatusBadge from "@/components/StatusBadge";
-import VendorApprovalControls from "@/components/admin/VendorApprovalControls";
+import VendorRowActions from "@/components/admin/VendorRowActions";
 
 export default async function AdminVendorsPage() {
   const user = await getCurrentUser();
@@ -50,12 +50,12 @@ export default async function AdminVendorsPage() {
                   <p className="text-xs text-stone-400">Note: {g.adminNote}</p>
                 )}
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Link href={`/chim/vendors/guides/${g.id}/edit`} className="btn-secondary">
-                  Edit
-                </Link>
-                <VendorApprovalControls apiPath={`/api/admin/guides/${g.id}`} status={g.status} />
-              </div>
+              <VendorRowActions
+                status={g.status}
+                apiPath={`/api/admin/guides/${g.id}`}
+                editHref={`/chim/vendors/guides/${g.id}/edit`}
+                profileHref={`/guides/${g.id}`}
+              />
             </div>
           ))}
           {guides.length === 0 && <p className="text-sm text-stone-500">No guides yet.</p>}
@@ -83,12 +83,12 @@ export default async function AdminVendorsPage() {
                   <p className="text-xs text-stone-400">Note: {h.adminNote}</p>
                 )}
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Link href={`/chim/vendors/hotels/${h.id}/edit`} className="btn-secondary">
-                  Edit
-                </Link>
-                <VendorApprovalControls apiPath={`/api/admin/hotels/${h.id}`} status={h.status} />
-              </div>
+              <VendorRowActions
+                status={h.status}
+                apiPath={`/api/admin/hotels/${h.id}`}
+                editHref={`/chim/vendors/hotels/${h.id}/edit`}
+                profileHref={`/hotels/${h.id}`}
+              />
             </div>
           ))}
           {hotels.length === 0 && <p className="text-sm text-stone-500">No hotels yet.</p>}
@@ -110,7 +110,7 @@ export default async function AdminVendorsPage() {
                     <p className="text-xs text-stone-400">Note: {op.adminNote}</p>
                   )}
                 </div>
-                <VendorApprovalControls apiPath={`/api/admin/transport/${op.id}`} status={op.status} />
+                <VendorRowActions status={op.status} apiPath={`/api/admin/transport/${op.id}`} />
               </div>
               {op.vehicles.length > 0 && (
                 <div className="mt-3 space-y-3 border-t border-stone-100 pt-3">
@@ -119,15 +119,12 @@ export default async function AdminVendorsPage() {
                       <span>
                         {v.type} · {v.plateNumber} <StatusBadge status={v.status} />
                       </span>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <Link
-                          href={`/chim/vendors/vehicles/${v.id}/edit`}
-                          className="btn-secondary"
-                        >
-                          Edit
-                        </Link>
-                        <VendorApprovalControls apiPath={`/api/admin/vehicles/${v.id}`} status={v.status} />
-                      </div>
+                      <VendorRowActions
+                        status={v.status}
+                        apiPath={`/api/admin/vehicles/${v.id}`}
+                        editHref={`/chim/vendors/vehicles/${v.id}/edit`}
+                        profileHref={`/vehicles/${v.id}`}
+                      />
                     </div>
                   ))}
                 </div>

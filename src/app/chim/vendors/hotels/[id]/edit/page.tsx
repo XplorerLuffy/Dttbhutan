@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import HotelEditForm from "@/components/admin/HotelEditForm";
+import ListingStatusSection from "@/components/admin/ListingStatusSection";
 import AddRoomTypeForm from "@/app/vendor/hotel/room-types/AddRoomTypeForm";
 import Money from "@/components/Money";
 
@@ -31,8 +32,8 @@ export default async function EditHotelPage({ params }: { params: Promise<{ id: 
       </Link>
       <h1 className="mb-1 mt-2 text-2xl font-bold">{hotel.name}</h1>
       <p className="mb-6 text-sm text-stone-600">
-        Hotel listing as travelers see it on /hotels and the destination pages. Approval status is
-        set from the vendors list — saving these details doesn&apos;t email the operator.
+        Hotel listing as travelers see it on /hotels and the destination pages. Saving these
+        details doesn&apos;t email the operator.
       </p>
 
       <HotelEditForm
@@ -78,6 +79,12 @@ export default async function EditHotelPage({ params }: { params: Promise<{ id: 
         </div>
         <AddRoomTypeForm endpoint={`/api/admin/hotels/${hotel.id}/room-types`} />
       </section>
+
+      <ListingStatusSection
+        status={hotel.status}
+        apiPath={`/api/admin/hotels/${hotel.id}`}
+        who="the owner"
+      />
     </div>
   );
 }

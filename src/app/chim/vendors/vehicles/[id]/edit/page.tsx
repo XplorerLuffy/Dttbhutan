@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import VehicleEditForm from "@/components/admin/VehicleEditForm";
+import ListingStatusSection from "@/components/admin/ListingStatusSection";
 
 export default async function EditVehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -25,8 +26,8 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
         {vehicle.type} · {vehicle.plateNumber}
       </h1>
       <p className="mb-6 text-sm text-stone-600">
-        Operated by {vehicle.operator.businessName}. Approval status is set from the vendors list —
-        saving these details doesn&apos;t email the operator.
+        Operated by {vehicle.operator.businessName}. Saving these details doesn&apos;t email the
+        operator.
       </p>
 
       <VehicleEditForm
@@ -40,6 +41,12 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
           ratePerDay: vehicle.ratePerDay.toString(),
           ratePerKm: vehicle.ratePerKm?.toString() ?? "",
         }}
+      />
+
+      <ListingStatusSection
+        status={vehicle.status}
+        apiPath={`/api/admin/vehicles/${vehicle.id}`}
+        who="the operator"
       />
     </div>
   );
