@@ -1,14 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { dashboardPathForRole } from "@/lib/roles";
 import StatusBadge from "@/components/StatusBadge";
 
 export default async function AdminGpsTripsPage() {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const trips = await prisma.trip.findMany({
     orderBy: { createdAt: "desc" },

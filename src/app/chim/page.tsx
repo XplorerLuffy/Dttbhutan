@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { dashboardPathForRole } from "@/lib/roles";
 import { getAdminWorkload } from "@/lib/admin/workload";
 import StatusBadge from "@/components/StatusBadge";
 
@@ -22,7 +20,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminHomePage() {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const [work, recentBookings, recentEnquiries, recentCustomTours] = await Promise.all([
     getAdminWorkload(),

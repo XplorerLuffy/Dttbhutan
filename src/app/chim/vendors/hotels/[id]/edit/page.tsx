@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { dashboardPathForRole } from "@/lib/roles";
 import HotelEditForm from "@/components/admin/HotelEditForm";
 import AddRoomTypeForm from "@/app/vendor/hotel/room-types/AddRoomTypeForm";
 import Money from "@/components/Money";
@@ -10,7 +9,7 @@ import Money from "@/components/Money";
 export default async function EditHotelPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const { id } = await params;
   const [hotel, destinations] = await Promise.all([

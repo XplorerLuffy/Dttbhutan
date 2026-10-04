@@ -7,10 +7,11 @@ import type { Role } from "@prisma/client";
 
 /**
  * Email + password sign-in. On /login it opens the dashboard for the
- * account's role; on the admin area (`stayHere`) it re-renders the page it is
- * on, so an admin returns to the screen they were signed out of.
+ * account's role. As the admin sign-in (`admin`) it accepts admin accounts
+ * only and re-renders the page it is on, so an admin returns to the screen
+ * they were signed out of.
  */
-export default function LoginForm({ stayHere = false }: { stayHere?: boolean }) {
+export default function LoginForm({ admin = false }: { admin?: boolean }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export default function LoginForm({ stayHere = false }: { stayHere?: boolean }) 
       body: JSON.stringify({
         email: form.get("email"),
         password: form.get("password"),
+        adminOnly: admin,
       }),
     }).catch(() => null);
 
@@ -47,7 +49,7 @@ export default function LoginForm({ stayHere = false }: { stayHere?: boolean }) 
     }
 
     const data = await res.json();
-    if (stayHere) {
+    if (admin) {
       // Drop ?expired so the notice doesn't come back on the next refresh.
       router.replace(window.location.pathname);
     } else {

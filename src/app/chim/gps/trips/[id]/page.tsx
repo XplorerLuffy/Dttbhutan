@@ -1,7 +1,6 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { dashboardPathForRole } from "@/lib/roles";
 import RouteComparisonMap from "@/components/map/RouteComparisonMapClient";
 import RegenerateReportButton from "@/components/admin/RegenerateReportButton";
 import StatusBadge from "@/components/StatusBadge";
@@ -15,7 +14,7 @@ export default async function TripMileageReportPage({
 }) {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const { id } = await params;
   const trip = await prisma.trip.findUnique({

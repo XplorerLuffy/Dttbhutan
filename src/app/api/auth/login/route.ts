@@ -35,6 +35,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
   const email = parsed.data.email.trim().toLowerCase();
+  // Sent by the admin sign-in at /chim, which is for admins only.
+  const adminOnly = Boolean((body as { adminOnly?: unknown }).adminOnly);
 
   // The session cookies Supabase wants to write are held back until we know
   // who signed in: an admin's are written without an expiry date, so they end
@@ -105,6 +107,13 @@ export async function POST(req: NextRequest) {
       { error: "That account is not set up yet. Please contact the team." },
       { status: 403 }
     );
+  }
+
+  if (adminOnly && user.role !== "ADMIN") {
+    // Undo the sign-in just made, on this browser only — not the account's
+    // sessions on its owner's other devices.
+    await supabase.auth.signOut({ scope: "local" });
+    return respond({ error: "This sign-in is for administrators only." }, { status: 403 });
   }
 
   return respond(

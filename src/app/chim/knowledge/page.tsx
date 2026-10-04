@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { dashboardPathForRole } from "@/lib/roles";
 import { getCurrentAgencyId } from "@/lib/ai/retrieval";
 import KnowledgeSyncButton from "@/components/admin/KnowledgeSyncButton";
 
@@ -41,7 +39,7 @@ const GENERATED_ORIGIN: Record<string, { label: string; href: string }> = {
 export default async function AdminKnowledgePage() {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const agencyId = await getCurrentAgencyId();
 

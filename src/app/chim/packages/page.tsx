@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { dashboardPathForRole } from "@/lib/roles";
 import DeletePackageButton from "@/components/admin/DeletePackageButton";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -14,7 +12,7 @@ const STATUS_BADGE: Record<string, string> = {
 export default async function AdminPackagesPage() {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const itineraries = await prisma.itinerary.findMany({
     orderBy: { createdAt: "desc" },

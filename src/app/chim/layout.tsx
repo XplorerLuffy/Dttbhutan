@@ -1,8 +1,6 @@
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import DashboardShell, { type DashboardNavItem } from "@/components/dashboard/DashboardShell";
 import { getCurrentUser } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/roles";
 import { getAdminWorkload } from "@/lib/admin/workload";
 import { ADMIN_IDLE_MS } from "@/lib/adminSession";
 import AuthLayout from "@/components/auth/AuthLayout";
@@ -28,17 +26,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // anonymous visitor's request ran the workload queries and began streaming
   // the admin sidebar before the page's redirect caught up with it.
   const user = await getCurrentUser();
-  // /chim is the admin's way in: signed out, it is the sign-in form, and
-  // signing in re-renders whichever admin page was asked for.
-  if (!user) {
+  // /chim is the admin's way in: to anyone who isn't a signed-in admin it is
+  // the sign-in form, and signing in re-renders whichever admin page was
+  // asked for. A non-admin account is told which account they're on rather
+  // than being sent to that account's dashboard — a guide account with no
+  // listing yet lands on the guide sign-up form, which reads as /chim broken.
+  if (!user || user.role !== "ADMIN") {
     return (
       <AuthLayout>
         <h1 className="mb-6 text-center text-2xl font-bold">Admin sign-in</h1>
-        <LoginForm stayHere />
+        {user && (
+          <p className="mb-4 rounded-md bg-stone-100 px-3 py-2 text-sm text-stone-700">
+            You&apos;re signed in as <strong>{user.email}</strong>, which isn&apos;t an admin
+            account. Log in with the admin account to continue.
+          </p>
+        )}
+        <LoginForm admin />
       </AuthLayout>
     );
   }
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
 
   const work = await getAdminWorkload();
 

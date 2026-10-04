@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Prisma, type BookingStatus } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { dashboardPathForRole } from "@/lib/roles";
 import StatusBadge from "@/components/StatusBadge";
 import ListFilters from "@/components/admin/ListFilters";
 import Pager from "@/components/admin/Pager";
@@ -29,7 +27,7 @@ export default async function AdminBookingsPage({
 }) {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const sp = await searchParams;
   const one = (key: string) => (Array.isArray(sp[key]) ? sp[key][0] : sp[key]) ?? "";

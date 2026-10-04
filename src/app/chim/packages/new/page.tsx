@@ -1,13 +1,11 @@
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { dashboardPathForRole } from "@/lib/roles";
 import ItineraryForm from "@/components/admin/ItineraryForm";
 
 export default async function NewPackagePage() {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const destinations = await prisma.destination.findMany({
     orderBy: { name: "asc" },

@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/roles";
 import { getSiteContent } from "@/lib/content";
 import { CONTENT_GROUPS } from "@/lib/content/registry";
 import ContentEditor from "@/components/admin/ContentEditor";
@@ -10,7 +8,7 @@ export const metadata = { title: "Site content" };
 export default async function AdminContentPage() {
   const user = await getCurrentUser();
   if (!user) return null; // the admin layout shows the sign-in form
-  if (user.role !== "ADMIN") redirect(dashboardPathForRole(user.role));
+  if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const content = await getSiteContent();
 
