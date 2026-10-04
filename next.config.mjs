@@ -22,6 +22,20 @@ const nextConfig = {
       ],
     },
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // Fixed rather than left to each browser's default: the app reads
+          // which page made an API call from the Referer header to pick the
+          // admin's login or the public site's (src/lib/authRealm.ts), and a
+          // policy that dropped the path would make admin uploads fail.
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -17,6 +17,9 @@
  * It is signed, so it can't be written by hand, and names the Supabase user
  * it was issued to, so it can't be carried over to another account.
  *
+ * It sits on top of the admin's own Supabase login, which is kept apart from
+ * the public site's — see authRealm.ts.
+ *
  * Runs in the middleware (Edge) as well as in Node, so it uses Web Crypto
  * only.
  */
@@ -85,11 +88,6 @@ export async function explainAdminSessionRejection(
   }
   if (now - Number(issued) > ADMIN_MAX_MS) return "older than the 12-hour maximum";
   return "unknown";
-}
-
-/** Supabase's auth cookies: sb-<project-ref>-auth-token, plus .0, .1… chunks. */
-export function isSupabaseAuthCookie(name: string): boolean {
-  return name.startsWith("sb-") && name.includes("-auth-token");
 }
 
 /**

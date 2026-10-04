@@ -27,10 +27,13 @@ export type DashboardNavItem = {
 export default function DashboardShell({
   title,
   nav,
+  realm,
   children,
 }: {
   title: string;
   nav: DashboardNavItem[];
+  /** "admin" for the admin dashboard: Log out then ends only the admin's login. */
+  realm?: "admin";
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -91,7 +94,7 @@ export default function DashboardShell({
             Droelma Tours &amp; Travels
           </span>
         </Link>
-        <LogoutButton />
+        <LogoutButton realm={realm} />
       </div>
 
       {/* On a phone the whole list used to wrap into a block of chips taller

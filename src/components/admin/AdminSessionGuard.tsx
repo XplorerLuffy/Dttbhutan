@@ -31,7 +31,11 @@ export default function AdminSessionGuard({ idleMs }: { idleMs: number }) {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   const expire = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ realm: "admin" }),
+    }).catch(() => null);
     // The admin layout shows the sign-in form to a signed-out visitor, so
     // this lands on the login, and back on this page once signed in again.
     window.location.replace(`${window.location.pathname}?expired=1`);

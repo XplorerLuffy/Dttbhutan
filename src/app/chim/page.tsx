@@ -108,7 +108,7 @@ export default async function AdminHomePage() {
           empty="Nothing waiting on confirmation."
           rows={recentBookings.map((b) => ({
             key: b.id,
-            href: `/dashboard/bookings/${b.id}`,
+            href: `/chim/bookings/${b.id}`,
             primary: b.traveler.name,
             secondary: `${b.reference} · ${b.startDate.toDateString()} · Nu. ${Number(
               b.totalPrice

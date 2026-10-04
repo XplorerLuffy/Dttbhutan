@@ -1,6 +1,8 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { REALM_HEADER, supabaseCookieOptions, type Realm } from "@/lib/authRealm";
+import { asBrowserSessionCookie } from "@/lib/adminSession";
 
 /**
  * The Supabase client for server components, route handlers and actions.
@@ -22,10 +24,17 @@ export function isSupabaseAuthConfigured(): boolean {
   );
 }
 
-export async function createSupabaseServerClient() {
+/** Which login this request uses — set by the middleware, see authRealm.ts. */
+export async function currentRealm(): Promise<Realm> {
+  return (await headers()).get(REALM_HEADER) === "admin" ? "admin" : "public";
+}
+
+export async function createSupabaseServerClient(realm?: Realm) {
   const cookieStore = await cookies();
+  const which = realm ?? (await currentRealm());
 
   return createServerClient(requiredEnv("NEXT_PUBLIC_SUPABASE_URL"), requiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"), {
+    ...supabaseCookieOptions(which),
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -33,7 +42,8 @@ export async function createSupabaseServerClient() {
       setAll(toSet) {
         try {
           for (const { name, value, options } of toSet) {
-            cookieStore.set(name, value, options);
+            // The admin's login ends with the browser, however it is renewed.
+            cookieStore.set(name, value, which === "admin" ? asBrowserSessionCookie(options) : options);
           }
         } catch {
           // Thrown when called from a server *component*, which may not set

@@ -5,10 +5,14 @@ import { prisma } from "@/lib/prisma";
 import {
   ADMIN_SESSION_COOKIE,
   explainAdminSessionRejection,
-  isSupabaseAuthCookie,
   readAdminSession,
 } from "@/lib/adminSession";
-import { createSupabaseServerClient, isSupabaseAuthConfigured } from "@/lib/supabase/server";
+import { isAuthCookieOf, type Realm } from "@/lib/authRealm";
+import {
+  createSupabaseServerClient,
+  currentRealm,
+  isSupabaseAuthConfigured,
+} from "@/lib/supabase/server";
 import type { Role } from "@prisma/client";
 
 /**
@@ -44,7 +48,10 @@ async function loadCurrentUser() {
   // It fails closed either way — no configuration can grant access.
   if (!isSupabaseAuthConfigured()) return null;
 
-  const supabase = await createSupabaseServerClient();
+  // The admin dashboard and the public site keep separate logins (see
+  // authRealm.ts), so "who is signed in" depends on which one this request is.
+  const realm = await currentRealm();
+  const supabase = await createSupabaseServerClient(realm);
   const {
     data: { user: authUser },
     error,
@@ -53,9 +60,9 @@ async function loadCurrentUser() {
     // Signed-out visitors carry no auth cookie and aren't worth a log line.
     // Someone who does carry one and is still refused is: that's a session
     // that looked live to the browser and wasn't to Supabase.
-    if ((await cookies()).getAll().some((c) => isSupabaseAuthCookie(c.name) && c.value)) {
+    if ((await cookies()).getAll().some((c) => isAuthCookieOf(realm, c.name) && c.value)) {
       console.warn(
-        `[auth] signed-in cookie refused by Supabase: ${error?.status ?? ""} ${error?.code ?? ""} ${error?.message ?? "no user"}`
+        `[auth] ${realm} cookie refused by Supabase: ${error?.status ?? ""} ${error?.code ?? ""} ${error?.message ?? "no user"}`
       );
     }
     return null;
@@ -66,13 +73,13 @@ async function loadCurrentUser() {
   // auth user. Treat it as not signed in rather than inventing a role.
   const user = await prisma.user.findUnique({ where: { authId: authUser.id } });
 
-  // An admin also needs a live admin session — see adminSession.ts. Without
-  // one (browser closed, idle too long, signed in too long ago) the admin
-  // reads as signed out everywhere, not only on the admin pages, so nothing
-  // on the public site shows them as still logged in either.
-  if (user?.role === "ADMIN") {
-    const cookieStore = await cookies();
-    const value = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+  if (!user) return null;
+
+  if (realm === "admin") {
+    // The admin dashboard is for admins and nobody else, and needs a live
+    // admin session on top of the login — see adminSession.ts.
+    if (user.role !== "ADMIN") return null;
+    const value = (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
     const session = await readAdminSession(value, authUser.id);
     if (!session) {
       console.warn(
@@ -80,7 +87,13 @@ async function loadCurrentUser() {
       );
       return null;
     }
+    return user;
   }
+
+  // The public site never recognises an admin, even one whose login cookie
+  // ended up here: admins sign in on their own page, so the public pages (the
+  // vendor sign-ups, the nav bar) never see the admin's session.
+  if (user.role === "ADMIN") return null;
   return user;
 }
 
@@ -110,8 +123,8 @@ export async function requireRole(...roles: Role[]) {
  * which is what people expect of a "log out everywhere" and costs nothing
  * here.
  */
-export async function signOut() {
-  const supabase = await createSupabaseServerClient();
+export async function signOut(realm?: Realm) {
+  const supabase = await createSupabaseServerClient(realm);
   await supabase.auth.signOut({ scope: "global" });
 }
 

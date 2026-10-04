@@ -37,7 +37,7 @@ export default function LoginForm({ admin = false }: { admin?: boolean }) {
       body: JSON.stringify({
         email: form.get("email"),
         password: form.get("password"),
-        adminOnly: admin,
+        realm: admin ? "admin" : "public",
       }),
     }).catch(() => null);
 

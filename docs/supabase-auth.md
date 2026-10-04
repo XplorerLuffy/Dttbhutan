@@ -77,3 +77,34 @@ confirmation flow is wired up, turn that off in
 `src/app/api/admin/account/route.ts` — and note that with Supabase's default
 "Confirm email change" on, a plain `updateUser({ email })` only *requests* the
 change, which is why the address goes through the admin client today.
+
+## Two logins: the public site and the admin dashboard
+
+Browser tabs share cookies, so a single login meant that signing in as a guide
+in one tab replaced the admin in every other tab: the dashboard stayed on
+screen, and its next Save was refused (403) because the cookie now belonged to
+a guide.
+
+The admin dashboard therefore has its own Supabase session, in its own cookie,
+kept apart from the public site's (`src/lib/authRealm.ts`):
+
+| | cookie | used by |
+|---|---|---|
+| public | `sb-<project>-auth-token` | travellers, guides, hotels, operators |
+| admin | `dtt-admin-auth` (+ `dtt_admin_session`, see below) | `/chim` only |
+
+- The middleware picks the login per request: `/chim/*`, `/api/admin/*`,
+  `/api/auth/session`, and any `/api/*` call made from an admin page (read from
+  `Referer`, hence the fixed `Referrer-Policy` in `next.config.mjs`). It passes
+  the choice on in the `x-dtt-realm` header, overwriting whatever a client sent.
+- `getCurrentUser()` follows it. The public site never recognises an admin and
+  the admin dashboard never recognises anyone else, so an admin in one tab and
+  a guide in the next are two people.
+- `/api/auth/login` and `/api/auth/logout` take `{ realm: "admin" }` from the
+  `/chim` form and refuse the wrong kind of account. The public login answers
+  an admin's credentials with "Invalid email or password" so `/chim` is never
+  hinted at.
+- Admins open bookings at `/chim/bookings/:id`, not `/dashboard/bookings/:id`.
+
+The admin login also ends when the browser closes, after 30 minutes idle and
+after 12 hours (`src/lib/adminSession.ts`).

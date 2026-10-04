@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { supabaseCookieOptions, type Realm } from "@/lib/authRealm";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/server";
 import {
   ADMIN_SESSION_COOKIE,
@@ -35,8 +36,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
   const email = parsed.data.email.trim().toLowerCase();
-  // Sent by the admin sign-in at /chim, which is for admins only.
-  const adminOnly = Boolean((body as { adminOnly?: unknown }).adminOnly);
+  // The admin sign-in at /chim says so; the public /login says nothing. The
+  // two logins are kept apart (see authRealm.ts): signing in on one never
+  // signs out, or in as, anyone on the other.
+  const realm: Realm = (body as { realm?: unknown }).realm === "admin" ? "admin" : "public";
 
   // The session cookies Supabase wants to write are held back until we know
   // who signed in: an admin's are written without an expiry date, so they end
@@ -46,6 +49,7 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
     {
+      ...supabaseCookieOptions(realm),
       cookies: {
         getAll: () => req.cookies.getAll(),
         setAll(toSet) {
@@ -57,8 +61,10 @@ export async function POST(req: NextRequest) {
   const respond = async (body: unknown, init: { status?: number; admin?: string } = {}) => {
     const res = NextResponse.json(body, { status: init.status ?? 200 });
     pendingCookies.forEach(({ value, options }, name) => {
-      res.cookies.set(name, value, init.admin ? asBrowserSessionCookie(options) : options);
+      res.cookies.set(name, value, realm === "admin" ? asBrowserSessionCookie(options) : options);
     });
+    // Only an admin sign-in touches the admin session; a guide logging in on
+    // the public site must leave it alone.
     if (init.admin) {
       const now = Date.now();
       res.cookies.set(
@@ -66,8 +72,6 @@ export async function POST(req: NextRequest) {
         await encodeAdminSession({ uid: init.admin, issuedAt: now, lastSeen: now }),
         adminSessionCookieOptions
       );
-    } else {
-      res.cookies.set(ADMIN_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
     }
     return res;
   };
@@ -109,15 +113,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (adminOnly && user.role !== "ADMIN") {
+  if (realm === "admin" && user.role !== "ADMIN") {
     // Undo the sign-in just made, on this browser only — not the account's
     // sessions on its owner's other devices.
     await supabase.auth.signOut({ scope: "local" });
     return respond({ error: "This sign-in is for administrators only." }, { status: 403 });
   }
 
+  if (realm === "public" && user.role === "ADMIN") {
+    // Admins sign in on their own page. The public site answers as it would
+    // for a wrong password — saying "that's an admin account" would tell
+    // anyone who tries an address that it belongs to the admin, and point at
+    // a sign-in that is meant to stay unlisted.
+    await supabase.auth.signOut({ scope: "local" });
+    return respond({ error: "Invalid email or password" }, { status: 401 });
+  }
+
   return respond(
     { id: user.id, role: user.role },
-    { admin: user.role === "ADMIN" ? data.user.id : undefined }
+    { admin: realm === "admin" ? data.user.id : undefined }
   );
 }

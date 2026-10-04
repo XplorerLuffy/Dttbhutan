@@ -127,7 +127,7 @@ export default async function AdminBookingsPage({
         {bookings.map((b) => (
           <Link
             key={b.id}
-            href={`/dashboard/bookings/${b.id}`}
+            href={`/chim/bookings/${b.id}`}
             className="card flex flex-col gap-3 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">

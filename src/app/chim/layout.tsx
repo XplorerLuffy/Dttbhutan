@@ -79,7 +79,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ];
 
   return (
-    <DashboardShell title="Admin" nav={nav}>
+    <DashboardShell title="Admin" nav={nav} realm="admin">
       <AdminSessionGuard idleMs={ADMIN_IDLE_MS} />
       {children}
     </DashboardShell>

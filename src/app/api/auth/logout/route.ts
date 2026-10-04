@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { signOut } from "@/lib/auth";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/server";
 import { ADMIN_SESSION_COOKIE } from "@/lib/adminSession";
+import { isAuthCookieOf, type Realm } from "@/lib/authRealm";
 
 /**
  * Logging out must never fail.
@@ -17,20 +18,25 @@ import { ADMIN_SESSION_COOKIE } from "@/lib/adminSession";
  * would otherwise linger in browsers for up to fourteen days doing nothing.
  */
 export async function POST(req: NextRequest) {
+  // Logging out ends one login: the admin dashboard's or the public site's —
+  // never both. A guide logging out in one tab leaves the admin in another.
+  const body = await req.json().catch(() => null);
+  const realm: Realm = body?.realm === "admin" ? "admin" : "public";
+
   if (isSupabaseAuthConfigured()) {
     try {
-      await signOut();
+      await signOut(realm);
     } catch (err) {
       console.error("[logout] Supabase signOut failed; clearing cookies anyway:", err);
     }
   }
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(ADMIN_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  if (realm === "admin") res.cookies.set(ADMIN_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
   for (const { name } of req.cookies.getAll()) {
-    // Supabase's cookies are sb-<project-ref>-auth-token, split into .0, .1…
-    // chunks when the token is large.
-    if (name === "dtt_session" || (name.startsWith("sb-") && name.includes("-auth-token"))) {
+    // Supabase's cookies are sb-<project-ref>-auth-token (the admin's:
+    // dtt-admin-auth), split into .0, .1… chunks when the token is large.
+    if ((realm === "public" && name === "dtt_session") || isAuthCookieOf(realm, name)) {
       res.cookies.set(name, "", { path: "/", maxAge: 0 });
     }
   }
