@@ -63,6 +63,30 @@ export async function readAdminSession(
   return session;
 }
 
+/**
+ * Why a cookie was refused, for the server log — never shown to the visitor.
+ * Mirrors readAdminSession's checks.
+ */
+export async function explainAdminSessionRejection(
+  value: string | undefined,
+  uid: string,
+  now = Date.now()
+): Promise<string> {
+  if (!value) return "no admin session cookie";
+  const parts = value.split(".");
+  if (parts.length !== 4) return "malformed cookie";
+  const [cookieUid, issued, last, signature] = parts;
+  if (!timingSafeEqual(signature, await sign(`${cookieUid}.${issued}.${last}`))) {
+    return "signature does not match (signing secret differs?)";
+  }
+  if (cookieUid !== uid) return "issued to a different user";
+  if (now - Number(last) > ADMIN_IDLE_MS) {
+    return `idle ${Math.round((now - Number(last)) / 60000)} min`;
+  }
+  if (now - Number(issued) > ADMIN_MAX_MS) return "older than the 12-hour maximum";
+  return "unknown";
+}
+
 /** Supabase's auth cookies: sb-<project-ref>-auth-token, plus .0, .1… chunks. */
 export function isSupabaseAuthCookie(name: string): boolean {
   return name.startsWith("sb-") && name.includes("-auth-token");

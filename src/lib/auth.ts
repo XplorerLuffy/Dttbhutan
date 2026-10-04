@@ -1,7 +1,13 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/adminSession";
+import {
+  ADMIN_SESSION_COOKIE,
+  explainAdminSessionRejection,
+  isSupabaseAuthCookie,
+  readAdminSession,
+} from "@/lib/adminSession";
 import { createSupabaseServerClient, isSupabaseAuthConfigured } from "@/lib/supabase/server";
 import type { Role } from "@prisma/client";
 
@@ -27,7 +33,11 @@ export type SessionPayload = {
   role: Role;
 };
 
-export async function getCurrentUser() {
+// Cached per request: the admin layout and its page both ask, and each ask
+// is a round trip to Supabase that a burst of page loads multiplies.
+export const getCurrentUser = cache(loadCurrentUser);
+
+async function loadCurrentUser() {
   // Unconfigured reads as "nobody is signed in" rather than throwing. Every
   // protected page then redirects to the login screen, which is a page that
   // explains itself; the alternative is a 500 on every dashboard in the site.
@@ -37,8 +47,19 @@ export async function getCurrentUser() {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user: authUser },
+    error,
   } = await supabase.auth.getUser();
-  if (!authUser) return null;
+  if (!authUser) {
+    // Signed-out visitors carry no auth cookie and aren't worth a log line.
+    // Someone who does carry one and is still refused is: that's a session
+    // that looked live to the browser and wasn't to Supabase.
+    if ((await cookies()).getAll().some((c) => isSupabaseAuthCookie(c.name) && c.value)) {
+      console.warn(
+        `[auth] signed-in cookie refused by Supabase: ${error?.status ?? ""} ${error?.code ?? ""} ${error?.message ?? "no user"}`
+      );
+    }
+    return null;
+  }
 
   // No profile for a verified auth user means the two stores have drifted —
   // an account created directly in Supabase, or a profile deleted without its
@@ -51,11 +72,14 @@ export async function getCurrentUser() {
   // on the public site shows them as still logged in either.
   if (user?.role === "ADMIN") {
     const cookieStore = await cookies();
-    const session = await readAdminSession(
-      cookieStore.get(ADMIN_SESSION_COOKIE)?.value,
-      authUser.id
-    );
-    if (!session) return null;
+    const value = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+    const session = await readAdminSession(value, authUser.id);
+    if (!session) {
+      console.warn(
+        `[auth] admin ${user.email} treated as signed out: ${await explainAdminSessionRejection(value, authUser.id)}`
+      );
+      return null;
+    }
   }
   return user;
 }

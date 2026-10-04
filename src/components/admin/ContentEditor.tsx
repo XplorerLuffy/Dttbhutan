@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ContentGroup } from "@/lib/content/registry";
 
 /**
@@ -11,7 +11,31 @@ import type { ContentGroup } from "@/lib/content/registry";
  * back to the designed default" behaviour honest: an untouched field is
  * never written, so it can't quietly acquire a row equal to its default and
  * stop tracking future copy changes.
+ *
+ * Unsaved edits are kept in this tab's sessionStorage until saved, so a save
+ * refused because the admin session ended loses nothing: sign in again and
+ * the edits are back, ready to save.
  */
+const DRAFT_KEY = "dtt-content-draft";
+
+function readDraft(): Record<string, string> {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeDraft(draft: Record<string, string>) {
+  try {
+    if (Object.keys(draft).length) sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    else sessionStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // Private mode or storage full: drafts just aren't kept.
+  }
+}
+
 export default function ContentEditor({
   groups,
   initial,
@@ -23,24 +47,55 @@ export default function ContentEditor({
   const [values, setValues] = useState<Record<string, string>>(initial);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [signedOut, setSignedOut] = useState(false);
+  const [restored, setRestored] = useState(false);
 
   const group = groups.find((g) => g.id === activeGroup) ?? groups[0];
   const changed = Object.keys(values).filter((k) => values[k] !== initial[k]);
 
+  // Bring back edits left unsaved in this tab (e.g. before signing in again).
+  useEffect(() => {
+    const draft = readDraft();
+    const usable = Object.fromEntries(
+      Object.entries(draft).filter(([k, v]) => k in initial && typeof v === "string" && v !== initial[k])
+    );
+    if (Object.keys(usable).length) {
+      setValues((v) => ({ ...v, ...usable }));
+      setRestored(true);
+    }
+    // Only on mount: `initial` is the server's copy for this page load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    writeDraft(Object.fromEntries(changed.map((k) => [k, values[k]])));
+    // `changed` is derived from `values`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values]);
+
   async function save() {
     setStatus("saving");
     setMessage("");
+    setSignedOut(false);
     const payload = Object.fromEntries(changed.map((k) => [k, values[k]]));
     try {
       const res = await fetch("/api/admin/content", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ values: payload }),
+        signal: AbortSignal.timeout(20_000),
       });
+      if (res.status === 401 || res.status === 403) {
+        setSignedOut(true);
+        throw new Error(
+          "Not saved: your admin session has ended. Your edits are kept — sign in again, then press Save."
+        );
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(typeof body.error === "string" ? body.error : "Could not save changes.");
       }
+      writeDraft({});
       setStatus("saved");
       setMessage(`Saved ${changed.length} ${changed.length === 1 ? "change" : "changes"}.`);
       // Reload so the page reflects what the site will now render, and so
@@ -137,11 +192,28 @@ export default function ContentEditor({
           {changed.length > 0 && status !== "saving" && (
             <button
               type="button"
-              onClick={() => setValues(initial)}
+              onClick={() => {
+                setValues(initial);
+                setRestored(false);
+              }}
               className="btn-secondary"
             >
               Discard
             </button>
+          )}
+          {signedOut && (
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="btn-primary"
+            >
+              Sign in again
+            </button>
+          )}
+          {restored && status === "idle" && changed.length > 0 && (
+            <p role="status" className="text-sm text-stone-600">
+              Your unsaved edits were brought back — press Save to keep them.
+            </p>
           )}
           {message && (
             <p

@@ -53,6 +53,10 @@ export default function DashboardShell({
       <Link
         key={item.href}
         href={item.href}
+        // Not prefetched: with fifteen links in view, every page load also
+        // rendered all fifteen dashboard pages in the background — each one
+        // a sign-in check against Supabase and a set of database queries.
+        prefetch={false}
         aria-current={active ? "page" : undefined}
         onClick={() => setOpen(false)}
         className={`flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
