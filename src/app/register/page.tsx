@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthLayout from "@/components/auth/AuthLayout";
@@ -23,6 +23,15 @@ export default function RegisterPage() {
   const [role, setRole] = useState<(typeof ROLE_OPTIONS)[number]["value"]>("TRAVELER");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // The vendor sign-up pages link here with ?role=GUIDE (etc.) so the account
+  // type is already right. Read from the URL after mount rather than with
+  // useSearchParams, which would need a Suspense boundary on this static page.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("role");
+    const match = ROLE_OPTIONS.find((o) => o.value === wanted);
+    if (match) setRole(match.value);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

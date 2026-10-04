@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import {
   FileTooLargeError,
+  StorageNotConfiguredError,
   UnsupportedFileError,
   putImage,
   usingBlobStorage,
@@ -38,6 +39,16 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     if (err instanceof UnsupportedFileError || err instanceof FileTooLargeError) {
       return NextResponse.json({ error: err.message }, { status: 400 });
+    }
+    if (err instanceof StorageNotConfiguredError) {
+      console.error("[uploads]", err.message);
+      return NextResponse.json(
+        {
+          error:
+            "Photo uploads aren't switched on yet on this site. You can continue without a photo and add one later.",
+        },
+        { status: 503 }
+      );
     }
     console.error("[uploads] failed to store image", err);
     return NextResponse.json({ error: "Upload failed. Please try again." }, { status: 500 });

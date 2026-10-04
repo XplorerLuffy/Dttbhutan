@@ -24,6 +24,10 @@ export const ALLOWED_IMAGE_TYPES: Record<string, string> = {
 };
 
 export class UnsupportedFileError extends Error {}
+/** On Vercel without a Blob store: the deployed filesystem is read-only, so
+ * the local-disk fallback can only fail. Raised before trying, so the error
+ * says what is actually missing instead of a generic write failure. */
+export class StorageNotConfiguredError extends Error {}
 export class FileTooLargeError extends Error {}
 
 export function usingBlobStorage(): boolean {
@@ -56,6 +60,12 @@ export async function putImage(file: File, folder = "uploads"): Promise<{ url: s
       addRandomSuffix: false,
     });
     return { url: blob.url };
+  }
+
+  if (process.env.VERCEL) {
+    throw new StorageNotConfiguredError(
+      "BLOB_READ_WRITE_TOKEN is not set: connect a Vercel Blob store to this project"
+    );
   }
 
   const dir = path.join(process.cwd(), "public", folder);
