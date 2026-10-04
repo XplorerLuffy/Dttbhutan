@@ -108,9 +108,32 @@ export default function ContentEditor({
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
-      <nav className="lg:w-64 lg:shrink-0" aria-label="Content sections">
-        <ul className="flex flex-wrap gap-1 lg:flex-col">
+    <div className="flex flex-col gap-4 xl:flex-row xl:gap-6">
+      {/* Below xl the dashboard's own sidebar already takes the left edge (or
+          the screen is a phone), so the sections are a dropdown rather than a
+          second column squeezing the form, or a block of wrapped chips
+          to scroll past before reaching the fields. */}
+      <label className="block xl:hidden">
+        <span className="mb-1 block text-sm font-medium text-stone-700">Section</span>
+        <select
+          value={group.id}
+          onChange={(e) => setActiveGroup(e.target.value)}
+          className="input"
+        >
+          {groups.map((g) => {
+            const dirty = g.fields.some((f) => values[f.key] !== initial[f.key]);
+            return (
+              <option key={g.id} value={g.id}>
+                {g.label}
+                {dirty ? " • edited" : ""}
+              </option>
+            );
+          })}
+        </select>
+      </label>
+
+      <nav className="hidden xl:block xl:w-56 xl:shrink-0" aria-label="Content sections">
+        <ul className="flex flex-col gap-1">
           {groups.map((g) => {
             const dirty = g.fields.some((f) => values[f.key] !== initial[f.key]);
             return (
@@ -180,7 +203,7 @@ export default function ContentEditor({
           </div>
         </div>
 
-        <div className="sticky bottom-0 mt-4 flex flex-wrap items-center gap-3 border-t border-stone-200 bg-stone-50 py-3">
+        <div className="sticky bottom-0 z-10 -mx-4 mt-4 flex flex-wrap items-center gap-3 border-t border-stone-200 bg-stone-50/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:mx-0 sm:px-0">
           <button
             type="button"
             onClick={save}
@@ -223,7 +246,7 @@ export default function ContentEditor({
               {message}
             </p>
           )}
-          <p className="ml-auto text-xs text-stone-500">
+          <p className="w-full text-xs text-stone-500 sm:ml-auto sm:w-auto">
             Clear a field to restore its original wording.
           </p>
         </div>
