@@ -59,6 +59,8 @@ export default function GuideEditForm({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const allCovered = destinations.length > 0 && destinations.every((d) => coverage.includes(d.id));
+
   function toggleCoverage(id: string) {
     setCoverage((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
@@ -157,6 +159,13 @@ export default function GuideEditForm({
       </Field>
 
       <Field label="Dzongkhags covered">
+        <button
+          type="button"
+          onClick={() => setCoverage(allCovered ? [] : destinations.map((d) => d.id))}
+          className="mb-2 text-sm font-medium text-brand-700 hover:underline"
+        >
+          {allCovered ? "Clear all" : "Select all"}
+        </button>
         <div className="max-h-56 overflow-y-auto rounded-lg border border-stone-200 p-3">
           <div className="grid gap-2 sm:grid-cols-3">
             {destinations.map((d) => (

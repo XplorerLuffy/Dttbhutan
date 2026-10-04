@@ -22,6 +22,9 @@ export default function GuideRegisterForm({
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [selectedDestinations, setSelectedDestinations] = useState<Set<string>>(new Set());
 
+  const allSelected =
+    destinations.length > 0 && destinations.every((d) => selectedDestinations.has(d.id));
+
   function toggleDestination(id: string) {
     setSelectedDestinations((prev) => {
       const next = new Set(prev);
@@ -95,7 +98,23 @@ export default function GuideRegisterForm({
       </Field>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">Destinations you cover</label>
+        <div className="mb-1 flex items-baseline justify-between gap-3">
+          <label className="block text-sm font-medium">Destinations you cover</label>
+          {destinations.length > 0 && (
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedDestinations(
+                  allSelected ? new Set() : new Set(destinations.map((d) => d.id))
+                )
+              }
+              aria-pressed={allSelected}
+              className="text-sm font-medium text-brand-700 hover:underline"
+            >
+              {allSelected ? "Clear all" : "Select all"}
+            </button>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           {destinations.map((d) => (
             <button
