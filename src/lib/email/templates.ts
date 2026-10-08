@@ -509,3 +509,61 @@ export function vendorStatusToVendor(input: {
         }),
   });
 }
+
+// ---------------------------------------------------------------------------
+// A personal reply to an enquiry, written by the team
+// ---------------------------------------------------------------------------
+
+/**
+ * Looks like a letter, not a notification: the team's own words, a signature,
+ * and the traveller's original message quoted underneath so the thread makes
+ * sense in their inbox.
+ */
+export function enquiryReplyToSender(input: {
+  subject: string;
+  body: string;
+  signedBy: string;
+  originalMessage: string;
+  originalDate: Date;
+}): RenderedEmail {
+  const paragraphs = input.body
+    .split(/\n{2,}/)
+    .map(
+      (p) =>
+        `<p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:${INK};">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`
+    )
+    .join("");
+  const quoted = `On ${formatDate(input.originalDate)} you wrote:`;
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f4f1;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4f1;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid ${BORDER};border-radius:10px;">
+        <tr><td style="padding:28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+          ${paragraphs}
+          <p style="margin:22px 0 0;font-size:15px;line-height:1.6;color:${INK};">Warm regards,<br><strong>${escapeHtml(input.signedBy)}</strong><br><span style="color:${MUTED};">${BRAND}</span></p>
+        </td></tr>
+        <tr><td style="padding:16px 28px 22px;border-top:1px solid ${BORDER};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+          <p style="margin:0 0 6px;font-size:12px;color:${MUTED};">${escapeHtml(quoted)}</p>
+          <p style="margin:0;font-size:13px;line-height:1.55;color:${MUTED};border-left:3px solid ${BORDER};padding-left:10px;">${escapeHtml(input.originalMessage).replace(/\n/g, "<br>")}</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  const text = [
+    input.body,
+    "",
+    "Warm regards,",
+    input.signedBy,
+    BRAND,
+    "",
+    "—",
+    quoted,
+    ...input.originalMessage.split("\n").map((l) => `> ${l}`),
+  ].join("\n");
+  return { subject: input.subject, html, text };
+}

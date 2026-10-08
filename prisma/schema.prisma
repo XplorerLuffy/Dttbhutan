@@ -87,8 +87,8 @@ model User {
   /// over an account that hasn't been claimed yet. Opening the link and
   /// choosing a password creates the Supabase login, links it through
   /// authId, and clears both columns. Null once used, or if never issued.
-  inviteTokenHash   String?   @unique
-  inviteExpiresAt   DateTime?
+  inviteTokenHash String?   @unique
+  inviteExpiresAt DateTime?
 
   guideProfile       GuideProfile?
   hotel              Hotel?
@@ -98,6 +98,7 @@ model User {
   sentMessages       Message[]
   customTourRequests CustomTourRequest[]
   contactMessages    ContactMessage[]
+  contactReplies     ContactReply[]
 }
 
 // ---------------------------------------------------------------------------
@@ -397,8 +398,8 @@ model Itinerary {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
-  days     ItineraryDay[]
-  bookings ItineraryBooking[]
+  days       ItineraryDay[]
+  bookings   ItineraryBooking[]
   departures Departure[]
   lodgings   ItineraryLodging[]
   photos     ItineraryPhoto[]
@@ -740,25 +741,46 @@ enum ContactMessageStatus {
 }
 
 model ContactMessage {
-  id         String               @id @default(cuid())
-  name       String
-  email      String
-  phone      String?
-  subject    String?
-  message    String
-  status     ContactMessageStatus @default(NEW)
-  adminNote  String?
-  travelerId String?
-  traveler   User?                @relation(fields: [travelerId], references: [id], onDelete: SetNull)
+  id          String               @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String?
+  message     String
+  status      ContactMessageStatus @default(NEW)
+  adminNote   String?
+  travelerId  String?
+  traveler    User?                @relation(fields: [travelerId], references: [id], onDelete: SetNull)
   /// Set when the enquiry came from "Request to book" on a specific
   /// departure. Kept as a relation rather than parsed out of `subject`, so
   /// staff see the real departure even if the subject line is edited.
   departureId String?
-  departure   Departure?          @relation(fields: [departureId], references: [id], onDelete: SetNull)
-  createdAt  DateTime             @default(now())
-  updatedAt  DateTime             @updatedAt
+  departure   Departure?           @relation(fields: [departureId], references: [id], onDelete: SetNull)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  replies     ContactReply[]
 
   @@index([status, createdAt])
+}
+
+/// An email the agency sent back to someone who enquired, written from the
+/// admin dashboard. Kept so the team can see what was already said — and by
+/// whom — before answering again, and whether the email actually went out.
+model ContactReply {
+  id        String         @id @default(cuid())
+  messageId String
+  message   ContactMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  subject   String
+  body      String
+  toEmail   String
+  sentById  String?
+  sentBy    User?          @relation(fields: [sentById], references: [id], onDelete: SetNull)
+  /// SENT, or FAILED when the mail server refused it (the text is still kept).
+  status    String
+  error     String?
+  createdAt DateTime       @default(now())
+
+  @@index([messageId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -820,8 +842,10 @@ model AiMessage {
 
 model Agency {
   id        String   @id @default(cuid())
-  /** Stable machine identifier, e.g. "droelma" — the only tenant that
-   * exists today. Never derived from user/browser input. */
+  /**
+   * Stable machine identifier, e.g. "droelma" — the only tenant that
+   * exists today. Never derived from user/browser input.
+   */
   slug      String   @unique
   name      String
   createdAt DateTime @default(now())
@@ -854,12 +878,16 @@ model KnowledgeDocument {
   agencyId   String
   agency     Agency              @relation(fields: [agencyId], references: [id])
   title      String
-  /** Full plain text — the source of truth chunks are derived from. */
+  /**
+   * Full plain text — the source of truth chunks are derived from.
+   */
   content    String
   sourceType KnowledgeSourceType
-  /** Where this came from, if applicable — e.g. the originating Article's
+  /**
+   * Where this came from, if applicable — e.g. the originating Article's
    * slug, or an uploaded file's original name. Not a foreign key: sources
-   * span different models (or no model at all, for hand-authored text). */
+   * span different models (or no model at all, for hand-authored text).
+   */
   sourceRef  String?
   category   String?
   visibility KnowledgeVisibility @default(PUBLIC)
@@ -873,9 +901,9 @@ model KnowledgeDocument {
 }
 
 model KnowledgeChunk {
-  id         String            @id @default(cuid())
+  id         String                      @id @default(cuid())
   documentId String
-  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document   KnowledgeDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
   // Denormalized from the parent document on purpose. Retrieval is the
   // security-critical path here — it must never surface another agency's
   // knowledge, or INTERNAL knowledge to an anonymous visitor — so the
@@ -886,14 +914,16 @@ model KnowledgeChunk {
   visibility KnowledgeVisibility
   content    String
   chunkIndex Int
-  /** pgvector column. Prisma's typed client can't construct or filter an
+  /**
+   * pgvector column. Prisma's typed client can't construct or filter an
    * `Unsupported` type, so every read/write of this column goes through
    * raw SQL (see src/lib/ai/retrieval.ts) — this field exists mainly so
    * `prisma db pull`/introspection and migration history stay accurate.
    * Dimension is tied to the embedding model (nomic-embed-text, 768) —
-   * changing models means re-embedding every row, not just this schema. */
+   * changing models means re-embedding every row, not just this schema.
+   */
   embedding  Unsupported("vector(768)")?
-  createdAt  DateTime          @default(now())
+  createdAt  DateTime                    @default(now())
 
   @@index([agencyId, visibility])
 }
@@ -950,20 +980,20 @@ model ContentSection {
 /// a one-off departure can run long or short (a festival date, a shortened
 /// shoulder-season run) without editing the package itself.
 model Departure {
-  id          String          @id @default(cuid())
-  itineraryId String
-  itinerary   Itinerary       @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  startDate   DateTime        @db.Date
-  endDate     DateTime        @db.Date
+  id            String          @id @default(cuid())
+  itineraryId   String
+  itinerary     Itinerary       @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  startDate     DateTime        @db.Date
+  endDate       DateTime        @db.Date
   /// Per-person price for this departure when it differs from the package's
   /// standard price — peak festival weeks, for instance. Null means the
   /// package price applies.
-  priceOverride Decimal?      @db.Decimal(10, 2)
-  status      DepartureStatus @default(OPEN)
+  priceOverride Decimal?        @db.Decimal(10, 2)
+  status        DepartureStatus @default(OPEN)
   /// Short public label, e.g. "Thimphu Tshechu" — shown beside the dates.
-  note        String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  note          String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   enquiries ContactMessage[]
 

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import EnquiryStatusControls from "@/components/admin/EnquiryStatusControls";
+import EnquiryReply from "@/components/admin/EnquiryReply";
 
 const STATUS_BADGE: Record<string, string> = {
   NEW: "badge-pending",
@@ -22,14 +23,21 @@ export default async function AdminEnquiriesPage({
   if (user.role !== "ADMIN") return null; // the admin layout shows the sign-in form
 
   const sp = await searchParams;
-  const raw = (Array.isArray(sp.status) ? sp.status[0] : sp.status)?.toUpperCase() ?? "";
+  const raw =
+    (Array.isArray(sp.status) ? sp.status[0] : sp.status)?.toUpperCase() ?? "";
   const filter = ["NEW", "IN_PROGRESS", "CLOSED"].includes(raw) ? raw : "";
 
   const all = await prisma.contactMessage.findMany({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     include: {
       traveler: { select: { email: true, role: true } },
-      departure: { include: { itinerary: { select: { title: true, slug: true } } } },
+      departure: {
+        include: { itinerary: { select: { title: true, slug: true } } },
+      },
+      replies: {
+        orderBy: { createdAt: "asc" },
+        include: { sentBy: { select: { name: true } } },
+      },
     },
   });
 
@@ -39,13 +47,21 @@ export default async function AdminEnquiriesPage({
   const tabs = [
     { value: "", label: "All", count: all.length },
     { value: "NEW", label: "New", count: newCount },
-    { value: "IN_PROGRESS", label: "In progress", count: countOf("IN_PROGRESS") },
+    {
+      value: "IN_PROGRESS",
+      label: "In progress",
+      count: countOf("IN_PROGRESS"),
+    },
     { value: "CLOSED", label: "Closed", count: countOf("CLOSED") },
   ];
   const stats = [
     { label: "All enquiries", value: all.length, status: "" },
     { label: "Unread", value: newCount, status: "NEW" },
-    { label: "In progress", value: countOf("IN_PROGRESS"), status: "IN_PROGRESS" },
+    {
+      label: "In progress",
+      value: countOf("IN_PROGRESS"),
+      status: "IN_PROGRESS",
+    },
     { label: "Closed", value: countOf("CLOSED"), status: "CLOSED" },
   ];
 
@@ -61,16 +77,23 @@ export default async function AdminEnquiriesPage({
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#fcf6e9] via-[#fcf6e9]/90 to-transparent" />
         <div className="px-5 py-7 sm:px-8 sm:py-9">
-          <h1 data-hero className="font-display text-3xl font-semibold text-stone-900 sm:text-4xl">
+          <h1
+            data-hero
+            className="font-display text-3xl font-semibold text-stone-900 sm:text-4xl"
+          >
             Enquiries
           </h1>
           <p className="mt-1.5 max-w-md text-sm text-stone-700 sm:text-base">
-            Messages from the public contact form. {newCount > 0 ? `${newCount} unread.` : "All caught up."}
+            Messages from the public contact form.{" "}
+            {newCount > 0 ? `${newCount} unread.` : "All caught up."}
           </p>
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" aria-label="Summary">
+      <section
+        className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"
+        aria-label="Summary"
+      >
         {stats.map((c) => (
           <Link
             key={c.label}
@@ -78,8 +101,12 @@ export default async function AdminEnquiriesPage({
             className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5"
           >
             <p className="text-sm font-medium text-stone-600">{c.label}</p>
-            <p className="mt-1 font-display text-2xl font-bold text-stone-900 sm:text-3xl">{c.value}</p>
-            <p className="mt-0.5 text-xs text-stone-500">{c.status ? "show these" : "show all"}</p>
+            <p className="mt-1 font-display text-2xl font-bold text-stone-900 sm:text-3xl">
+              {c.value}
+            </p>
+            <p className="mt-0.5 text-xs text-stone-500">
+              {c.status ? "show these" : "show all"}
+            </p>
           </Link>
         ))}
       </section>
@@ -99,7 +126,13 @@ export default async function AdminEnquiriesPage({
               }`}
             >
               {t.label}
-              <span className={on ? "ml-1.5 text-white/70" : "ml-1.5 text-stone-400"}>{t.count}</span>
+              <span
+                className={
+                  on ? "ml-1.5 text-white/70" : "ml-1.5 text-stone-400"
+                }
+              >
+                {t.count}
+              </span>
             </Link>
           );
         })}
@@ -118,7 +151,10 @@ export default async function AdminEnquiriesPage({
                 </p>
                 <p className="text-sm text-stone-500">
                   {m.name} ·{" "}
-                  <a href={`mailto:${m.email}`} className="text-brand-700 hover:underline">
+                  <a
+                    href={`mailto:${m.email}`}
+                    className="text-brand-700 hover:underline"
+                  >
                     {m.email}
                   </a>
                   {m.phone ? ` · ${m.phone}` : ""} ·{" "}
@@ -141,20 +177,46 @@ export default async function AdminEnquiriesPage({
               <p className="mt-3 rounded-md bg-brand-50 px-3 py-2 text-sm text-brand-900">
                 <span className="font-semibold">Departure requested:</span>{" "}
                 {m.departure.itinerary.title} ·{" "}
-                {m.departure.startDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                {m.departure.startDate.toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
                 {" → "}
-                {m.departure.endDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                {m.departure.endDate.toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
               </p>
             )}
 
             <p className="mt-3 whitespace-pre-wrap border-t border-stone-100 pt-3 text-sm text-stone-700">
               {m.message}
             </p>
+
+            <EnquiryReply
+              id={m.id}
+              email={m.email}
+              firstName={m.name.trim().split(/\s+/)[0]}
+              defaultSubject={`Re: ${m.subject || "Your enquiry to Droelma Tours & Travels"}`}
+              past={m.replies.map((r) => ({
+                id: r.id,
+                subject: r.subject,
+                body: r.body,
+                status: r.status,
+                error: r.error,
+                by: r.sentBy?.name ?? null,
+                at: r.createdAt.toISOString(),
+              }))}
+            />
           </div>
         ))}
 
         {messages.length === 0 && (
-          <p className="rounded-2xl border border-stone-200 bg-white px-4 py-8 text-center text-sm text-stone-500">{filter ? "No enquiries with that status." : "No enquiries yet."}</p>
+          <p className="rounded-2xl border border-stone-200 bg-white px-4 py-8 text-center text-sm text-stone-500">
+            {filter ? "No enquiries with that status." : "No enquiries yet."}
+          </p>
         )}
       </div>
     </div>
