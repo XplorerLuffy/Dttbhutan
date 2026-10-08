@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import StatusBadge from "@/components/StatusBadge";
@@ -20,27 +21,65 @@ export default async function AdminVendorsPage() {
     }),
   ]);
 
-  return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="text-2xl font-bold">Vendors</h1>
-        <p className="mt-1 text-sm text-stone-600">
-          Add guides and hotels you work with, approve or suspend a listing, and edit the details
-          travelers see. Changing a status emails the vendor (if they have an email); editing
-          details does not.
-        </p>
-      </div>
+  const pending =
+    guides.filter((g) => g.status === "PENDING").length +
+    hotels.filter((h) => h.status === "PENDING").length +
+    operators.filter((o) => o.status === "PENDING").length;
+  const stats = [
+    { label: "To approve", value: pending, href: "#guides", hot: pending > 0 },
+    { label: "Tour guides", value: guides.length, href: "#guides" },
+    { label: "Hotels", value: hotels.length, href: "#hotels" },
+    { label: "Transport operators", value: operators.length, href: "#transport" },
+  ];
 
-      <section>
+  return (
+    <div className="space-y-6">
+      <section className="relative isolate overflow-hidden rounded-2xl border border-stone-200 bg-[#fcf6e9]">
+        <Image
+          src="/media/packages/dzong-ridge.webp"
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 70vw, 100vw"
+          className="-z-10 object-cover object-right opacity-60"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#fcf6e9] via-[#fcf6e9]/90 to-transparent" />
+        <div className="px-5 py-7 sm:px-8 sm:py-9">
+          <h1 data-hero className="font-display text-3xl font-semibold text-stone-900 sm:text-4xl">
+            Vendors
+          </h1>
+          <p className="mt-1.5 max-w-xl text-sm text-stone-700 sm:text-base">
+            Add guides and hotels you work with, approve or suspend a listing, and edit the details
+            travelers see. Changing a status emails the vendor (if they have an email); editing
+            details does not.
+          </p>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" aria-label="Summary">
+        {stats.map((c) => (
+          <a
+            key={c.label}
+            href={c.href}
+            className={`rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5 ${
+              c.hot ? "border-amber-200 bg-amber-50" : "border-stone-200 bg-white"
+            }`}
+          >
+            <p className="text-sm font-medium text-stone-600">{c.label}</p>
+            <p className="mt-1 font-display text-2xl font-bold text-stone-900 sm:text-3xl">{c.value}</p>
+          </a>
+        ))}
+      </section>
+
+      <section id="guides" className="scroll-mt-20 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Tour guides</h2>
+          <h2 className="font-display text-lg font-semibold">Tour guides</h2>
           <Link href="/chim/vendors/guides/new" className="btn-primary">
             + Add guide
           </Link>
         </div>
         <div className="space-y-3">
           {guides.map((g) => (
-            <div key={g.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div key={g.id} className="flex flex-col gap-3 rounded-xl border border-stone-100 bg-stone-50/60 p-3.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="font-medium">
                   {g.user.name} <StatusBadge status={g.status} />
@@ -84,16 +123,16 @@ export default async function AdminVendorsPage() {
         </div>
       </section>
 
-      <section>
+      <section id="hotels" className="scroll-mt-20 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Hotels</h2>
+          <h2 className="font-display text-lg font-semibold">Hotels</h2>
           <Link href="/chim/vendors/hotels/new" className="btn-primary">
             + Add hotel
           </Link>
         </div>
         <div className="space-y-3">
           {hotels.map((h) => (
-            <div key={h.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div key={h.id} className="flex flex-col gap-3 rounded-xl border border-stone-100 bg-stone-50/60 p-3.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="font-medium">
                   {h.name} <StatusBadge status={h.status} />
@@ -117,11 +156,11 @@ export default async function AdminVendorsPage() {
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">Transport operators & vehicles</h2>
+      <section id="transport" className="scroll-mt-20 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+        <h2 className="mb-3 font-display text-lg font-semibold">Transport operators & vehicles</h2>
         <div className="space-y-3">
           {operators.map((op) => (
-            <div key={op.id} className="card">
+            <div key={op.id} className="rounded-xl border border-stone-100 bg-stone-50/60 p-3.5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="font-medium">
