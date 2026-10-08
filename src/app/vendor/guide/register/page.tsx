@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { RegisterFrame } from "@/components/vendor/VendorUI";
 import GuideApplicationForm from "./GuideApplicationForm";
 import GuideRegisterForm from "./GuideRegisterForm";
 
@@ -31,27 +32,21 @@ export default async function GuideRegisterPage() {
     if (listing) redirect("/vendor/guide");
 
     return (
-      <div className="mx-auto max-w-lg">
-        <h1 className="mb-1 text-2xl font-bold">Finish your guide profile</h1>
-        <p className="mb-6 text-sm text-stone-600">
-          Your TCB (Tourism Council of Bhutan) licence number is required. Our team reviews every
-          guide profile before it appears in search.
-        </p>
+      <RegisterFrame
+        title="Finish your guide profile"
+        intro="Your TCB (Tourism Council of Bhutan) licence number is required. Our team reviews every guide profile before it appears in search."
+      >
         <GuideRegisterForm destinations={destinations} />
-      </div>
+      </RegisterFrame>
     );
   }
 
   return (
-    <div className="mx-auto max-w-lg">
-      <h1 className="mb-1 text-2xl font-bold">Apply as a tour guide</h1>
-      <p className="mb-6 text-sm leading-relaxed text-stone-600">
-        Tell us about yourself and your TCB (Tourism Council of Bhutan) licence. Our team reviews
-        every application by hand. You don&apos;t need an account to apply — if you&apos;re
-        approved, we&apos;ll email you a link to set your password and log in.
-      </p>
-
+    <RegisterFrame
+      title="Apply as a tour guide"
+      intro="Tell us about yourself and your TCB (Tourism Council of Bhutan) licence. Our team reviews every application by hand. You don't need an account to apply — if you're approved, we'll email you a link to set your password and log in."
+    >
       <GuideApplicationForm destinations={destinations} />
-    </div>
+    </RegisterFrame>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { dashboardPathForRole } from "@/lib/roles";
+import { RegisterFrame } from "@/components/vendor/VendorUI";
 import LogoutButton from "@/components/LogoutButton";
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -49,10 +50,8 @@ export default async function VendorRegisterGate({
   }
 
   return (
-    <div className="mx-auto max-w-lg">
-      <h1 className="mb-4 text-2xl font-bold">{title}</h1>
-
-      <div className="rounded-xl border border-stone-200 bg-white p-6">
+    <RegisterFrame title={title}>
+      <div>
         {!user ? (
           <>
             <p className="font-semibold text-stone-900">
@@ -103,7 +102,7 @@ export default async function VendorRegisterGate({
           </>
         )}
       </div>
-    </div>
+    </RegisterFrame>
   );
 }
 

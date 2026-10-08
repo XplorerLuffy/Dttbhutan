@@ -44,7 +44,7 @@ export default function TransportRegisterForm() {
       setError(
         data.error?.formErrors?.[0] ??
           JSON.stringify(data.error?.fieldErrors ?? data.error) ??
-          "Something went wrong"
+          "Something went wrong",
       );
       return;
     }
@@ -54,15 +54,7 @@ export default function TransportRegisterForm() {
   }
 
   return (
-    <div className="mx-auto max-w-lg">
-      <h1 className="mb-1 text-2xl font-bold">Register as a transport operator</h1>
-      <p className="mb-6 text-sm text-stone-600">
-        Register your business and your first vehicle. If the vehicle
-        already has a GPS unit installed, add its device identifier (IMEI or
-        Traccar unique ID) so trip mileage can be verified from GPS instead
-        of driver-reported distance.
-      </p>
-
+    <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field label="Business name">
           <input name="businessName" required className="input" />
@@ -85,7 +77,13 @@ export default function TransportRegisterForm() {
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Passenger capacity">
-            <input name="capacity" type="number" min={1} required className="input" />
+            <input
+              name="capacity"
+              type="number"
+              min={1}
+              required
+              className="input"
+            />
           </Field>
           <Field label="Plate number">
             <input name="plateNumber" required className="input" />
@@ -113,7 +111,13 @@ export default function TransportRegisterForm() {
             />
           </Field>
           <Field label="Rate per km (optional, BTN)">
-            <input name="ratePerKm" type="number" min={0} step="0.01" className="input" />
+            <input
+              name="ratePerKm"
+              type="number"
+              min={0}
+              step="0.01"
+              className="input"
+            />
           </Field>
         </div>
 
@@ -127,7 +131,11 @@ export default function TransportRegisterForm() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="btn-primary w-full"
+        >
           {isSubmitting ? "Submitting..." : "Submit for review"}
         </button>
       </form>
@@ -135,7 +143,13 @@ export default function TransportRegisterForm() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <label className="mb-1 block text-sm font-medium">{label}</label>

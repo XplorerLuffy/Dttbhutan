@@ -111,3 +111,46 @@ export function EmptyRow({ children }: { children: ReactNode }) {
     </p>
   );
 }
+
+/**
+ * Frame for the vendor sign-up and application pages: the banner, then the form
+ * (or message) in a white card.
+ */
+export function RegisterFrame({
+  title,
+  intro,
+  children,
+}: {
+  title: string;
+  intro?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8 sm:px-6">
+      <section className="relative isolate overflow-hidden rounded-2xl border border-stone-200 bg-[#fcf6e9]">
+        <Image
+          src="/media/packages/dzong-ridge.webp"
+          alt=""
+          fill
+          priority
+          sizes="(min-width: 768px) 42rem, 100vw"
+          className="-z-10 object-cover object-right opacity-60"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#fcf6e9] via-[#fcf6e9]/90 to-transparent" />
+        <div className="px-5 py-8 sm:px-8 sm:py-10">
+          <h1 className="font-display text-3xl font-semibold text-stone-900 sm:text-4xl">
+            {title}
+          </h1>
+          {intro && (
+            <div className="mt-2 max-w-lg text-sm leading-relaxed text-stone-700 sm:text-base">
+              {intro}
+            </div>
+          )}
+        </div>
+      </section>
+      <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6">
+        {children}
+      </section>
+    </div>
+  );
+}
