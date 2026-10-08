@@ -3,10 +3,11 @@ import Image from "next/image";
 /**
  * The client's logo artwork — the DTT mountain-and-river "D".
  *
- * Source of truth is public/new logo.jpeg, uploaded by the client. The PNGs
- * under public/logo/ are derived from it: cropped to the artwork and cut out
- * from its flat #f7f7f7 background, which would otherwise show as a grey
- * rectangle on anything that isn't that exact grey. The artwork itself —
+ * The artwork is the client's DTT logo with the prayer-flag line, supplied as
+ * a transparent PNG. The PNGs under public/logo/ are cropped to it and split
+ * into the full lockup and the DTT mark alone. The `?v=` on each src is a
+ * cache-buster: the files keep their names, so browsers would otherwise show
+ * the old logo. The artwork itself —
  * shapes, proportions, colours — is untouched.
  *
  * `LogoMark` is the emblem alone (the "D" with the peak and the river), for
@@ -25,10 +26,10 @@ import Image from "next/image";
 export default function LogoMark({ className }: { className?: string }) {
   return (
     <Image
-      src="/logo/dtt-mark.png"
+      src="/logo/dtt-mark.png?v=2"
       alt="Droelma Tours &amp; Travels"
       width={544}
-      height={416}
+      height={198}
       priority
       className={className}
     />
@@ -38,10 +39,10 @@ export default function LogoMark({ className }: { className?: string }) {
 export function LogoLockup({ className }: { className?: string }) {
   return (
     <Image
-      src="/logo/dtt-logo.png"
+      src="/logo/dtt-logo.png?v=2"
       alt="Droelma Tours &amp; Travels"
       width={1436}
-      height={416}
+      height={244}
       priority
       className={className}
     />
@@ -51,10 +52,10 @@ export function LogoLockup({ className }: { className?: string }) {
 export function LogoMarkReverse({ className }: { className?: string }) {
   return (
     <Image
-      src="/logo/dtt-mark-reverse.png"
+      src="/logo/dtt-mark-reverse.png?v=2"
       alt="Droelma Tours &amp; Travels"
       width={544}
-      height={416}
+      height={198}
       priority
       className={className}
     />
@@ -64,10 +65,10 @@ export function LogoMarkReverse({ className }: { className?: string }) {
 export function LogoLockupReverse({ className }: { className?: string }) {
   return (
     <Image
-      src="/logo/dtt-logo-reverse.png"
+      src="/logo/dtt-logo-reverse.png?v=2"
       alt="Droelma Tours &amp; Travels"
       width={1436}
-      height={416}
+      height={244}
       priority
       className={className}
     />
