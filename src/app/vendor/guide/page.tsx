@@ -4,6 +4,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { dashboardPathForRole } from "@/lib/roles";
 import StatusBadge from "@/components/StatusBadge";
+import {
+  VendorPage,
+  VendorHero,
+  VendorNotice,
+  VendorStats,
+  VendorPanel,
+  EmptyRow,
+} from "@/components/vendor/VendorUI";
 import { SetBookingStatusButton } from "@/components/BookingActions";
 
 export default async function GuideVendorDashboard() {
@@ -22,59 +30,107 @@ export default async function GuideVendorDashboard() {
     include: { traveler: true },
   });
 
+  const pending = bookings.filter((b) => b.status === "PENDING").length;
+  const confirmed = bookings.filter((b) => b.status === "CONFIRMED").length;
+
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">My guide profile</h1>
-        <StatusBadge status={profile.status} />
-      </div>
+    <VendorPage>
+      <VendorHero
+        title="My guide profile"
+        subtitle={`TCB licence ${profile.licenseNumber}`}
+        status={profile.status}
+      />
 
       {profile.status === "PENDING" && (
-        <p className="card mb-6 text-sm text-amber-700">
+        <VendorNotice tone="amber">
           Your profile is awaiting admin approval before it appears in search.
-        </p>
+        </VendorNotice>
       )}
       {profile.status === "REJECTED" && (
-        <p className="card mb-6 text-sm text-red-700">
-          Your profile was rejected{profile.adminNote ? `: ${profile.adminNote}` : "."}
-        </p>
+        <VendorNotice tone="red">
+          Your profile was rejected
+          {profile.adminNote ? `: ${profile.adminNote}` : "."}
+        </VendorNotice>
       )}
 
-      <div className="card mb-6">
-        <p><strong>License:</strong> {profile.licenseNumber}</p>
-        <p><strong>Languages:</strong> {profile.languages.join(", ")}</p>
-        <p><strong>Specialties:</strong> {profile.specialties.join(", ")}</p>
-        <p><strong>Rate:</strong> Nu. {Number(profile.ratePerDay).toLocaleString()}/day</p>
-      </div>
+      <VendorStats
+        items={[
+          {
+            label: "Rate per day",
+            value: `Nu. ${Number(profile.ratePerDay).toLocaleString("en-IN")}`,
+          },
+          { label: "Awaiting your reply", value: pending },
+          { label: "Confirmed", value: confirmed },
+          { label: "All bookings", value: bookings.length },
+        ]}
+      />
 
-      <h2 className="mb-3 text-lg font-semibold">Bookings</h2>
-      {bookings.length === 0 ? (
-        <p className="text-sm text-stone-500">No bookings yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {bookings.map((b) => (
-            <div key={b.id} className="card flex items-center justify-between">
-              <div>
-                <Link href={`/dashboard/bookings/${b.id}`} className="font-medium hover:underline">
-                  {b.traveler.name}
-                </Link>
-                <p className="text-sm text-stone-500">
-                  {b.startDate.toDateString()} → {b.endDate.toDateString()}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <StatusBadge status={b.status} />
-                {b.status === "PENDING" && (
-                  <SetBookingStatusButton bookingId={b.id} status="CONFIRMED" label="Confirm" />
-                )}
-                {b.status === "CONFIRMED" && (
-                  <SetBookingStatusButton bookingId={b.id} status="COMPLETED" label="Complete" />
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+      <VendorPanel title="Your details">
+        <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+          <div>
+            <dt className="text-stone-500">Licence</dt>
+            <dd className="font-medium text-stone-900">
+              {profile.licenseNumber}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-stone-500">Languages</dt>
+            <dd className="font-medium text-stone-900">
+              {profile.languages.join(", ") || "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-stone-500">Specialties</dt>
+            <dd className="font-medium text-stone-900">
+              {profile.specialties.join(", ") || "—"}
+            </dd>
+          </div>
+        </dl>
+      </VendorPanel>
+
+      <VendorPanel title="Bookings">
+        {bookings.length === 0 ? (
+          <EmptyRow>No bookings yet.</EmptyRow>
+        ) : (
+          <ul className="divide-y divide-stone-100">
+            {bookings.map((b) => (
+              <li
+                key={b.id}
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3.5 first:pt-0 last:pb-0"
+              >
+                <div className="min-w-0">
+                  <Link
+                    href={`/dashboard/bookings/${b.id}`}
+                    className="text-sm font-semibold text-stone-900 hover:underline"
+                  >
+                    {b.traveler.name}
+                  </Link>
+                  <p className="text-xs text-stone-500">
+                    {b.startDate.toDateString()} → {b.endDate.toDateString()}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge status={b.status} />
+                  {b.status === "PENDING" && (
+                    <SetBookingStatusButton
+                      bookingId={b.id}
+                      status="CONFIRMED"
+                      label="Confirm"
+                    />
+                  )}
+                  {b.status === "CONFIRMED" && (
+                    <SetBookingStatusButton
+                      bookingId={b.id}
+                      status="COMPLETED"
+                      label="Complete"
+                    />
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </VendorPanel>
+    </VendorPage>
   );
 }
