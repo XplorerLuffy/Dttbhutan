@@ -96,6 +96,23 @@ export default async function HomePage() {
     const bScore = (bRating?._avg.rating ?? 0) * 1000 + (bRating?._count.rating ?? 0);
     return bScore - aScore || Number(a.pricePerPerson) - Number(b.pricePerPerson);
   });
+  // Best sellers: the packages travelers have actually booked most. Cancelled
+  // bookings don't count, and a package nobody has booked can't be a best
+  // seller, so the section shows only packages with at least one booking.
+  const bookingCounts = await prisma.itineraryBooking.groupBy({
+    by: ["itineraryId"],
+    where: { itineraryId: { in: packageIds }, booking: { status: { not: "CANCELLED" } } },
+    _count: { _all: true },
+  });
+  const bookingCountById = new Map(bookingCounts.map((c) => [c.itineraryId, c._count._all]));
+  const bestSellers = publishedItineraries
+    .filter((p) => (bookingCountById.get(p.id) ?? 0) > 0)
+    .sort(
+      (a, b) =>
+        (bookingCountById.get(b.id) ?? 0) - (bookingCountById.get(a.id) ?? 0) ||
+        (packageRatingById.get(b.id)?._avg.rating ?? 0) - (packageRatingById.get(a.id)?._avg.rating ?? 0)
+    )
+    .slice(0, 3);
   const trendingTreks = sortedPackages.filter((p) => p.category === "TREKKING").slice(0, 4);
   const featured = sortedPackages.slice(0, 6);
 
@@ -180,6 +197,20 @@ export default async function HomePage() {
       {collections.length > 0 && (
         <Container className="py-20 sm:py-24">
           <FeaturedCollections content={content} collections={collections} />
+        </Container>
+      )}
+
+      {bestSellers.length > 0 && (
+        <Container className="pb-20 sm:pb-24">
+          <SectionHeading
+            title={content("home.bestsellers.heading")}
+            subtitle={content("home.bestsellers.subtitle")}
+          />
+          <ScrollReveal className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {bestSellers.map((p) => (
+              <TripCard key={p.id} itinerary={p} rating={packageRatingById.get(p.id)} />
+            ))}
+          </ScrollReveal>
         </Container>
       )}
 

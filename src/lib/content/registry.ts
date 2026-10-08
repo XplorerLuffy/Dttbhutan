@@ -116,6 +116,8 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "home.packages.heading", label: "Featured tours — heading", type: "text", default: "Journeys Worth the Flight" },
       { key: "home.packages.subtitle", label: "Featured tours — sub-line", type: "textarea", default: "Planned end to end, priced per person, and ready to book — or to use as the starting point for something of your own." },
       { key: "home.packages.cta", label: "Featured tours — button", type: "text", default: "See all tour packages" },
+      { key: "home.bestsellers.heading", label: "Best sellers — heading", type: "text", default: "Best Selling Packages" },
+      { key: "home.bestsellers.subtitle", label: "Best sellers — subtitle", type: "text", default: "The journeys our travelers book most.", help: "The three most-booked tours are chosen automatically; the section is hidden until a tour has been booked." },
       { key: "home.guides.heading", label: "Guides — heading", type: "text", default: "The People You'll Travel With" },
       { key: "home.guides.subtitle", label: "Guides — sub-line", type: "textarea", default: "Bhutan requires every visitor to travel with a licensed guide. These are ours." },
       { key: "home.guides.cta", label: "Guides — link", type: "text", default: "Meet all our guides →" },
