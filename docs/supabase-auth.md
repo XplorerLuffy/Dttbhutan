@@ -108,3 +108,24 @@ kept apart from the public site's (`src/lib/authRealm.ts`):
 
 The admin login also ends when the browser closes, after 30 minutes idle and
 after 12 hours (`src/lib/adminSession.ts`).
+
+## Guides apply; they don't sign up
+
+A tour guide applies at `/vendor/guide/register` with no account and no
+password. That stores a pending guide listing under a contact record with no
+login (`User.authId` null). Nothing is public and nothing exists in Supabase.
+
+- **Approve** (`/chim/vendors`): the approval email carries a one-time "set your
+  password" link (`src/lib/invite.ts`; only its SHA-256 is stored, 7 days).
+- The guide opens it, picks a password, and only then is the Supabase login
+  created and linked (`/api/auth/set-password`). The link works once.
+- **Reject**: a note is emailed; no login or link is ever made.
+- If the email didn't go out (no SMTP yet) or expired, the guide's row and edit
+  page have **Email login link / Copy login link**, e.g. to paste into WhatsApp.
+- `/register` no longer offers "Tour guide", and `/api/auth/register` refuses
+  `GUIDE`. Applying with an address that already has an account is refused
+  with one generic message, so the form can't be used to look up who has one.
+- Signed-out visitors may upload a photo only to the `applications` folder,
+  10 an hour per address.
+
+Hotels and transport operators still create an account first.

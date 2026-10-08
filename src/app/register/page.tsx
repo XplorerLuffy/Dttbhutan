@@ -7,13 +7,11 @@ import AuthLayout from "@/components/auth/AuthLayout";
 
 const ROLE_OPTIONS = [
   { value: "TRAVELER", label: "Traveler — booking a trip" },
-  { value: "GUIDE", label: "Tour guide" },
   { value: "HOTEL_OPERATOR", label: "Hotel / homestay operator" },
   { value: "TRANSPORT_OPERATOR", label: "Transport operator (vehicles & drivers)" },
 ] as const;
 
 const vendorRegisterPath: Record<string, string> = {
-  GUIDE: "/vendor/guide/register",
   HOTEL_OPERATOR: "/vendor/hotel/register",
   TRANSPORT_OPERATOR: "/vendor/transport/register",
 };
@@ -29,8 +27,14 @@ export default function RegisterPage() {
   // useSearchParams, which would need a Suspense boundary on this static page.
   useEffect(() => {
     const wanted = new URLSearchParams(window.location.search).get("role");
+    // Guides apply first — they get a login only once approved.
+    if (wanted === "GUIDE") {
+      router.replace("/vendor/guide/register");
+      return;
+    }
     const match = ROLE_OPTIONS.find((o) => o.value === wanted);
     if (match) setRole(match.value);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -69,8 +73,11 @@ export default function RegisterPage() {
     <AuthLayout>
       <h1 className="mb-1 text-center text-2xl font-bold">Create your account</h1>
       <p className="mb-6 text-center text-sm text-stone-600">
-        Vendors (guides, hotels, transport operators) go through an admin
-        approval step before their listing goes live.
+        Hotels and transport operators go through an admin approval step before their
+        listing goes live.{" "}
+        <Link href="/vendor/guide/register" className="font-medium text-brand-700 hover:underline">
+          Tour guide? Apply here — no account needed.
+        </Link>
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">

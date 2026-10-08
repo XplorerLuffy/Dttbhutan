@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import StatusBadge from "@/components/StatusBadge";
 import VendorRowActions from "@/components/admin/VendorRowActions";
+import GuideLoginAccess from "@/components/admin/GuideLoginAccess";
+import { isPlaceholderEmail } from "@/lib/adminVendor";
 
 export default async function AdminVendorsPage() {
   const user = await getCurrentUser();
@@ -46,8 +48,28 @@ export default async function AdminVendorsPage() {
                 <p className="text-sm text-stone-500">
                   TCB license {g.licenseNumber} · {g.languages.join(", ")}
                 </p>
+                {/* Who to reach — an application has no login, so this is the
+                    only place the admin sees how to contact the applicant. */}
+                {(!isPlaceholderEmail(g.user.email) || g.user.phone) && (
+                  <p className="text-xs text-stone-500">
+                    {[!isPlaceholderEmail(g.user.email) ? g.user.email : null, g.user.phone]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    {g.status === "PENDING" && ` · applied ${g.createdAt.toDateString().slice(4)}`}
+                  </p>
+                )}
                 {g.adminNote && (
                   <p className="text-xs text-stone-400">Note: {g.adminNote}</p>
+                )}
+                {g.status !== "REJECTED" && (
+                  <div className="mt-1.5">
+                    <GuideLoginAccess
+                      guideId={g.id}
+                      hasLogin={Boolean(g.user.authId)}
+                      hasEmail={!isPlaceholderEmail(g.user.email)}
+                      status={g.status}
+                    />
+                  </div>
                 )}
               </div>
               <VendorRowActions

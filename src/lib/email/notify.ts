@@ -1,7 +1,8 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { agencyInbox, sendEmails, type EmailMessage } from "@/lib/email/send";
+import { agencyInbox, sendEmail, sendEmails, type EmailMessage } from "@/lib/email/send";
 import { isPlaceholderEmail } from "@/lib/adminVendor";
+import { INVITE_TTL_DAYS } from "@/lib/invite";
 import {
   bookingCancelledToVendor,
   bookingReceivedToTraveler,
@@ -12,7 +13,10 @@ import {
   customTourToAgency,
   formatBTN,
   formatDateRange,
+  guideApplicationReceived,
+  guideApplicationToAgency,
   itineraryRequestToAgency,
+  loginLinkToVendor,
   newBookingToAgency,
   newBookingToVendor,
   vendorStatusToVendor,
@@ -328,6 +332,8 @@ export async function notifyVendorStatusChanged(input: {
   listingName: string;
   status: "APPROVED" | "REJECTED" | "SUSPENDED" | "PENDING";
   adminNote?: string | null;
+  /** Set when an approved applicant has no login yet. */
+  loginLinkUrl?: string;
 }): Promise<void> {
   await dispatch([
     to(
@@ -336,8 +342,68 @@ export async function notifyVendorStatusChanged(input: {
         listingName: input.listingName,
         status: input.status,
         adminNote: input.adminNote ?? null,
+        loginLink: input.loginLinkUrl
+          ? { url: input.loginLinkUrl, days: INVITE_TTL_DAYS }
+          : undefined,
       }),
       agencyInbox() ?? undefined
     ),
   ]);
+}
+
+/**
+ * A tour guide applied. The applicant gets a receipt that says no account
+ * exists yet; the agency is alerted to review it. The application itself is
+ * already saved (and shows in /chim/vendors), so a failed email never fails
+ * it.
+ */
+export async function notifyGuideApplication(guideId: string): Promise<void> {
+  const guide = await prisma.guideProfile.findUnique({
+    where: { id: guideId },
+    include: { user: true },
+  });
+  if (!guide) return;
+
+  await dispatch([
+    to(guide.user.email, guideApplicationReceived({ name: guide.user.name }), agencyInbox() ?? undefined),
+    to(
+      agencyInbox(),
+      guideApplicationToAgency({
+        name: guide.user.name,
+        email: guide.user.email,
+        phone: guide.user.phone ?? "—",
+        licenseNumber: guide.licenseNumber,
+        languages: guide.languages,
+        ratePerDay: guide.ratePerDay.toString(),
+      }),
+      // Replying to the alert reaches the applicant.
+      guide.user.email
+    ),
+  ]);
+}
+
+/**
+ * A fresh "set your password" link, sent when an admin asks for one. Says what
+ * actually happened, so the admin panel can offer "copy the link" when email
+ * isn't going out (no mail settings yet, or the provider refused it).
+ */
+export async function notifyLoginLink(input: {
+  email: string;
+  name: string;
+  url: string;
+}): Promise<"sent" | "not-configured" | "failed" | "no-email"> {
+  const message = to(
+    input.email,
+    loginLinkToVendor({ name: input.name, url: input.url, days: INVITE_TTL_DAYS }),
+    agencyInbox() ?? undefined
+  );
+  if (!message) return "no-email";
+  try {
+    const result = await sendEmail(message);
+    if (!result.ok) return "failed";
+    return "skipped" in result ? "not-configured" : "sent";
+  } catch (err) {
+    console.error("[email] login link failed", err);
+    return "failed";
+  }
 }

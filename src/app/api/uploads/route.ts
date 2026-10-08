@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { clientIp, createRateLimiter } from "@/lib/rateLimit";
 import {
   FileTooLargeError,
   StorageNotConfiguredError,
@@ -15,11 +16,12 @@ import {
  * production, local disk in dev.
  */
 
+/** Signed-out visitors may upload only to `applications` — the photo on a guide
+ * application, made before any account exists — and only a few at a time. */
+const anonymousLimited = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 10 });
+
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
@@ -29,9 +31,21 @@ export async function POST(req: NextRequest) {
 
   const folder = typeof form?.get("folder") === "string" ? String(form.get("folder")) : "uploads";
   // Only allow a short allowlist through — this ends up in a storage path.
-  const safeFolder = ["uploads", "guides", "hotels", "packages", "articles"].includes(folder)
+  const safeFolder = ["uploads", "guides", "hotels", "packages", "articles", "applications"].includes(folder)
     ? folder
     : "uploads";
+
+  if (!user) {
+    if (safeFolder !== "applications") {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+    if (anonymousLimited(clientIp(req))) {
+      return NextResponse.json(
+        { error: "Too many uploads from this connection. Please try again later." },
+        { status: 429 }
+      );
+    }
+  }
 
   try {
     const { url } = await putImage(file, safeFolder);

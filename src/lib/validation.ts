@@ -5,7 +5,9 @@ export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(72),
   phone: z.string().max(30).optional(),
-  role: z.enum(["TRAVELER", "GUIDE", "HOTEL_OPERATOR", "TRANSPORT_OPERATOR"]),
+  // No GUIDE: guides apply first (guideApplicationSchema) and only get a
+  // login once an admin approves them.
+  role: z.enum(["TRAVELER", "HOTEL_OPERATOR", "TRANSPORT_OPERATOR"]),
 });
 
 export const loginSchema = z.object({
@@ -65,6 +67,35 @@ export const guideProfileSchema = z.object({
   bio: z.string().max(2000).optional(),
   photoUrl: z.string().url().optional().or(z.literal("")),
   destinationIds: z.array(z.string().min(1)).default([]),
+});
+
+/**
+ * A tour guide's application: who they are and the listing they want. There is
+ * no password — no account exists until an admin approves the application.
+ */
+export const guideApplicationSchema = z.object({
+  name: z.string().trim().min(2, "Please enter your full name").max(100),
+  email: z
+    .string()
+    .trim()
+    .email("That doesn't look like an email address")
+    .max(200),
+  phone: z.string().trim().min(6, "Please enter a phone or WhatsApp number").max(30),
+  licenseNumber: z.string().trim().min(3, "Please enter your TCB licence number").max(50),
+  languages: z.array(z.string().trim().min(1).max(60)).min(1, "Add at least one language").max(20),
+  specialties: z.array(z.string().trim().min(1).max(60)).min(1, "Add at least one specialty").max(20),
+  yearsExperience: z.coerce.number().int().min(0).max(60),
+  ratePerDay: z.coerce.number().positive("Enter your rate per day").max(1_000_000),
+  bio: z.string().trim().max(2000).optional(),
+  // An uploaded photo: a web address, or a site path in local development.
+  photoUrl: z
+    .string()
+    .max(500)
+    .refine((v) => v === "" || /^https?:\/\//.test(v) || v.startsWith("/"), "Photo link isn't valid")
+    .optional(),
+  destinationIds: z.array(z.string().min(1)).max(40).default([]),
+  /** Hidden field real visitors leave empty; bots fill it in. */
+  website: z.string().max(200).optional(),
 });
 
 export const hotelSchema = z.object({

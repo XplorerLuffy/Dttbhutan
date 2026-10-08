@@ -79,6 +79,17 @@ model User {
   /// Null means it has never been changed, and every token is accepted.
   passwordChangedAt DateTime?
 
+  /// A one-time "set your password" link, for a guide an admin has approved.
+  ///
+  /// Guides apply without an account — only people the admin accepts get a
+  /// login. Approving one emails a link carrying a random token; only its
+  /// SHA-256 is stored here, so a copy of the database can't be used to take
+  /// over an account that hasn't been claimed yet. Opening the link and
+  /// choosing a password creates the Supabase login, links it through
+  /// authId, and clears both columns. Null once used, or if never issued.
+  inviteTokenHash   String?   @unique
+  inviteExpiresAt   DateTime?
+
   guideProfile       GuideProfile?
   hotel              Hotel?
   transportOperator  TransportOperator?

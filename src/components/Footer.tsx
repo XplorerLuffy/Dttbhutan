@@ -37,7 +37,7 @@ export default async function Footer() {
           <FooterColumn
             title="For vendors"
             links={[
-              { href: "/vendor/guide/register", label: "Register as a guide" },
+              { href: "/vendor/guide/register", label: "Apply as a guide" },
               { href: "/vendor/hotel/register", label: "Register your hotel" },
               { href: "/vendor/transport/register", label: "Register as a transport operator" },
             ]}

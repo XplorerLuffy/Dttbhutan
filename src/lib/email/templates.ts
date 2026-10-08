@@ -407,10 +407,59 @@ export function itineraryRequestToAgency(input: {
 // Vendor approvals
 // ---------------------------------------------------------------------------
 
+/**
+ * A guide's application arrived. Two emails: a receipt to the applicant that
+ * says plainly what happens next (no account yet), and an alert to the agency.
+ */
+export function guideApplicationReceived(input: { name: string }): RenderedEmail {
+  return render("We've received your guide application", {
+    heading: "Application received",
+    intro: `Thank you, ${input.name}. Our team will review your application and your TCB licence details, and email you with a decision.`,
+    outro:
+      "You don't need to do anything else for now. No account is created at this stage — if your application is approved, we'll email you a link to set your password and log in.",
+  });
+}
+
+export function guideApplicationToAgency(input: {
+  name: string;
+  email: string;
+  phone: string;
+  licenseNumber: string;
+  languages: string[];
+  ratePerDay: string;
+}): RenderedEmail {
+  return render(`[Guide application] ${input.name}`, {
+    heading: "New tour guide application",
+    intro: `${input.name} applied to join as a tour guide. Nothing is public and no login exists until you approve it.`,
+    rows: [
+      { label: "Name", value: input.name },
+      { label: "Email", value: input.email },
+      { label: "Phone / WhatsApp", value: input.phone },
+      { label: "TCB licence", value: input.licenseNumber },
+      { label: "Languages", value: input.languages.join(", ") },
+      { label: "Rate per day", value: `Nu. ${input.ratePerDay}` },
+    ],
+    cta: { label: "Review the application", href: `${siteUrl()}/chim/vendors` },
+    outro: "Approving it emails the guide a link to set their password. Rejecting it sends them a note and creates nothing.",
+  });
+}
+
+/** A fresh "set your password" link, sent on request from the admin panel. */
+export function loginLinkToVendor(input: { name: string; url: string; days: number }): RenderedEmail {
+  return render("Set your password to log in", {
+    heading: "Set your password",
+    intro: `Hello ${input.name}, use the button below to choose a password and log in to your dashboard.`,
+    cta: { label: "Set your password", href: input.url },
+    outro: `The link works once and expires in ${input.days} days. If it has expired, reply to this email and we'll send a new one.`,
+  });
+}
+
 export function vendorStatusToVendor(input: {
   listingName: string;
   status: "APPROVED" | "REJECTED" | "SUSPENDED" | "PENDING";
   adminNote: string | null;
+  /** For an approved applicant with no login yet: the link to create one. */
+  loginLink?: { url: string; days: number };
 }): RenderedEmail {
   const copy = {
     APPROVED: {
@@ -447,7 +496,16 @@ export function vendorStatusToVendor(input: {
       { label: "Status", value: input.status.charAt(0) + input.status.slice(1).toLowerCase() },
       ...(input.adminNote ? [{ label: "Note from our team", value: input.adminNote }] : []),
     ],
-    cta: { label: "Open your dashboard", href: `${siteUrl()}/dashboard` },
-    outro: copy.outro || undefined,
+    // An applicant who has no login yet is given the way to make one;
+    // everyone else goes to the dashboard they already use.
+    ...(input.loginLink && input.status === "APPROVED"
+      ? {
+          cta: { label: "Set your password and log in", href: input.loginLink.url },
+          outro: `You don't have a login yet — the button above lets you choose a password. The link works once and expires in ${input.loginLink.days} days; if it has expired, reply to this email and we'll send a new one.`,
+        }
+      : {
+          cta: { label: "Open your dashboard", href: `${siteUrl()}/dashboard` },
+          outro: copy.outro || undefined,
+        }),
   });
 }

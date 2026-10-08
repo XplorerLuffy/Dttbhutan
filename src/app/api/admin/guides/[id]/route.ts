@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { vendorStatusUpdateSchema } from "@/lib/adminVendor";
 import { guideAdminDetailsSchema } from "@/lib/validation";
 import { notifyVendorStatusChanged } from "@/lib/email/notify";
+import { canInvite, issueInvite } from "@/lib/invite";
 import { revalidateHomepage } from "@/lib/revalidate";
 
 /**
@@ -53,11 +54,21 @@ export async function PATCH(
       include: { user: true },
     });
 
+    // Approving an applicant who has no login yet is what gives them one: the
+    // approval email carries a link to choose a password. Nothing is created
+    // in Supabase until they use it. A guide who already has a login just gets
+    // the usual "approved" email.
+    const loginLinkUrl =
+      parsed.data.status === "APPROVED" && canInvite(updated.user)
+        ? (await issueInvite(updated.user.id)).url
+        : undefined;
+
     await notifyVendorStatusChanged({
       email: updated.user.email,
       listingName: `${updated.user.name}'s guide profile`,
       status: parsed.data.status,
       adminNote: parsed.data.adminNote,
+      loginLinkUrl,
     });
 
     revalidateHomepage();

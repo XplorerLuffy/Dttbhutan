@@ -17,10 +17,13 @@ export default function PhotoUpload({
   label = "Photo",
   initialUrl,
   onUploaded,
+  folder,
 }: {
   label?: string;
   initialUrl?: string | null;
   onUploaded: (url: string) => void;
+  /** Storage folder; signed-out visitors can only use "applications". */
+  folder?: "applications";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(initialUrl ?? null);
@@ -34,6 +37,7 @@ export default function PhotoUpload({
 
     const form = new FormData();
     form.append("file", file);
+    if (folder) form.append("folder", folder);
 
     const res = await fetch("/api/uploads", { method: "POST", body: form });
     setIsUploading(false);

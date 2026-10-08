@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import GuideEditForm from "@/components/admin/GuideEditForm";
 import ListingStatusSection from "@/components/admin/ListingStatusSection";
+import GuideLoginAccess from "@/components/admin/GuideLoginAccess";
+import { isPlaceholderEmail } from "@/lib/adminVendor";
 
 export default async function EditGuidePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -52,6 +54,22 @@ export default async function EditGuidePage({ params }: { params: Promise<{ id: 
         apiPath={`/api/admin/guides/${guide.id}`}
         who="the guide"
       />
+
+      <section className="card mt-4 space-y-2">
+        <h2 className="text-lg font-semibold">Login</h2>
+        <p className="text-sm text-stone-600">
+          {isPlaceholderEmail(guide.user.email)
+            ? "Contact: no email on file."
+            : `Contact: ${guide.user.email}`}
+          {guide.user.phone ? ` · ${guide.user.phone}` : ""}
+        </p>
+        <GuideLoginAccess
+          guideId={guide.id}
+          hasLogin={Boolean(guide.user.authId)}
+          hasEmail={!isPlaceholderEmail(guide.user.email)}
+          status={guide.status}
+        />
+      </section>
     </div>
   );
 }
