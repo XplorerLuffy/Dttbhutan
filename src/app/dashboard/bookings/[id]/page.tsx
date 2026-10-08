@@ -1,11 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import StatusBadge from "@/components/StatusBadge";
 import MessageThread from "@/components/MessageThread";
 import ReviewForm from "@/components/ReviewForm";
-import { CancelBookingButton, SetBookingStatusButton } from "@/components/BookingActions";
+import {
+  CancelBookingButton,
+  SetBookingStatusButton,
+} from "@/components/BookingActions";
 import type { Prisma } from "@prisma/client";
 import Money from "@/components/Money";
 
@@ -62,51 +66,147 @@ export default async function BookingDetailPage({
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
-        <div className="card">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-xl font-bold">{bookingTitle(booking)}</h1>
-              <p className="text-sm text-stone-500">
-                {booking.startDate.toDateString()} → {booking.endDate.toDateString()}
-              </p>
-              <p className="mt-1 text-sm text-stone-500">
-                Booking reference{" "}
-                <span className="select-all font-mono font-medium text-stone-800">
+        {isAdmin && (
+          <section className="relative isolate overflow-hidden rounded-2xl border border-stone-200 bg-[#fcf6e9]">
+            <Image
+              src="/media/packages/dzong-ridge.webp"
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 70vw, 100vw"
+              className="-z-10 object-cover object-right opacity-60"
+            />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#fcf6e9] via-[#fcf6e9]/90 to-transparent" />
+            <div className="px-5 py-7 sm:px-8">
+              <Link
+                href="/chim/bookings"
+                className="text-sm font-medium text-brand-700 hover:underline"
+              >
+                ← All bookings
+              </Link>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <h1
+                  data-hero
+                  className="font-display text-2xl font-semibold text-stone-900 sm:text-3xl"
+                >
+                  {bookingTitle(booking)}
+                </h1>
+                <StatusBadge status={booking.status} />
+              </div>
+              <p className="mt-1.5 text-sm text-stone-700">
+                {booking.startDate.toDateString()} →{" "}
+                {booking.endDate.toDateString()} · Reference{" "}
+                <span className="select-all font-mono font-medium text-stone-900">
                   {booking.reference}
                 </span>
               </p>
+              <p className="mt-1 font-display text-xl font-bold text-stone-900">
+                Total: <Money btn={Number(booking.totalPrice)} />
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {isTraveler &&
+                  booking.status !== "CANCELLED" &&
+                  booking.status !== "COMPLETED" && (
+                    <CancelBookingButton bookingId={booking.id} />
+                  )}
+                {(isVendorOwner || isAdmin) && booking.status === "PENDING" && (
+                  <SetBookingStatusButton
+                    bookingId={booking.id}
+                    status="CONFIRMED"
+                    label="Confirm"
+                  />
+                )}
+                {(isVendorOwner || isAdmin) &&
+                  booking.status === "CONFIRMED" && (
+                    <SetBookingStatusButton
+                      bookingId={booking.id}
+                      status="COMPLETED"
+                      label="Mark completed"
+                    />
+                  )}
+                {(isVendorOwner || isAdmin) &&
+                  booking.status !== "CANCELLED" &&
+                  booking.status !== "COMPLETED" && (
+                    <SetBookingStatusButton
+                      bookingId={booking.id}
+                      status="CANCELLED"
+                      label="Cancel"
+                    />
+                  )}
+              </div>
             </div>
-            <StatusBadge status={booking.status} />
-          </div>
+          </section>
+        )}
 
-          <p className="mt-3 font-medium text-brand-800">
-            Total: <Money btn={Number(booking.totalPrice)} />
-          </p>
+        {!isAdmin && (
+          <div className="card">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-xl font-bold">{bookingTitle(booking)}</h1>
+                <p className="text-sm text-stone-500">
+                  {booking.startDate.toDateString()} →{" "}
+                  {booking.endDate.toDateString()}
+                </p>
+                <p className="mt-1 text-sm text-stone-500">
+                  Booking reference{" "}
+                  <span className="select-all font-mono font-medium text-stone-800">
+                    {booking.reference}
+                  </span>
+                </p>
+              </div>
+              <StatusBadge status={booking.status} />
+            </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {isTraveler && booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
-              <CancelBookingButton bookingId={booking.id} />
-            )}
-            {(isVendorOwner || isAdmin) && booking.status === "PENDING" && (
-              <SetBookingStatusButton bookingId={booking.id} status="CONFIRMED" label="Confirm" />
-            )}
-            {(isVendorOwner || isAdmin) && booking.status === "CONFIRMED" && (
-              <SetBookingStatusButton bookingId={booking.id} status="COMPLETED" label="Mark completed" />
-            )}
-            {(isVendorOwner || isAdmin) && booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
-              <SetBookingStatusButton bookingId={booking.id} status="CANCELLED" label="Cancel" />
-            )}
+            <p className="mt-3 font-medium text-brand-800">
+              Total: <Money btn={Number(booking.totalPrice)} />
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {isTraveler &&
+                booking.status !== "CANCELLED" &&
+                booking.status !== "COMPLETED" && (
+                  <CancelBookingButton bookingId={booking.id} />
+                )}
+              {(isVendorOwner || isAdmin) && booking.status === "PENDING" && (
+                <SetBookingStatusButton
+                  bookingId={booking.id}
+                  status="CONFIRMED"
+                  label="Confirm"
+                />
+              )}
+              {(isVendorOwner || isAdmin) && booking.status === "CONFIRMED" && (
+                <SetBookingStatusButton
+                  bookingId={booking.id}
+                  status="COMPLETED"
+                  label="Mark completed"
+                />
+              )}
+              {(isVendorOwner || isAdmin) &&
+                booking.status !== "CANCELLED" &&
+                booking.status !== "COMPLETED" && (
+                  <SetBookingStatusButton
+                    bookingId={booking.id}
+                    status="CANCELLED"
+                    label="Cancel"
+                  />
+                )}
+            </div>
           </div>
-        </div>
+        )}
 
         {booking.type === "FLIGHT" && booking.flightBooking && (
           <div className="card">
             <h3 className="font-semibold">Flight details</h3>
             <dl className="mt-2 grid grid-cols-2 gap-y-1 text-sm">
               <dt className="text-stone-500">Route</dt>
-              <dd>{booking.flightBooking.origin} → {booking.flightBooking.destination}</dd>
+              <dd>
+                {booking.flightBooking.origin} →{" "}
+                {booking.flightBooking.destination}
+              </dd>
               <dt className="text-stone-500">Airline</dt>
-              <dd>{booking.flightBooking.airline} ({booking.flightBooking.flightNumber})</dd>
+              <dd>
+                {booking.flightBooking.airline} (
+                {booking.flightBooking.flightNumber})
+              </dd>
               <dt className="text-stone-500">Departure</dt>
               <dd>{booking.flightBooking.departureAt.toLocaleString()}</dd>
               {booking.flightBooking.returnAt && (
@@ -124,8 +224,9 @@ export default async function BookingDetailPage({
               PNR: {booking.flightBooking.pnr}
             </p>
             <p className="mt-1 text-xs text-stone-400">
-              Issued via a demo aggregator ({booking.flightBooking.aggregatorProvider}) — not a real
-              airline reservation. See README for production integration notes.
+              Issued via a demo aggregator (
+              {booking.flightBooking.aggregatorProvider}) — not a real airline
+              reservation. See README for production integration notes.
             </p>
           </div>
         )}
@@ -147,10 +248,13 @@ export default async function BookingDetailPage({
               {booking.itineraryBooking.itinerary.durationDays} days
             </p>
             {booking.itineraryBooking.notes && (
-              <p className="mt-2 text-sm text-stone-600">Notes: {booking.itineraryBooking.notes}</p>
+              <p className="mt-2 text-sm text-stone-600">
+                Notes: {booking.itineraryBooking.notes}
+              </p>
             )}
             <p className="mt-2 text-xs text-stone-400">
-              This is a request — our team will confirm the assigned guide, hotel, and vehicle with you.
+              This is a request — our team will confirm the assigned guide,
+              hotel, and vehicle with you.
             </p>
           </div>
         )}
@@ -178,17 +282,24 @@ export default async function BookingDetailPage({
           </div>
         )}
 
-        {booking.type !== "FLIGHT" && booking.status === "COMPLETED" && isTraveler && (
-          booking.review ? (
+        {booking.type !== "FLIGHT" &&
+          booking.status === "COMPLETED" &&
+          isTraveler &&
+          (booking.review ? (
             <div className="card">
               <h3 className="font-semibold">Your review</h3>
-              <p className="text-amber-600">{"★".repeat(booking.review.rating)}</p>
-              {booking.review.comment && <p className="text-sm text-stone-600">{booking.review.comment}</p>}
+              <p className="text-amber-600">
+                {"★".repeat(booking.review.rating)}
+              </p>
+              {booking.review.comment && (
+                <p className="text-sm text-stone-600">
+                  {booking.review.comment}
+                </p>
+              )}
             </div>
           ) : (
             <ReviewForm bookingId={booking.id} />
-          )
-        )}
+          ))}
       </div>
 
       <div>
@@ -213,6 +324,7 @@ function bookingTitle(booking: BookingDetail) {
     return `Hotel: ${booking.roomType?.hotel.name} — ${booking.roomType?.name}`;
   if (booking.type === "FLIGHT")
     return `Flight: ${booking.flightBooking?.origin} → ${booking.flightBooking?.destination}`;
-  if (booking.type === "ITINERARY") return `Package: ${booking.itineraryBooking?.itinerary.title}`;
+  if (booking.type === "ITINERARY")
+    return `Package: ${booking.itineraryBooking?.itinerary.title}`;
   return `Transport: ${booking.vehicle?.operator.businessName} (${booking.vehicle?.type})`;
 }
