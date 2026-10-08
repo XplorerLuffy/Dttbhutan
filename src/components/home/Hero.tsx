@@ -24,6 +24,7 @@ type Destination = { id: string; name: string; slug: string };
 export default function Hero({
   destinations,
   headline,
+  subtitle,
   searchButton,
   searchPrompt,
   customPrefix,
@@ -35,6 +36,7 @@ export default function Hero({
 }: {
   destinations: Destination[];
   headline: string;
+  subtitle: string;
   searchButton: string;
   searchPrompt: string;
   customPrefix: string;
@@ -137,16 +139,21 @@ export default function Hero({
           whole clip the way a heavy scrim would. */}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/45 via-black/20 to-black/45" />
 
-      <div ref={contentRef} className="w-full px-4 py-24 sm:px-6 sm:py-28">
-        <h1 className="text-balance text-center font-display text-4xl font-semibold leading-tight text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] sm:text-6xl">
+      <div ref={contentRef} className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-28">
+        <h1 className="text-balance font-display text-4xl font-semibold leading-tight text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.5)] sm:text-6xl">
           {headline}
         </h1>
+        {subtitle && (
+          <p className="mt-3 max-w-2xl text-lg text-white/95 [text-shadow:0_1px_12px_rgba(0,0,0,0.5)] sm:text-xl">
+            {subtitle}
+          </p>
+        )}
 
         <div className="mt-10 sm:mt-12">
           <HeroSearchBar destinations={destinations} submitLabel={searchButton} prompt={searchPrompt} />
         </div>
 
-        <p className="mt-6 text-center text-sm text-white/90 [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
+        <p className="mt-6 text-center text-sm text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
           {customPrefix}{" "}
           <Link href={customHref} className="font-semibold underline underline-offset-4 hover:text-white">
             {customLink}

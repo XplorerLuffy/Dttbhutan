@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { LogoLockupReverse } from "@/components/Logo";
+import { LogoLockup } from "@/components/Logo";
 import DestinationsMenu from "@/components/nav/DestinationsMenu";
 import PackagesMenu from "@/components/nav/PackagesMenu";
 import MobileMenu from "@/components/nav/MobileMenu";
@@ -22,14 +22,8 @@ import { getSiteContent, companyFrom } from "@/lib/content";
  */
 
 const MAIN_LINKS = [
-  { href: "/packages?category=TREKKING", label: "Trekking" },
   { href: "/travel-guide", label: "Travel Guide" },
-  { href: "/gallery", label: "Gallery" },
   { href: "/about", label: "About Us" },
-  // Last in the row but first in intent: the assistant is the front door for
-  // anyone who hasn't decided what they want yet, which the fixed links above
-  // can't serve.
-  { href: "/assistant", label: "Ask DRUKA" },
 ];
 
 export default async function NavBar() {
@@ -47,61 +41,39 @@ export default async function NavBar() {
   ]);
   const company = companyFrom(content);
 
+  const link = "text-brand-900 transition-colors hover:text-brand-600";
+
   return (
-    <header className="bg-brand-900 text-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex items-center justify-between gap-3 py-3 sm:gap-4">
-          {/* The logo carries the agency name itself, so there is no separate
-              text beside it; the link's label keeps the name for screen
-              readers and search engines. min-w-0 lets it give way on the
-              narrowest phones instead of pushing the menu button off screen. */}
-          <Link href="/" aria-label={`${company.name} — home`} className="flex min-w-0 items-center">
-            <LogoLockupReverse className="h-11 w-auto max-w-full sm:h-14" />
+    <header className="border-b border-stone-200/70 bg-[#fbf8f4] text-brand-900">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <Link href="/" aria-label={`${company.name} — home`} className="flex min-w-0 shrink-0 items-center">
+          <LogoLockup className="h-11 w-auto max-w-full sm:h-12" />
+        </Link>
+
+        <nav className="hidden items-center gap-9 text-[15px] font-semibold lg:flex">
+          <PackagesMenu packages={packages} triggerClassName={link} label="Tours" />
+          <DestinationsMenu destinations={destinations} triggerClassName={link} />
+          {MAIN_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className={link}>
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden items-center gap-5 text-sm lg:flex">
+          <CurrencySelector className="rounded-lg border border-brand-900/30 bg-transparent px-3 py-1.5 text-sm font-medium text-brand-900 hover:border-brand-900/60" />
+          <Link href="/login" className="font-semibold text-brand-900 hover:text-brand-600">
+            Log in
           </Link>
-
-          <div className="hidden items-center gap-6 text-sm lg:flex">
-            <Link href="/contact" className="text-white/80 transition-colors hover:text-white">
-              Contact Us
-            </Link>
-            <CurrencySelector className="rounded-md border border-white/25 bg-transparent px-2 py-1 text-sm text-white hover:border-white/50 [&>option]:text-stone-900" />
-            <Link
-              href="/login"
-              className="rounded-full bg-white px-5 py-1.5 font-semibold text-brand-900 transition-colors hover:bg-white/90"
-            >
-              Log in
-            </Link>
-          </div>
-
-          <MobileMenu destinations={destinations} packages={packages} className="lg:hidden" />
-        </div>
-      </div>
-
-      <div className="hidden border-t border-white/15 lg:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6">
-          <nav className="flex items-center gap-8 text-[15px] font-medium">
-            <PackagesMenu packages={packages} triggerClassName="text-white/90 hover:text-white" />
-            <DestinationsMenu
-              destinations={destinations}
-              triggerClassName="text-white/90 hover:text-white"
-            />
-            {MAIN_LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="text-white/90 transition-colors hover:text-white"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-
           <Link
-            href="/contact"
-            className="shrink-0 rounded-full bg-gold-400 px-6 py-2 font-display text-sm font-semibold text-brand-950 transition-colors hover:bg-gold-300"
+            href="/custom-tour"
+            className="rounded-xl bg-brand-900 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-brand-800"
           >
-            Enquire Now
+            Plan Your Trip
           </Link>
         </div>
+
+        <MobileMenu destinations={destinations} packages={packages} className="lg:hidden" />
       </div>
     </header>
   );

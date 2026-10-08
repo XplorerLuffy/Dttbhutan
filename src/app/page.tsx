@@ -3,6 +3,7 @@ import { startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content";
 import Hero from "@/components/home/Hero";
+import FindYourBhutan from "@/components/home/FindYourBhutan";
 import ScrollReveal from "@/components/ScrollReveal";
 import TripCard from "@/components/listing/TripCard";
 import DestinationCard from "@/components/home/DestinationCard";
@@ -163,6 +164,7 @@ export default async function HomePage() {
       <Hero
         destinations={destinations}
         headline={content("home.hero.headline")}
+        subtitle={content("home.hero.subtitle")}
         searchButton={content("home.hero.searchButton")}
         searchPrompt={content("home.hero.searchPrompt")}
         customPrefix={content("home.hero.customPrefix")}
@@ -172,6 +174,8 @@ export default async function HomePage() {
         videoUrl={content("home.hero.videoUrl")}
         posterUrl={content("home.hero.posterUrl")}
       />
+
+      <FindYourBhutan />
 
       {collections.length > 0 && (
         <Container className="py-20 sm:py-24">

@@ -27,19 +27,13 @@ const DURATIONS = [
 ];
 
 const CATEGORIES = [
-  { value: "CULTURAL", label: "Cultural" },
-  { value: "TREKKING", label: "Trekking" },
-  { value: "WILDLIFE", label: "Wildlife" },
-  { value: "HONEYMOON", label: "Honeymoon" },
+  { value: "CULTURAL", label: "Culture & Heritage" },
+  { value: "TREKKING", label: "Trekking & Adventure" },
+  { value: "WILDLIFE", label: "Wildlife & Nature" },
+  { value: "HONEYMOON", label: "Honeymoon & Retreats" },
 ];
 
-const DIFFICULTIES = [
-  { value: "EASY", label: "Easy" },
-  { value: "MODERATE", label: "Moderate" },
-  { value: "CHALLENGING", label: "Challenging" },
-];
-
-const FIELD_LABELS = ["Where", "How long", "What", "Pace"];
+const FIELD_LABELS = ["Destination", "Duration", "Travel Style"];
 
 export default function HeroSearchBar({
   destinations,
@@ -98,9 +92,10 @@ export default function HeroSearchBar({
       >
         <Field
           ref={firstFieldRef}
-          label="Where"
+          label="Destination"
           name="destination"
-          placeholder="Search destinations"
+          placeholder="Where would you like to go?"
+          icon="pin"
         >
           {destinations.map((d) => (
             <option key={d.id} value={d.slug}>
@@ -111,7 +106,7 @@ export default function HeroSearchBar({
 
         <Divider />
 
-        <Field label="How long" name="duration" placeholder="Add trip length">
+        <Field label="Duration" name="duration" placeholder="Choose trip length" icon="calendar">
           {DURATIONS.map((d) => (
             <option key={d.value} value={d.value}>
               {d.label}
@@ -121,7 +116,7 @@ export default function HeroSearchBar({
 
         <Divider />
 
-        <Field label="What" name="category" placeholder="Choose your style">
+        <Field label="Travel Style" name="category" placeholder="Find your kind of journey" icon="mountain">
           {CATEGORIES.map((c) => (
             <option key={c.value} value={c.value}>
               {c.label}
@@ -129,21 +124,12 @@ export default function HeroSearchBar({
           ))}
         </Field>
 
-        <Divider />
-
-        <Field label="Pace" name="difficulty" placeholder="How hard?">
-          {DIFFICULTIES.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
-            </option>
-          ))}
-        </Field>
-
         <button
           type="submit"
-          className="mt-1 shrink-0 rounded-full bg-brand-700 px-8 py-4 font-display text-base font-semibold text-white transition-colors hover:bg-brand-800 sm:mt-0 sm:self-center sm:py-3.5"
+          className="mt-1 flex shrink-0 items-center justify-center gap-2 rounded-full bg-brand-900 px-8 py-4 font-display text-base font-semibold text-white transition-colors hover:bg-brand-800 sm:mt-0 sm:self-center sm:py-3.5"
         >
           {submitLabel}
+          <span aria-hidden>›</span>
         </button>
       </div>
     </form>
@@ -156,11 +142,13 @@ function Divider() {
 
 const Field = forwardRef<
   HTMLSelectElement,
-  { label: string; name: string; placeholder: string; children: React.ReactNode }
->(function Field({ label, name, placeholder, children }, ref) {
+  { label: string; name: string; placeholder: string; icon: "pin" | "calendar" | "mountain"; children: React.ReactNode }
+>(function Field({ label, name, placeholder, icon, children }, ref) {
   return (
-    <label className="group relative min-w-0 flex-1 cursor-pointer rounded-2xl px-5 py-2.5 transition-colors hover:bg-stone-50 sm:rounded-full">
-      <span className="block font-display text-base font-semibold text-stone-900">{label}</span>
+    <label className="group relative flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-2xl px-5 py-2.5 transition-colors hover:bg-stone-50 sm:rounded-full">
+      <FieldIcon name={icon} />
+      <span className="min-w-0 flex-1">
+      <span className="block text-sm font-semibold text-stone-900">{label}</span>
       {/* The select is transparent and sits over its own chevron so the whole
           segment stays one click target, the way a native combobox would. */}
       <select
@@ -173,13 +161,37 @@ const Field = forwardRef<
         <option value="">{placeholder}</option>
         {children}
       </select>
+      </span>
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-3.5 right-4 h-4 w-4 text-stone-400"
+        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500"
       >
         <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </label>
   );
 });
+
+function FieldIcon({ name }: { name: "pin" | "calendar" | "mountain" }) {
+  const common = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, className: "h-5 w-5 shrink-0 text-gold-600" } as const;
+  if (name === "pin")
+    return (
+      <svg {...common}>
+        <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" />
+        <circle cx="12" cy="10" r="2.3" />
+      </svg>
+    );
+  if (name === "calendar")
+    return (
+      <svg {...common}>
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M4 10h16M9 3v4M15 3v4" />
+      </svg>
+    );
+  return (
+    <svg {...common}>
+      <path d="m3 19 6-11 4 7 2-3 6 7H3Z" />
+    </svg>
+  );
+}
