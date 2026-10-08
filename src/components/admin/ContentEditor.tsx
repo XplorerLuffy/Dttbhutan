@@ -155,10 +155,10 @@ export default function ContentEditor({
                   type="button"
                   onClick={() => setActiveGroup(g.id)}
                   aria-current={g.id === activeGroup ? "true" : undefined}
-                  className={`flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                  className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
                     g.id === activeGroup
-                      ? "bg-brand-700 text-white"
-                      : "text-stone-700 hover:bg-stone-100"
+                      ? "bg-brand-900 text-white"
+                      : "text-stone-700 hover:bg-white"
                   }`}
                 >
                   {g.label}
