@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import DashboardShell, { type DashboardNavItem } from "@/components/dashboard/DashboardShell";
 import { getCurrentUser } from "@/lib/auth";
 import { getAdminWorkload } from "@/lib/admin/workload";
+import { getSiteContent } from "@/lib/content";
 import { ADMIN_IDLE_MS } from "@/lib/adminSession";
 import AuthLayout from "@/components/auth/AuthLayout";
 import LoginForm from "@/components/auth/LoginForm";
@@ -40,46 +41,52 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     );
   }
 
-  const work = await getAdminWorkload();
+  const [work, content] = await Promise.all([getAdminWorkload(), getSiteContent()]);
 
   const nav: DashboardNavItem[] = [
-    { href: "/chim", label: "Overview", section: "Today" },
+    { href: "/chim", label: "Overview", icon: "overview", section: "Today" },
 
-    { href: "/chim/bookings", label: "Bookings", section: "Operations", badge: work.bookings },
-    { href: "/chim/enquiries", label: "Enquiries", section: "Operations", badge: work.enquiries },
+    { href: "/chim/bookings", label: "Bookings", icon: "bookings", section: "Operations", badge: work.bookings },
+    { href: "/chim/enquiries", label: "Enquiries", icon: "enquiries", section: "Operations", badge: work.enquiries },
     {
       href: "/chim/custom-tours",
-      label: "Custom tour requests",
+      label: "Custom tour requests", icon: "custom",
       section: "Operations",
       badge: work.customTours,
     },
     {
       href: "/chim/vendors",
-      label: "Vendor approvals",
+      label: "Vendor approvals", icon: "vendors",
       section: "Operations",
       badge: work.vendors,
     },
     {
       href: "/chim/gps/trips",
-      label: "GPS mileage reports",
+      label: "GPS mileage reports", icon: "gps",
       section: "Operations",
       badge: work.flaggedTrips,
     },
 
-    { href: "/chim/packages", label: "Package tours", section: "Catalogue" },
-    { href: "/chim/destinations", label: "Destinations", section: "Catalogue" },
-    { href: "/chim/travel-guide", label: "Travel guide", section: "Catalogue" },
+    { href: "/chim/packages", label: "Package tours", icon: "packages", section: "Catalogue" },
+    { href: "/chim/destinations", label: "Destinations", icon: "destinations", section: "Catalogue" },
+    { href: "/chim/travel-guide", label: "Travel guide", icon: "guide", section: "Catalogue" },
 
-    { href: "/chim/content", label: "Site content", section: "Content" },
-    { href: "/chim/content/pages", label: "Page content", section: "Content" },
-    { href: "/chim/knowledge", label: "DRUKA knowledge", section: "Content" },
+    { href: "/chim/content", label: "Site content", icon: "content", section: "Content" },
+    { href: "/chim/content/pages", label: "Page content", icon: "pages", section: "Content" },
+    { href: "/chim/knowledge", label: "DRUKA knowledge", icon: "knowledge", section: "Content" },
 
-    { href: "/chim/exchange-rates", label: "Exchange rates", section: "Settings" },
-    { href: "/chim/account", label: "Your account", section: "Settings" },
+    { href: "/chim/exchange-rates", label: "Exchange rates", icon: "rates", section: "Settings" },
+    { href: "/chim/account", label: "Your account", icon: "account", section: "Settings" },
   ];
 
   return (
-    <DashboardShell title="Admin" nav={nav} realm="admin">
+    <DashboardShell
+      title="Admin"
+      nav={nav}
+      realm="admin"
+      user={{ name: user.name, email: user.email }}
+      tagline={content("footer.tagline")}
+    >
       <AdminSessionGuard idleMs={ADMIN_IDLE_MS} />
       {children}
     </DashboardShell>

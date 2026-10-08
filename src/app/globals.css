@@ -125,3 +125,20 @@ label:has(:is(input, select, textarea)[required])::after {
   color: #dc2626;
   font-weight: 600;
 }
+
+/*
+ * Fingertip-sized controls in the admin area on phones. Many admin buttons and
+ * text links were 18–30px tall — easy to miss with a thumb, which read as
+ * "the button doesn't work". Buttons get a 40px minimum; plain text links get
+ * the same hit area through padding that is cancelled by an equal negative
+ * margin, so the text doesn't move. Cards and pill links already have height.
+ */
+@media (max-width: 640px) {
+  .admin-ui button {
+    min-height: 2.5rem;
+  }
+  .admin-ui a:not([class*="rounded"]) {
+    padding-block: 0.7rem;
+    margin-block: -0.7rem;
+  }
+}
