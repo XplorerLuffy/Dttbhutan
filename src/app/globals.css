@@ -111,3 +111,17 @@ h3 {
 .leaflet-container {
   isolation: isolate;
 }
+
+/*
+ * A red asterisk on every label whose field is required. Driven by the
+ * field's own `required` attribute, so a form can't mark one thing and
+ * enforce another, and new forms get it without any extra markup. Covers the
+ * two shapes labels take here: a label directly before its field, and a
+ * label wrapping it.
+ */
+label:has(+ :is(input, select, textarea)[required])::after,
+label:has(:is(input, select, textarea)[required])::after {
+  content: " *";
+  color: #dc2626;
+  font-weight: 600;
+}
