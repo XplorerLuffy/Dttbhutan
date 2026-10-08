@@ -189,7 +189,7 @@ export default async function AdminHomePage({
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#fcf6e9] via-[#fcf6e9]/90 to-transparent" />
         <div className="px-5 py-8 sm:px-8 sm:py-10">
-          <h1 className="font-display text-3xl font-semibold text-stone-900 sm:text-4xl">
+          <h1 data-hero className="font-display text-3xl font-semibold text-stone-900 sm:text-4xl">
             {greeting}, {first}
           </h1>
           <p className="mt-1.5 max-w-md text-sm text-stone-700 sm:text-base">

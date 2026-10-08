@@ -142,3 +142,73 @@ label:has(:is(input, select, textarea)[required])::after {
     margin-block: -0.7rem;
   }
 }
+
+/*
+ * The admin area's look, applied to the shared building blocks so every admin
+ * page matches the overview without being edited one by one: rounder white
+ * cards on the warm page, deeper navy buttons, softer inputs, and the serif
+ * display face for headings. Scoped to .admin-ui so the public site, which
+ * uses the same classes, is untouched.
+ */
+.admin-ui .card {
+  border-radius: 1rem;
+  border-color: #e7e2d9;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgb(60 40 10 / 0.04);
+}
+.admin-ui .rounded-lg.border.bg-white {
+  border-radius: 1rem;
+  border-color: #e7e2d9;
+}
+.admin-ui .btn-primary,
+.admin-ui .btn-secondary {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.admin-ui .btn-primary {
+  background-color: #0b2a5b;
+}
+.admin-ui .btn-primary:hover:not(:disabled) {
+  background-color: #123a78;
+}
+.admin-ui .btn-secondary {
+  border-color: #d9d3c7;
+}
+.admin-ui .input {
+  border-radius: 0.75rem;
+  border-color: #d9d3c7;
+  background-color: #fff;
+  padding: 0.6rem 0.85rem;
+}
+.admin-ui .badge,
+.admin-ui [class*="badge-"] {
+  padding: 0.2rem 0.65rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.admin-ui h1:not([data-hero]) {
+  font-family: var(--font-display), serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #1c1917;
+}
+.admin-ui h2:not([data-hero]) {
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  color: #1c1917;
+}
+@media (max-width: 640px) {
+  .admin-ui h1:not([data-hero]) {
+    font-size: 1.5rem;
+  }
+}
