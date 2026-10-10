@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -8,12 +9,9 @@ import Money from "@/components/Money";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Bhutan Tour Packages & Trekking Tours",
-  description:
-    "Bhutan tour packages with day-by-day itineraries, licensed guides, hotels and transport included.",
-  alternates: { canonical: "/packages" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("packages", "/packages");
+}
 
 export const dynamic = "force-dynamic";
 

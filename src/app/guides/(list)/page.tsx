@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -7,12 +8,9 @@ import Money from "@/components/Money";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Licensed tour guides in Bhutan",
-  description:
-    "Browse licensed Bhutanese tour guides by language, speciality and region, with daily rates and real availability.",
-  alternates: { canonical: "/guides" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("guides", "/guides");
+}
 
 export const dynamic = "force-dynamic";
 

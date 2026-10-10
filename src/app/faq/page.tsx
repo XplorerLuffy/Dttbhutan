@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,12 +8,9 @@ import RichText from "@/components/RichText";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Bhutan Travel FAQ: Visas, SDF, Guides & Booking",
-  description:
-    "Common questions about visiting Bhutan: visas, the Sustainable Development Fee, guides, booking, payment and cancellations.",
-  alternates: { canonical: "/faq" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("faq", "/faq");
+}
 
 /**
  * Questions and categories are editable under /chim/content/pages.

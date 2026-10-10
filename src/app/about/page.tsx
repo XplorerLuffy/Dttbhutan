@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,12 +10,9 @@ import {
   paragraphs,
 } from "@/lib/content";
 
-export const metadata: Metadata = {
-  title: "About Us — Bhutan Tour Operator",
-  description:
-    "Droelma Tours & Travels (DTT) is a Bhutan-based tour operator arranging licensed guides, hotels, transport and custom itineraries across all 20 dzongkhags.",
-  alternates: { canonical: "/about" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("about", "/about");
+}
 
 /** The four cards under "What we do". Numbered rather than named so the
  * registry can hold them as flat keys the admin form renders without any

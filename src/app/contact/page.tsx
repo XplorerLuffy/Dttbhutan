@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,12 +8,9 @@ import OpeningHours from "@/components/company/OpeningHours";
 import SocialLinks from "@/components/company/SocialLinks";
 import { getSiteContent, companyFrom, formatAddress } from "@/lib/content";
 
-export const metadata: Metadata = {
-  title: "Contact us",
-  description:
-    "Get in touch with Droelma Tours & Travels about a trip to Bhutan — no account needed. We usually reply within one working day.",
-  alternates: { canonical: "/contact" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("contact", "/contact");
+}
 
 export default async function ContactPage({
   searchParams,

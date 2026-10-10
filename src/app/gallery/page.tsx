@@ -1,14 +1,13 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Bhutan Photo Gallery",
-  description: "A look at Bhutan's destinations, tour packages, hotels, and guides on Droelma Tours & Travels.",
-  alternates: { canonical: "/gallery" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("gallery", "/gallery");
+}
 
 export const dynamic = "force-dynamic";
 

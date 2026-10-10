@@ -151,7 +151,7 @@ export default async function SeoDashboardPage() {
   const score = Math.round((techScore * 0.5 + pageScore * 0.5) * 100);
   const tone = score >= 80 ? "text-emerald-700" : score >= 55 ? "text-amber-700" : "text-red-700";
 
-  const seoGroup = CONTENT_GROUPS.filter((g) => g.id === "seo");
+  const seoGroup = CONTENT_GROUPS.filter((g) => g.id === "seo" || g.id === "seoPages");
   const initial: Record<string, string> = {};
   for (const g of seoGroup) for (const f of g.fields) initial[f.key] = content(f.key);
 
@@ -223,8 +223,8 @@ export default async function SeoDashboardPage() {
       </section>
 
       <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-        <h2 className="font-display text-lg font-semibold text-stone-900">Connect Google and Bing</h2>
-        <p className="mb-3 text-sm text-stone-600">Paste the verification codes here. They are added to every page automatically.</p>
+        <h2 className="font-display text-lg font-semibold text-stone-900">Search settings</h2>
+        <p className="mb-3 text-sm text-stone-600">Edit the page titles and Google descriptions of the main pages, or paste your Google and Bing verification codes. Changes appear on the site straight away.</p>
         <ContentEditor groups={seoGroup} initial={initial} />
       </section>
 

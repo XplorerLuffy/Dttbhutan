@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import Image from "next/image";
 import MotionCard from "@/components/MotionCard";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -6,12 +7,9 @@ import { getSiteContent } from "@/lib/content";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Bhutan Destinations: Places to Visit in All 20 Dzongkhags",
-  description:
-    "Explore all 20 dzongkhags (districts) of Bhutan — where to stay, which guides cover each region, and the tours that visit them.",
-  alternates: { canonical: "/destinations" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("destinations", "/destinations");
+}
 
 export const dynamic = "force-dynamic";
 

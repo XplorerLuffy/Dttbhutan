@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import ArticleCard from "@/components/ArticleCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import { prisma } from "@/lib/prisma";
@@ -5,12 +6,9 @@ import { getSiteContent } from "@/lib/content";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Bhutan Travel Guide: Visas, SDF & Best Time to Visit",
-  description:
-    "Practical answers about visiting Bhutan — visas, the Sustainable Development Fee, when to go, and what to expect on the ground.",
-  alternates: { canonical: "/travel-guide" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("travelGuide", "/travel-guide");
+}
 
 export const dynamic = "force-dynamic";
 

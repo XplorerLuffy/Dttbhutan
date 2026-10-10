@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -7,12 +8,9 @@ import Money from "@/components/Money";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Transport & vehicle hire in Bhutan",
-  description:
-    "Hire vehicles with licensed drivers across Bhutan. GPS-verified trip mileage means your invoice matches the distance actually driven.",
-  alternates: { canonical: "/vehicles" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("vehicles", "/vehicles");
+}
 
 export const dynamic = "force-dynamic";
 

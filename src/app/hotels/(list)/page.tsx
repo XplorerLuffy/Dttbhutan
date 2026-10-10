@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -7,12 +8,9 @@ import Money from "@/components/Money";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Hotels & homestays in Bhutan",
-  description:
-    "Find hotels and homestays across all 20 dzongkhags of Bhutan, with real room availability and nightly rates.",
-  alternates: { canonical: "/hotels" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("hotels", "/hotels");
+}
 
 export const dynamic = "force-dynamic";
 

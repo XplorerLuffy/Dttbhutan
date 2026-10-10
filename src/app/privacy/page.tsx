@@ -1,15 +1,13 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import type { Metadata } from "next";
 import LegalPageShell, { Clause } from "@/components/legal/LegalPageShell";
 import RichText from "@/components/RichText";
 import { getCompany } from "@/lib/content";
 import { getSections } from "@/lib/content/sections";
 
-export const metadata: Metadata = {
-  title: "Privacy policy",
-  description:
-    "What personal data we collect, why we need it, who we share it with, and how long we keep it.",
-  alternates: { canonical: "/privacy" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("privacy", "/privacy");
+}
 
 export default async function PrivacyPage() {
   const [company, { sections }] = await Promise.all([getCompany(), getSections("privacy")]);

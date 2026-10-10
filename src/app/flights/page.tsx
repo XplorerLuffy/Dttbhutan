@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import { AIRPORTS, ROUTES as ROUTE_ROWS, airportLabel, destinationsFrom, findRoute } from "@/lib/flights/network";
 import FlightRequestForm from "@/components/booking/FlightRequestForm";
 import { getSiteContent } from "@/lib/content";
@@ -5,12 +6,9 @@ import { flightSearchSchema } from "@/lib/validation";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Flights to Bhutan",
-  description:
-    "Fly to Paro, Bhutan's only international airport, on Drukair or Bhutan Airlines. Choose your route and we'll confirm flights and fares.",
-  alternates: { canonical: "/flights" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("flights", "/flights");
+}
 
 export const dynamic = "force-dynamic";
 

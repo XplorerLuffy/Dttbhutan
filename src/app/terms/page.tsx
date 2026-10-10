@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import type { Metadata } from "next";
 import LegalPageShell, { Clause } from "@/components/legal/LegalPageShell";
 import CompanyFact from "@/components/company/CompanyFact";
@@ -5,12 +6,9 @@ import RichText from "@/components/RichText";
 import { getCompany } from "@/lib/content";
 import { getSections } from "@/lib/content/sections";
 
-export const metadata: Metadata = {
-  title: "Terms & conditions",
-  description:
-    "The terms that apply when booking guides, accommodation, transport, flights and package tours.",
-  alternates: { canonical: "/terms" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("terms", "/terms");
+}
 
 export default async function TermsPage() {
   const [company, { sections }] = await Promise.all([getCompany(), getSections("terms")]);

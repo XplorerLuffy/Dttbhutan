@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import Link from "next/link";
 import { startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
@@ -20,21 +21,17 @@ import FeatureBanner from "@/components/home/FeatureBanner";
 import type { Testimonial } from "@/components/home/TestimonialCarousel";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  // The home page is the one most likely to rank for the head terms, so it
-  // leads with them rather than with the brand, which the template would
-  // otherwise repeat.
-  title: { absolute: "Bhutan Tour Packages & Travel Agency | Droelma Tours & Travels (DTT)" },
-  description:
-    "Plan your Bhutan trip with Droelma Tours & Travels (DTT), a licensed Bhutanese tour operator — tour packages, treks, festival tours, local guides, hotels and custom trips, booked directly online.",
-  alternates: { canonical: "/" },
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
   openGraph: {
     title: "Droelma Tours & Travels (DTT) | Bhutan Tour Packages & Custom Trips",
     description:
       "Discover Bhutan, your way — tour packages, treks, festival tours, verified local guides and custom trips, booked directly online.",
     url: "/",
   },
-};
+  };
+  return { ...base, ...(await pageMetadata("home", "/", { absoluteTitle: true })) };
+}
 
 /**
  * The homepage lays out its own width rather than sitting inside the shared

@@ -1,15 +1,13 @@
+import { pageMetadata } from "@/lib/pageMeta";
 import type { Metadata } from "next";
 import LegalPageShell, { Clause, Confirm } from "@/components/legal/LegalPageShell";
 import RichText from "@/components/RichText";
 import { getCompany, getSiteContent } from "@/lib/content";
 import { getSections } from "@/lib/content/sections";
 
-export const metadata: Metadata = {
-  title: "Cancellation & refund policy",
-  description:
-    "How cancellations, date changes and refunds work, including the refund tiers by notice period.",
-  alternates: { canonical: "/cancellation" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("cancellation", "/cancellation");
+}
 
 export default async function CancellationPage() {
   const [company, content, { sections }] = await Promise.all([
