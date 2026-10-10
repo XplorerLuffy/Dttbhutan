@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { DzongkhagRegion } from "@prisma/client";
 import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
 import { apiErrorMessage } from "@/lib/apiError";
+import ImageListUpload, { type ImageItem } from "@/components/admin/ImageListUpload";
 
 type InitialValues = {
   id: string;
@@ -15,6 +16,7 @@ type InitialValues = {
   metaDescription: string;
   highlights: string[];
   photoUrl: string;
+  photoUrls: string[];
   latitude: string;
   longitude: string;
 };
@@ -51,7 +53,10 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
   const [description, setDescription] = useState(initial.description);
   const [metaDescription, setMetaDescription] = useState(initial.metaDescription);
   const [highlights, setHighlights] = useState(initial.highlights.join("\n"));
-  const [photoUrl, setPhotoUrl] = useState(initial.photoUrl);
+  // One list in the form: the first photo is the main one (the card and share image), the rest form the page gallery.
+  const [photos, setPhotos] = useState<ImageItem[]>(() =>
+    [initial.photoUrl, ...initial.photoUrls].filter(Boolean).map((url) => ({ url }))
+  );
   const [latitude, setLatitude] = useState(initial.latitude);
   const [longitude, setLongitude] = useState(initial.longitude);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +76,9 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
         description: nullableText(description),
         metaDescription: nullableText(metaDescription),
         highlights: splitLines(highlights),
-        photoUrl: nullableText(photoUrl),
+        // null, not undefined: removing every photo has to clear the main one.
+        photoUrl: photos[0]?.url ?? null,
+        photoUrls: photos.slice(1).map((p) => p.url),
         latitude: nullableNumber(latitude),
         longitude: nullableNumber(longitude),
       }),
@@ -88,8 +95,6 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
     router.push("/chim/destinations");
     router.refresh();
   }
-
-  const trimmedPhoto = photoUrl.trim();
 
   return (
     <form onSubmit={handleSubmit} className="card space-y-4">
@@ -150,18 +155,15 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
         />
       </Field>
 
-      <Field label="Photo URL (used on the homepage destination grid and the listing card)">
-        <input value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} className="input" />
-      </Field>
-
-      {trimmedPhoto && (
-        <div className="overflow-hidden rounded-lg border border-stone-200">
-          {/* Arbitrary admin-entered URL, including remote hosts not in the
-              next.config image allowlist — next/image would throw on those. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={trimmedPhoto} alt="" className="aspect-[16/9] w-full object-cover" />
-        </div>
-      )}
+      <ImageListUpload
+        images={photos}
+        onChange={setPhotos}
+        folder="destinations"
+        max={12}
+        label="Photos"
+        hint="The first photo is the main one: the destination card, the homepage grid and the share image. The others form a gallery on the destination page. Each photo gets alt text automatically, such as “Paro, Bhutan: landscape and landmarks”."
+        leadLabel="Main"
+      />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Latitude (optional)">

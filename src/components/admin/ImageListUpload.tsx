@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 export type ImageItem = { url: string; caption?: string };
 
-type Folder = "uploads" | "guides" | "hotels" | "vehicles" | "packages" | "articles";
+type Folder = "uploads" | "guides" | "hotels" | "vehicles" | "destinations" | "packages" | "articles";
 
 /**
  * Photos an admin adds by uploading — several at once — instead of pasting

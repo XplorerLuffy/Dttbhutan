@@ -1,3 +1,5 @@
+import DetailGallery from "@/components/listing/DetailGallery";
+import { destinationAlt } from "@/lib/metaDescriptions";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -85,6 +87,13 @@ export default async function DestinationDetailPage({
           ]),
         ]}
       />
+      {[destination.photoUrl, ...destination.photoUrls].filter(Boolean).length > 0 && (
+        <DetailGallery
+          photos={[destination.photoUrl, ...destination.photoUrls]}
+          label={destination.name}
+          alt={destinationAlt(destination.name)}
+        />
+      )}
       <p className="text-sm font-medium uppercase tracking-wide text-gold-700">Bhutan</p>
       <h1 className="mt-1 text-3xl font-bold">{destination.name}</h1>
       {destination.description && <p className="mt-3 max-w-2xl text-stone-700">{destination.description}</p>}

@@ -380,6 +380,8 @@ export const destinationAdminSchema = z.object({
   metaDescription: z.string().trim().max(200).nullish(),
   highlights: z.array(z.string().min(1).max(200)).max(40),
   photoUrl: z.string().max(500).nullish(),
+  // optional, not default([]): an update that omits it must leave the gallery alone.
+  photoUrls: z.array(z.string().min(1).max(500)).max(20).optional(),
   latitude: z.number().min(-90).max(90).nullish(),
   longitude: z.number().min(-180).max(180).nullish(),
 });

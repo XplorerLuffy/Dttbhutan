@@ -125,6 +125,8 @@ model Destination {
   metaDescription String?
   highlights  String[] // notable sites/attractions
   photoUrl    String?
+  /// More photos of the place, shown in a gallery on its page. The first photo stays in photoUrl.
+  photoUrls   String[]        @default([])
   latitude    Float?
   longitude   Float?
   createdAt   DateTime        @default(now())

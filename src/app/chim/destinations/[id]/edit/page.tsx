@@ -38,6 +38,7 @@ export default async function EditDestinationPage({
           metaDescription: destination.metaDescription ?? "",
           highlights: destination.highlights,
           photoUrl: destination.photoUrl ?? "",
+          photoUrls: destination.photoUrls,
           latitude: destination.latitude?.toString() ?? "",
           longitude: destination.longitude?.toString() ?? "",
         }}

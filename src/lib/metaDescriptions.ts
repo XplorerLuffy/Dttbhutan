@@ -63,3 +63,9 @@ export function operatorAlt(businessName: string, index = 0, total = 1): string 
   const base = `${businessName}, a vehicle hire and transport operator in Bhutan`;
   return total > 1 ? `${base} (photo ${index + 1} of ${total})` : base;
 }
+
+/** Alt text for a destination photo: where it is, and which photo of the set. */
+export function destinationAlt(name: string, index = 0, total = 1): string {
+  const base = `${name}, Bhutan: landscape and landmarks of the ${name} district`;
+  return total > 1 ? `${base} (photo ${index + 1} of ${total})` : base;
+}
