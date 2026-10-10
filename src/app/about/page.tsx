@@ -56,7 +56,7 @@ export default async function AboutPage() {
           className="-z-10 object-cover opacity-45"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-950/70 via-brand-950/40 to-brand-950/80" />
-        <div className="mx-auto max-w-6xl px-4 py-12 text-center sm:px-6 sm:py-16">
+        <div className="w-full px-4 py-12 text-center sm:px-8 sm:py-16 lg:px-[7%]">
           {content("about.eyebrow") && (
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">
               {content("about.eyebrow")}
@@ -66,7 +66,7 @@ export default async function AboutPage() {
             {company.name}
           </h1>
           {content("about.intro") && (
-            <p className="mt-4 text-base leading-relaxed text-white/90 sm:text-lg">
+            <p className="mt-5 whitespace-pre-line text-left text-base leading-relaxed text-white/90 sm:text-lg">
               {content("about.intro")}
             </p>
           )}
