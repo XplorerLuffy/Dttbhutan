@@ -23,6 +23,7 @@ import { getSiteContent, companyFrom } from "@/lib/content";
  */
 
 const MAIN_LINKS = [
+  { href: "/travel-guide", label: "Travel Guide" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
 ];
@@ -48,10 +49,10 @@ export default async function NavBar() {
     <header className="border-b border-stone-200/70 bg-[#fbf8f4] text-brand-900">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/" aria-label={`${company.name} — home`} className="flex min-w-0 shrink-0 items-center">
-          <LogoLockup className="h-11 w-auto max-w-full sm:h-12" />
+          <LogoLockup className="h-10 w-auto max-w-full sm:h-11 xl:h-12" />
         </Link>
 
-        <nav className="hidden items-center gap-6 whitespace-nowrap text-[15px] font-semibold lg:flex xl:gap-9">
+        <nav className="hidden items-center gap-3.5 whitespace-nowrap text-[13.5px] font-semibold min-[1100px]:flex xl:gap-8 xl:text-[15px]">
           <PackagesMenu packages={packages} triggerClassName={link} label="Tours" />
           <ServicesMenu triggerClassName={link} />
           <DestinationsMenu destinations={destinations} triggerClassName={link} />
@@ -62,20 +63,20 @@ export default async function NavBar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-5 whitespace-nowrap text-sm lg:flex">
-          <CurrencySelector className="hidden rounded-lg border border-brand-900/30 bg-transparent px-3 py-1.5 text-sm font-medium text-brand-900 hover:border-brand-900/60 xl:block" />
+        <div className="hidden items-center gap-3 whitespace-nowrap text-sm min-[1100px]:flex xl:gap-5">
+          <CurrencySelector compact />
           <Link href="/login" className="font-semibold text-brand-900 hover:text-brand-600">
             Log in
           </Link>
           <Link
             href="/custom-tour"
-            className="rounded-xl bg-brand-900 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-brand-800"
+            className="rounded-xl bg-brand-900 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-brand-800 xl:px-5"
           >
             Plan Your Trip
           </Link>
         </div>
 
-        <MobileMenu destinations={destinations} packages={packages} className="lg:hidden" />
+        <MobileMenu destinations={destinations} packages={packages} className="min-[1100px]:hidden" />
       </div>
     </header>
   );
