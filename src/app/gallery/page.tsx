@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = "force-dynamic";
 
-type GalleryPhoto = { href: string; photoUrl: string; caption: string };
+type GalleryPhoto = { href: string; photoUrl: string; caption: string; alt: string };
 
 export default async function GalleryPage() {
   const content = await getSiteContent();
@@ -26,7 +26,7 @@ export default async function GalleryPage() {
     }),
     prisma.hotel.findMany({
       where: { status: "APPROVED" },
-      select: { id: true, name: true, photoUrls: true },
+      select: { id: true, name: true, photoUrls: true, destination: { select: { name: true } } },
     }),
     prisma.guideProfile.findMany({
       where: { status: "APPROVED", photoUrl: { not: null } },
@@ -34,20 +34,34 @@ export default async function GalleryPage() {
     }),
   ]);
 
+  // Alt text says what the picture is and where, in plain words — it is what
+  // screen readers read aloud and what Google Images uses to understand a photo.
   const photos: GalleryPhoto[] = [
-    ...destinations.map((d) => ({ href: `/destinations/${d.slug}`, photoUrl: d.photoUrl as string, caption: d.name })),
+    ...destinations.map((d) => ({
+      href: `/destinations/${d.slug}`,
+      photoUrl: d.photoUrl as string,
+      caption: d.name,
+      alt: `${d.name}, Bhutan: landscape and landmarks of the ${d.name} district`,
+    })),
     ...itineraries.map((it) => ({
       href: `/packages/${it.slug}`,
       photoUrl: it.coverPhotoUrl as string,
       caption: it.title,
+      alt: `${it.title}: Bhutan tour package`,
     })),
     ...hotels.flatMap((h) =>
-      h.photoUrls.map((url) => ({ href: `/hotels/${h.id}`, photoUrl: url, caption: h.name }))
+      h.photoUrls.map((url, i) => ({
+        href: `/hotels/${h.id}`,
+        photoUrl: url,
+        caption: h.name,
+        alt: `${h.name}, a hotel in ${h.destination.name}, Bhutan${h.photoUrls.length > 1 ? ` (photo ${i + 1} of ${h.photoUrls.length})` : ""}`,
+      }))
     ),
     ...guides.map((g) => ({
       href: `/guides/${g.id}`,
       photoUrl: g.photoUrl as string,
       caption: g.user.name,
+      alt: `${g.user.name}, licensed Bhutanese tour guide`,
     })),
   ];
 
@@ -78,7 +92,7 @@ export default async function GalleryPage() {
             >
               <Image
                 src={p.photoUrl}
-                alt={p.caption}
+                alt={p.alt}
                 width={400}
                 height={300}
                 unoptimized
