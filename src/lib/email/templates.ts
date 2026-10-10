@@ -549,7 +549,6 @@ export function enquiryReplyToSender(input: {
   attachmentNames?: string[];
   contact?: { phone?: string; email?: string };
 }): RenderedEmail {
-  const logo = `${siteUrl()}/logo/dtt-logo.png`;
   const web = siteUrl().replace(/^https?:\/\//, "");
   const paragraphs = input.body
     .split(/\n{2,}/)
