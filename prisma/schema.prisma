@@ -385,6 +385,8 @@ model Itinerary {
   title          String
   slug           String            @unique
   summary        String
+  /// The text search engines show under the page title (aim for 70–160 characters). Falls back to the summary.
+  metaDescription String?
   description    String?
   durationDays   Int
   pricePerPerson Decimal           @db.Decimal(10, 2)

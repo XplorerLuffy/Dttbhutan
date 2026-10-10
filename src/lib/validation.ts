@@ -271,6 +271,7 @@ export const itineraryAdminSchema = z.object({
     .max(150)
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens only"),
   summary: z.string().min(2).max(500),
+  metaDescription: z.string().trim().max(200).nullable().optional(),
   description: z.string().max(5000).optional(),
   durationDays: z.coerce.number().int().min(1).max(60),
   pricePerPerson: z.coerce.number().positive(),

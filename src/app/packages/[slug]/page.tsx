@@ -45,7 +45,9 @@ export async function generateMetadata({
   const itinerary = await prisma.itinerary.findUnique({ where: { slug } });
   if (!itinerary || itinerary.status !== "PUBLISHED") return { title: "Package not found" };
 
-  const description = `${itinerary.durationDays}-day Bhutan tour. ${itinerary.summary}`.slice(0, 160);
+  const description =
+    itinerary.metaDescription?.trim() ||
+    `${itinerary.durationDays}-day Bhutan tour. ${itinerary.summary}`.slice(0, 160);
 
   return {
     // "Bhutan tour package" is what people search for, and it is not always in

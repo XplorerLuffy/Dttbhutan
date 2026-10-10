@@ -39,6 +39,7 @@ type InitialValues = {
   title: string;
   slug: string;
   summary: string;
+  metaDescription: string;
   description: string;
   durationDays: number;
   pricePerPerson: number;
@@ -97,6 +98,7 @@ export default function ItineraryForm({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [summary, setSummary] = useState(initial?.summary ?? "");
+  const [metaDescription, setMetaDescription] = useState(initial?.metaDescription ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [durationDays, setDurationDays] = useState(initial?.durationDays ?? 5);
   const [pricePerPerson, setPricePerPerson] = useState(initial?.pricePerPerson ?? 0);
@@ -161,6 +163,7 @@ export default function ItineraryForm({
       title,
       slug,
       summary,
+      metaDescription: metaDescription.trim() || null,
       description: description || undefined,
       durationDays,
       pricePerPerson,
@@ -233,6 +236,17 @@ export default function ItineraryForm({
 
         <Field label="Summary (shown on listing cards)">
           <input value={summary} onChange={(e) => setSummary(e.target.value)} required maxLength={500} className="input" />
+        </Field>
+
+        <Field label={`Google description (${metaDescription.trim().length}/160 characters)`}>
+          <textarea
+            value={metaDescription}
+            onChange={(e) => setMetaDescription(e.target.value)}
+            rows={2}
+            maxLength={200}
+            className="input"
+            placeholder="The text Google shows under this package's title. Aim for 70–160 characters."
+          />
         </Field>
 
         <Field label="Full description (optional)">

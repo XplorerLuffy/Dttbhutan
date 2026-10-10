@@ -38,6 +38,7 @@ export default async function EditPackagePage({
           title: itinerary.title,
           slug: itinerary.slug,
           summary: itinerary.summary,
+          metaDescription: itinerary.metaDescription ?? "",
           description: itinerary.description ?? "",
           durationDays: itinerary.durationDays,
           pricePerPerson: Number(itinerary.pricePerPerson),

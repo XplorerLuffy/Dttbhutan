@@ -33,7 +33,7 @@ export default async function SeoDashboardPage() {
   const [packages, destinations, articles, hotels, guides] = await Promise.all([
     prisma.itinerary.findMany({
       where: { status: "PUBLISHED" },
-      select: { id: true, title: true, summary: true, description: true, coverPhotoUrl: true, _count: { select: { days: true, photos: true } } },
+      select: { id: true, title: true, summary: true, metaDescription: true, description: true, coverPhotoUrl: true, _count: { select: { days: true, photos: true } } },
     }),
     prisma.destination.findMany({ select: { id: true, name: true, description: true, photoUrl: true } }),
     prisma.article.findMany({
@@ -112,8 +112,9 @@ export default async function SeoDashboardPage() {
   const packageIssues: Issue[] = [];
   for (const p of packages) {
     const problems: string[] = [];
-    if (len(p.summary) < 70) problems.push("Summary is too short for a search description (aim for 70–160 characters)");
-    if (len(p.summary) > 160) problems.push("Summary is longer than Google shows (over 160 characters)");
+    const meta = len(p.metaDescription) || len(p.summary);
+    if (meta < 70) problems.push("Google description is too short (aim for 70–160 characters)");
+    if (meta > 160) problems.push("Google description is longer than Google shows (over 160 characters)");
     if (len(p.description) < 400) problems.push("Description is thin — write at least a few paragraphs");
     if (!p.coverPhotoUrl) problems.push("No cover photo (also the share image)");
     if (p._count.days < 3) problems.push("Fewer than 3 itinerary days written");
