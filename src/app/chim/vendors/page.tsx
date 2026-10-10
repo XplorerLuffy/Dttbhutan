@@ -115,7 +115,7 @@ export default async function AdminVendorsPage() {
                 status={g.status}
                 apiPath={`/api/admin/guides/${g.id}`}
                 editHref={`/chim/vendors/guides/${g.id}/edit`}
-                profileHref={`/guides/${g.id}`}
+                profileHref={`/chim/vendors/guides/${g.id}`}
               />
             </div>
           ))}
@@ -148,7 +148,7 @@ export default async function AdminVendorsPage() {
                 status={h.status}
                 apiPath={`/api/admin/hotels/${h.id}`}
                 editHref={`/chim/vendors/hotels/${h.id}/edit`}
-                profileHref={`/hotels/${h.id}`}
+                profileHref={`/chim/vendors/hotels/${h.id}`}
               />
             </div>
           ))}
@@ -184,7 +184,7 @@ export default async function AdminVendorsPage() {
                         status={v.status}
                         apiPath={`/api/admin/vehicles/${v.id}`}
                         editHref={`/chim/vendors/vehicles/${v.id}/edit`}
-                        profileHref={`/vehicles/${v.id}`}
+                        profileHref={`/chim/vendors/vehicles/${v.id}`}
                       />
                     </div>
                   ))}

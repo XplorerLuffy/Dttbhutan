@@ -22,6 +22,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  // Flights are quoted and ticketed by the team after a fare request; an
+  // offer posted from the browser carries a price and ticket number nobody has
+  // verified, so it must never become a confirmed booking.
+  if (parsed.data.type === "FLIGHT") {
+    return NextResponse.json(
+      { error: "Flights are requested from the Flights page; our team confirms fares and tickets." },
+      { status: 400 }
+    );
+  }
+
   try {
     const booking = await createBooking(user.id, parsed.data);
     await notifyBookingCreated(booking.id);

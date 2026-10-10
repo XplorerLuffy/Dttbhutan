@@ -1,18 +1,14 @@
-import { searchFlights } from "@/lib/flights/aggregator";
+import { AIRPORTS, ROUTES as ROUTE_ROWS, airportLabel, destinationsFrom, findRoute } from "@/lib/flights/network";
+import FlightRequestForm from "@/components/booking/FlightRequestForm";
 import { getSiteContent } from "@/lib/content";
 import { flightSearchSchema } from "@/lib/validation";
-import FlightBookingButton from "@/components/booking/FlightBookingButton";
-import ScrollReveal from "@/components/ScrollReveal";
-import MotionListItem from "@/components/MotionListItem";
-import type { FlightLeg, FlightOffer } from "@/lib/flights/aggregator";
-import Money from "@/components/Money";
 
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Flights to Bhutan",
   description:
-    "Search flights to Paro, Bhutan's only international airport, and book them alongside your ground arrangements.",
+    "Fly to Paro, Bhutan's only international airport, on Drukair or Bhutan Airlines. Choose your route and we'll confirm flights and fares.",
   alternates: { canonical: "/flights" },
 };
 
@@ -39,17 +35,29 @@ export default async function FlightsSearchPage({
 }) {
   const sp = await searchParams;
   const parsed = flightSearchSchema.safeParse({
-    origin: sp.origin,
-    destination: sp.destination,
+    origin: sp.origin?.toUpperCase(),
+    destination: sp.destination?.toUpperCase(),
     departureDate: sp.departureDate,
     returnDate: sp.returnDate || undefined,
     passengers: sp.passengers ?? "1",
     cabinClass: sp.cabinClass === "BUSINESS" ? "BUSINESS" : "ECONOMY",
   });
-
-  const offers = parsed.success ? await searchFlights(parsed.data) : [];
+  const search = parsed.success ? parsed.data : null;
+  const route = search ? findRoute(search.origin, search.destination) : null;
 
   const content = await getSiteContent();
+  const airports = Object.values(AIRPORTS);
+  const cabin = sp.cabinClass === "BUSINESS" ? "BUSINESS" : "ECONOMY";
+
+  const summary = search
+    ? [
+        `Flight fare request`,
+        `Route: ${airportLabel(search.origin)} to ${airportLabel(search.destination)}${search.returnDate ? " (return)" : " (one way)"}`,
+        `Departing: ${search.departureDate}${search.returnDate ? `, returning ${search.returnDate}` : ""}`,
+        `Passengers: ${search.passengers}`,
+        `Cabin: ${search.cabinClass === "BUSINESS" ? "Business" : "Economy"}`,
+      ].join("\n")
+    : "";
 
   return (
     <div>
@@ -59,37 +67,11 @@ export default async function FlightsSearchPage({
       )}
 
       <form className="card mb-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-6" method="get">
-        <input
-          name="origin"
-          placeholder="From (e.g. PBH)"
-          maxLength={3}
-          defaultValue={sp.origin ?? ""}
-          required
-          className="input uppercase"
-        />
-        <input
-          name="destination"
-          placeholder="To (e.g. BKK)"
-          maxLength={3}
-          defaultValue={sp.destination ?? ""}
-          required
-          className="input uppercase"
-        />
-        <input
-          name="departureDate"
-          type="date"
-          defaultValue={sp.departureDate ?? ""}
-          required
-          className="input"
-        />
-        <input
-          name="returnDate"
-          type="date"
-          defaultValue={sp.returnDate ?? ""}
-          placeholder="Return (optional)"
-          className="input"
-        />
-        <select name="cabinClass" defaultValue={sp.cabinClass === "BUSINESS" ? "BUSINESS" : "ECONOMY"} className="input">
+        <AirportSelect name="origin" label="From" value={sp.origin} airports={airports} />
+        <AirportSelect name="destination" label="To" value={sp.destination} airports={airports} />
+        <input name="departureDate" type="date" defaultValue={sp.departureDate ?? ""} required className="input" aria-label="Departure date" />
+        <input name="returnDate" type="date" defaultValue={sp.returnDate ?? ""} className="input" aria-label="Return date (optional)" />
+        <select name="cabinClass" defaultValue={cabin} className="input" aria-label="Cabin">
           {CABIN_OPTIONS.map((c) => (
             <option key={c.value} value={c.value}>
               {c.label}
@@ -97,93 +79,104 @@ export default async function FlightsSearchPage({
           ))}
         </select>
         <div className="flex gap-2">
-          <input
-            name="passengers"
-            type="number"
-            min={1}
-            max={9}
-            defaultValue={sp.passengers ?? "1"}
-            className="input"
-            aria-label="Passengers"
-          />
+          <input name="passengers" type="number" min={1} max={9} defaultValue={sp.passengers ?? "1"} className="input" aria-label="Passengers" />
           <button type="submit" className="btn-primary shrink-0">
             Search
           </button>
         </div>
       </form>
 
-      {!parsed.success ? (
-        <p className="text-stone-500">
-          Enter an origin, destination, and departure date to search flights.
-        </p>
-      ) : offers.length === 0 ? (
-        <p className="text-stone-500">No flights found for these dates.</p>
+      {!search ? (
+        <RouteList />
+      ) : !route ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold">Drukair and Bhutan Airlines don&apos;t fly {airportLabel(search.origin)} to {airportLabel(search.destination)} directly.</p>
+          {destinationsFrom(search.origin).length > 0 ? (
+            <p className="mt-1">
+              From {airportLabel(search.origin)} you can fly to:{" "}
+              {destinationsFrom(search.origin).map(airportLabel).join(", ")}.
+            </p>
+          ) : (
+            <p className="mt-1">Every flight to Bhutan lands at Paro (PBH). Choose Paro as one end of your journey, or ask us to arrange a connection.</p>
+          )}
+        </div>
       ) : (
-        <ScrollReveal className="space-y-3">
-          {offers.map((offer) => (
-            <FlightOfferCard key={offer.id} offer={offer} />
-          ))}
-        </ScrollReveal>
+        <div className="card space-y-4 p-5">
+          <div>
+            <p className="font-display text-xl font-bold text-brand-900">
+              {airportLabel(search.origin)} → {airportLabel(search.destination)}
+            </p>
+            <p className="text-sm text-stone-600">
+              {search.departureDate}
+              {search.returnDate ? ` – ${search.returnDate}` : " · one way"} · {search.passengers} passenger
+              {search.passengers > 1 ? "s" : ""} · {search.cabinClass === "BUSINESS" ? "Business" : "Economy"}
+            </p>
+          </div>
+          <ul className="space-y-2">
+            {route.airlines.map((a) => (
+              <li key={a.code} className="flex flex-wrap items-center gap-2 rounded-lg bg-stone-50 px-3 py-2 text-sm">
+                <span className="badge bg-gold-100 text-gold-800">{a.code}</span>
+                <span className="font-medium text-stone-900">{a.name}</span>
+                <span className="text-stone-500">· {route.note}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-sm text-stone-600">
+            Send us your request and we&apos;ll reply with the available flights, times and the fare for your
+            dates. Seats are confirmed by our team before you pay anything.
+          </p>
+          <FlightRequestForm summary={summary} />
+        </div>
       )}
     </div>
   );
 }
 
-function FlightOfferCard({ offer }: { offer: FlightOffer }) {
+function AirportSelect({
+  name,
+  label,
+  value,
+  airports,
+}: {
+  name: string;
+  label: string;
+  value?: string;
+  airports: { code: string; city: string; country: string }[];
+}) {
   return (
-    <MotionListItem className="listing-row sm:flex-row sm:items-center sm:justify-between p-4">
-      <div className="flex-1 space-y-3">
-        {offer.isBhutaneseCarrier && (
-          <span className="badge bg-gold-100 text-gold-800">Bhutanese carrier</span>
-        )}
-        <LegRow leg={offer.outbound} />
-        {offer.inbound && <LegRow leg={offer.inbound} />}
-        <p className="text-xs text-stone-400">
-          {offer.passengers} passenger{offer.passengers > 1 ? "s" : ""} ·{" "}
-          {offer.cabinClass.replace("_", " ").toLowerCase()}
-        </p>
-      </div>
-      <div className="mt-4 border-t border-stone-100 pt-3 text-right sm:mt-0 sm:ml-6 sm:border-0 sm:pt-0">
-        <p className="font-display text-xl font-bold text-brand-800">
-          <Money btn={offer.totalPrice} />
-        </p>
-        <p className="mb-2 text-xs text-stone-500">total</p>
-        <FlightBookingButton offer={offer} />
-      </div>
-    </MotionListItem>
+    <select name={name} defaultValue={value?.toUpperCase() ?? ""} required className="input" aria-label={label}>
+      <option value="" disabled>
+        {label}
+      </option>
+      {["Bhutan", "India", "Nepal", "Bangladesh", "Thailand", "Singapore"].map((country) => (
+        <optgroup key={country} label={country}>
+          {airports
+            .filter((a) => a.country === country)
+            .map((a) => (
+              <option key={a.code} value={a.code}>
+                {a.city} ({a.code})
+              </option>
+            ))}
+        </optgroup>
+      ))}
+    </select>
   );
 }
 
-function LegRow({ leg }: { leg: FlightLeg }) {
+function RouteList() {
   return (
-    <div className="flex items-center gap-4 text-sm">
-      <div>
-        <p className="font-medium">
-          {leg.origin} → {leg.destination}
-        </p>
-        <p className="text-stone-500">
-          {leg.airline} · {leg.flightNumber}
-        </p>
-      </div>
-      <div className="text-stone-600">
-        {formatTime(leg.departureAt)} → {formatTime(leg.arrivalAt)}
-      </div>
-      <div className="text-stone-400">{formatDuration(leg.durationMinutes)}</div>
+    <div className="card p-5">
+      <h2 className="mb-3 font-display text-lg font-bold text-brand-900">Flights to and from Paro</h2>
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {ROUTE_ROWS.map((r) => (
+          <li key={r.to} className="rounded-lg bg-stone-50 px-3 py-2 text-sm">
+            <p className="font-medium text-stone-900">Paro ⇄ {airportLabel(r.to)}</p>
+            <p className="text-xs text-stone-500">
+              {r.airlines.map((a) => a.name).join(" · ")} · {r.note}
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
-}
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatDuration(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}h ${m}m`;
 }

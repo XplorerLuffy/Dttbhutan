@@ -30,7 +30,7 @@ export default function VendorRowActions({
     return (
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         {profileHref && (
-          <Link href={profileHref} target="_blank" className="btn-secondary">
+          <Link href={profileHref} className="btn-secondary">
             View profile
           </Link>
         )}

@@ -251,7 +251,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "vehicles.intro", label: "Transport — intro", type: "textarea", default: "" },
 
       { key: "flights.heading", label: "Flights — heading", type: "text", default: "Flights" },
-      { key: "flights.intro", label: "Flights — intro", type: "textarea", default: "Bhutan-specific routes (Drukair, Bhutan Airlines) are shown first out of/into Paro. This search runs against a demo flight aggregator — see the README for what a production integration needs.", help: "The second sentence is true today: flight results are not live. Rewrite it when a real airline integration replaces the demo one, and not before." },
+      { key: "flights.intro", label: "Flights — intro", type: "textarea", default: "Drukair and Bhutan Airlines are the only airlines that fly to Bhutan, and every international flight lands at Paro. Pick your route and dates and we'll confirm the flights and fare for you.", help: "Shown above the flight search." },
 
       { key: "travelGuide.heading", label: "Travel guide — heading", type: "text", default: "Travel Guide" },
       { key: "travelGuide.intro", label: "Travel guide — intro", type: "textarea", default: "Practical answers to the questions travelers ask us most — visas, fees, timing, and what to expect on the ground in Bhutan." },
