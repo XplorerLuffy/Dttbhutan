@@ -35,6 +35,14 @@ export default async function AboutPage() {
 
   const travelling = paragraphs(content("about.travelling.body"));
 
+  const details = [
+    { label: "Trading name", value: company.name, plain: true },
+    { label: "Registered name", value: company.legalName },
+    { label: "TCB licence", value: company.tcbLicenceNumber },
+    { label: "Registration no.", value: company.registrationNumber },
+    { label: "Operating since", value: company.foundedYear },
+  ];
+
   return (
     <div className="pb-10">
       {/* Opening banner */}
@@ -83,17 +91,25 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-3xl px-4 pt-8 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {cards.length > 0 && (
-          <section className="mb-10">
-            <h2 className="mb-3 font-display text-xl font-semibold text-stone-900">
-              {content("about.whatWeDo.heading")}
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {cards.map((item) => (
-                <div key={item.title} className="card">
-                  <p className="font-medium text-stone-900">{item.title}</p>
-                  <p className="mt-1 text-sm text-stone-600">{item.body}</p>
+          <section className="pt-10 sm:pt-12">
+            <SectionHeading title={content("about.whatWeDo.heading")} />
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {cards.map((item, i) => (
+                <div
+                  key={item.title}
+                  className="group rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold-100 font-display text-base font-semibold text-gold-700">
+                    {i + 1}
+                  </span>
+                  <p className="mt-3 font-display text-lg font-semibold text-stone-900">
+                    {item.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-stone-600">
+                    {item.body}
+                  </p>
                 </div>
               ))}
             </div>
@@ -101,88 +117,94 @@ export default async function AboutPage() {
         )}
 
         {(travelling.length > 0 || content("about.travelling.linkText")) && (
-          <section className="mb-10">
-            <h2 className="mb-3 font-display text-xl font-semibold text-stone-900">
-              {content("about.travelling.heading")}
-            </h2>
-            <div className="card space-y-3 text-sm text-stone-700">
+          <section className="mt-10 rounded-3xl bg-[#fcf6e9] px-6 py-8 sm:mt-12 sm:px-10">
+            <SectionHeading title={content("about.travelling.heading")} />
+            <div className="mt-5 space-y-3 text-base leading-relaxed text-stone-700">
               {travelling.map((para, i) => (
                 <p key={i}>{para}</p>
               ))}
-              {content("about.travelling.linkText") && (
+            </div>
+            {content("about.travelling.linkText") && (
+              <p className="mt-5">
                 <Link
                   href="/travel-guide"
-                  className="inline-block font-medium text-brand-700 hover:underline"
+                  className="inline-block rounded-full bg-brand-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-800"
                 >
                   {content("about.travelling.linkText")}
                 </Link>
-              )}
-            </div>
+              </p>
+            )}
           </section>
         )}
 
-        <section className="mb-10">
-          <h2 className="mb-3 font-display text-xl font-semibold text-stone-900">
-            {content("about.companyDetails.heading")}
-          </h2>
-          <div className="card">
-            <dl className="space-y-2 text-sm">
-              <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
-                <dt className="w-48 shrink-0 text-stone-500">Trading name</dt>
-                <dd className="text-stone-900">{company.name}</dd>
-              </div>
-              {[
-                { label: "Registered name", value: company.legalName },
-                { label: "TCB licence", value: company.tcbLicenceNumber },
-                {
-                  label: "Registration no.",
-                  value: company.registrationNumber,
-                },
-                { label: "Operating since", value: company.foundedYear },
-              ].map(({ label, value }) =>
-                !value.trim() &&
-                process.env.NODE_ENV === "production" ? null : (
-                  <div
-                    key={label}
-                    className="flex flex-col gap-1 sm:flex-row sm:gap-3"
-                  >
-                    <dt className="w-48 shrink-0 text-stone-500">{label}</dt>
-                    <dd className="text-stone-900">
-                      <CompanyFact value={value} />
-                    </dd>
-                  </div>
-                ),
-              )}
-              {address && (
-                <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
-                  <dt className="w-48 shrink-0 text-stone-500">Address</dt>
-                  <dd className="text-stone-900">{address}</dd>
+        <section className="mt-10 sm:mt-12">
+          <SectionHeading title={content("about.companyDetails.heading")} />
+          <dl className="mt-5 divide-y divide-stone-100 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+            {details.map(({ label, value, plain }) =>
+              !plain &&
+              !value.trim() &&
+              process.env.NODE_ENV === "production" ? null : (
+                <div
+                  key={label}
+                  className="flex flex-col gap-1 px-6 py-4 sm:flex-row sm:items-baseline sm:gap-6"
+                >
+                  <dt className="w-40 shrink-0 text-xs font-semibold uppercase tracking-wider text-stone-500">
+                    {label}
+                  </dt>
+                  <dd className="mt-1 text-stone-900">
+                    {plain ? value : <CompanyFact value={value} />}
+                  </dd>
                 </div>
-              )}
-            </dl>
-          </div>
+              ),
+            )}
+            {address && (
+              <div className="flex flex-col gap-1 px-6 py-4 sm:flex-row sm:items-baseline sm:gap-6">
+                <dt className="w-40 shrink-0 text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Address
+                </dt>
+                <dd className="mt-1 text-stone-900">{address}</dd>
+              </div>
+            )}
+          </dl>
         </section>
 
-        <div className="card flex flex-col items-center gap-3 text-center">
+        <section className="mt-10 flex flex-col gap-5 overflow-hidden rounded-3xl bg-brand-900 px-6 py-8 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:px-10">
           {content("about.cta.text") && (
-            <p className="text-sm text-stone-600">
+            <p className="font-display text-xl text-white sm:text-2xl">
               {content("about.cta.text")}
             </p>
           )}
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex shrink-0 flex-wrap gap-3">
             {content("about.cta.contactLabel") && (
-              <Link href="/contact" className="btn-primary">
+              <Link
+                href="/contact"
+                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand-900 hover:bg-stone-100"
+              >
                 {content("about.cta.contactLabel")}
               </Link>
             )}
             {content("about.cta.customLabel") && (
-              <Link href="/custom-tour" className="btn-secondary">
+              <Link
+                href="/custom-tour"
+                className="rounded-full border border-white/70 px-6 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+              >
                 {content("about.cta.customLabel")}
               </Link>
             )}
           </div>
-        </div>
+        </section>
       </div>
+    </div>
+  );
+}
+
+function SectionHeading({ title }: { title: string }) {
+  return (
+    <div>
+      <h2 className="font-display text-2xl font-semibold text-stone-900 sm:text-[1.7rem]">
+        {title}
+      </h2>
+      <span aria-hidden className="mt-2 block h-0.5 w-10 rounded bg-gold-500" />
     </div>
   );
 }
