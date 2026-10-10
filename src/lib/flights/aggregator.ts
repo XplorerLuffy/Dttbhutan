@@ -27,7 +27,7 @@ import "server-only";
 
 const PIN_BHUTAN_CARRIERS = true;
 
-export type CabinClass = "ECONOMY" | "PREMIUM_ECONOMY" | "BUSINESS" | "FIRST";
+export type CabinClass = "ECONOMY" | "BUSINESS";
 
 export type FlightSearchParams = {
   origin: string; // IATA code
@@ -90,9 +90,7 @@ function mulberry32(seed: number) {
 
 const CABIN_MULTIPLIER: Record<CabinClass, number> = {
   ECONOMY: 1,
-  PREMIUM_ECONOMY: 1.5,
   BUSINESS: 2.6,
-  FIRST: 4,
 };
 
 function buildLeg(

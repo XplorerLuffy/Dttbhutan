@@ -29,9 +29,7 @@ type SearchParams = {
 
 const CABIN_OPTIONS = [
   { value: "ECONOMY", label: "Economy" },
-  { value: "PREMIUM_ECONOMY", label: "Premium Economy" },
   { value: "BUSINESS", label: "Business" },
-  { value: "FIRST", label: "First" },
 ];
 
 export default async function FlightsSearchPage({
@@ -46,7 +44,7 @@ export default async function FlightsSearchPage({
     departureDate: sp.departureDate,
     returnDate: sp.returnDate || undefined,
     passengers: sp.passengers ?? "1",
-    cabinClass: sp.cabinClass ?? "ECONOMY",
+    cabinClass: sp.cabinClass === "BUSINESS" ? "BUSINESS" : "ECONOMY",
   });
 
   const offers = parsed.success ? await searchFlights(parsed.data) : [];
@@ -91,7 +89,7 @@ export default async function FlightsSearchPage({
           placeholder="Return (optional)"
           className="input"
         />
-        <select name="cabinClass" defaultValue={sp.cabinClass ?? "ECONOMY"} className="input">
+        <select name="cabinClass" defaultValue={sp.cabinClass === "BUSINESS" ? "BUSINESS" : "ECONOMY"} className="input">
           {CABIN_OPTIONS.map((c) => (
             <option key={c.value} value={c.value}>
               {c.label}

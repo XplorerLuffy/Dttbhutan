@@ -190,7 +190,7 @@ export const flightOfferSchema = z.object({
   provider: z.literal("mock"),
   outbound: flightLegSchema,
   inbound: flightLegSchema.nullable(),
-  cabinClass: z.enum(["ECONOMY", "PREMIUM_ECONOMY", "BUSINESS", "FIRST"]),
+  cabinClass: z.enum(["ECONOMY", "BUSINESS"]),
   passengers: z.number().int().min(1).max(9),
   pricePerPassenger: z.number().positive(),
   totalPrice: z.number().positive(),
@@ -335,7 +335,7 @@ export const flightSearchSchema = z.object({
   departureDate: z.string().min(1),
   returnDate: z.string().min(1).optional(),
   passengers: z.coerce.number().int().min(1).max(9),
-  cabinClass: z.enum(["ECONOMY", "PREMIUM_ECONOMY", "BUSINESS", "FIRST"]),
+  cabinClass: z.enum(["ECONOMY", "BUSINESS"]),
 });
 
 export const reviewSchema = z.object({
