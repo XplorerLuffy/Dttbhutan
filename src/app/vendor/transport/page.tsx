@@ -15,6 +15,7 @@ import {
 import { SetBookingStatusButton } from "@/components/BookingActions";
 import TripControls from "@/components/TripControls";
 import AddVehicleForm from "./vehicles/AddVehicleForm";
+import VehiclePhotos from "./vehicles/VehiclePhotos";
 
 export default async function TransportVendorDashboard() {
   const user = await getCurrentUser();
@@ -92,6 +93,9 @@ export default async function TransportVendorDashboard() {
                     </span>
                   )}
                   <StatusBadge status={v.status} />
+                </div>
+                <div className="basis-full">
+                  <VehiclePhotos vehicleId={v.id} initial={v.photoUrls} />
                 </div>
               </li>
             ))}

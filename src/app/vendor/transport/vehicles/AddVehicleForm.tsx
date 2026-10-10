@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiErrorMessage } from "@/lib/apiError";
+import ImageListUpload, { type ImageItem } from "@/components/admin/ImageListUpload";
 
 export default function AddVehicleForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
+  const [photos, setPhotos] = useState<ImageItem[]>([]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,6 +30,7 @@ export default function AddVehicleForm() {
         ratePerDay: form.get("ratePerDay"),
         ratePerKm: form.get("ratePerKm") || undefined,
         gpsDeviceIdentifier: form.get("gpsDeviceIdentifier") || undefined,
+        photoUrls: photos.map((p) => p.url),
       }),
     });
 
@@ -39,6 +42,7 @@ export default function AddVehicleForm() {
     }
 
     (e.target as HTMLFormElement).reset();
+    setPhotos([]);
     setOpen(false);
     router.refresh();
   }
@@ -68,6 +72,15 @@ export default function AddVehicleForm() {
         <input name="ratePerKm" type="number" min={0} step="0.01" placeholder="Rate/km (optional)" className="input" />
         <input name="gpsDeviceIdentifier" placeholder="GPS device ID (optional)" className="input" />
       </div>
+      <ImageListUpload
+        images={photos}
+        onChange={setPhotos}
+        folder="vehicles"
+        max={10}
+        label="Photos (optional)"
+        hint="The first photo is shown on the transport list. You can add more later."
+        leadLabel="Main"
+      />
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
         <button type="submit" disabled={isSubmitting} className="btn-primary">

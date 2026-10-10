@@ -141,6 +141,7 @@ export const vehicleSchema = z.object({
   ratePerDay: z.coerce.number().positive(),
   ratePerKm: z.coerce.number().positive().optional(),
   gpsDeviceIdentifier: z.string().min(1).max(100).optional(),
+  photoUrls: z.array(z.string().min(1).max(500)).max(10).default([]),
 });
 
 export const guideBookingSchema = z.object({
