@@ -118,7 +118,7 @@ export default function Hero({
   }, [videoUrl]);
 
   return (
-    <section className="relative isolate flex min-h-[600px] flex-col justify-center overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-900 sm:min-h-[720px]">
+    <section className="relative isolate flex min-h-[520px] flex-col justify-center overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-900 sm:min-h-[600px]">
       {/* No `src` and no `autoPlay`: the effect above attaches the clip once
           the page is idle. `poster` is what the visitor actually sees first,
           so the hero looks finished immediately, and it stays put for anyone
@@ -139,21 +139,21 @@ export default function Hero({
           whole clip the way a heavy scrim would. */}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/45 via-black/20 to-black/45" />
 
-      <div ref={contentRef} className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-28">
-        <h1 className="text-balance font-display text-4xl font-semibold leading-tight text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.5)] sm:text-6xl">
+      <div ref={contentRef} className="mx-auto w-full max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-24">
+        <h1 className="text-balance font-display text-3xl font-semibold leading-tight text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.5)] sm:text-5xl">
           {headline}
         </h1>
         {subtitle && (
-          <p className="mt-3 max-w-2xl text-lg text-white/95 [text-shadow:0_1px_12px_rgba(0,0,0,0.5)] sm:text-xl">
+          <p className="mx-auto mt-3 max-w-xl text-base text-white/95 [text-shadow:0_1px_12px_rgba(0,0,0,0.5)] sm:text-lg">
             {subtitle}
           </p>
         )}
 
-        <div className="mt-10 sm:mt-12">
+        <div className="mt-8 sm:mt-9">
           <HeroSearchBar destinations={destinations} submitLabel={searchButton} prompt={searchPrompt} />
         </div>
 
-        <p className="mt-6 text-center text-sm text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
+        <p className="mt-5 text-center text-[13px] text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
           {customPrefix}{" "}
           <Link href={customHref} className="font-semibold underline underline-offset-4 hover:text-white">
             {customLink}
