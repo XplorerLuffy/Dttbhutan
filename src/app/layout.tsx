@@ -27,7 +27,7 @@ const body = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   // Makes every relative canonical/OG URL below resolve absolutely.
   metadataBase: new URL(siteUrl()),
   title: {
@@ -74,6 +74,21 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
 };
+
+/** The base metadata plus the Search Console / Bing codes saved in the SEO dashboard. */
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getSiteContent();
+  const google = content("seo.googleVerification").trim();
+  const bing = content("seo.bingVerification").trim();
+  if (!google && !bing) return baseMetadata;
+  return {
+    ...baseMetadata,
+    verification: {
+      ...(google ? { google } : {}),
+      ...(bing ? { other: { "msvalidate.01": bing } } : {}),
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

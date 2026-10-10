@@ -403,6 +403,15 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "legal.tier5.refund", label: "Tier 5 — refund", type: "text", default: "No refund" },
     ],
   },
+  {
+    id: "seo",
+    label: "Search engines",
+    description: "Codes that connect the site to Google Search Console and Bing Webmaster Tools. Managed from the SEO dashboard.",
+    fields: [
+      { key: "seo.googleVerification", label: "Google Search Console verification code", type: "text", default: "", help: "Only the code, from the \"HTML tag\" method: the long value inside content=\"…\". Not the whole tag." },
+      { key: "seo.bingVerification", label: "Bing Webmaster verification code", type: "text", default: "", help: "Only the code from Bing's \"HTML meta tag\" method." },
+    ],
+  },
 ];
 
 /** Flat key → default, built once from the registry. */

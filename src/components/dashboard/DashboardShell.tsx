@@ -42,6 +42,7 @@ export type IconName =
   | "pages"
   | "knowledge"
   | "rates"
+  | "seo"
   | "account";
 
 export default function DashboardShell({
@@ -336,6 +337,12 @@ function NavIcon({ name, className = "" }: { name: IconName; className?: string 
       <>
         <path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V17h5v-1.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
         <path d="M10 21h4" />
+      </>
+    ),
+    seo: (
+      <>
+        <circle cx="10.5" cy="10.5" r="6" />
+        <path d="m15 15 5 5M8 11.5l1.8-2 1.4 1.4 2-2.3" />
       </>
     ),
     rates: (
