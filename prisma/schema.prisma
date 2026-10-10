@@ -457,6 +457,8 @@ model Article {
   slug          String        @unique
   category      String // e.g. "Visa & Entry", "SDF Fee", "Festivals & Seasons"
   excerpt       String
+  /// The text search engines show under the page title (70–160 characters). Falls back to the excerpt.
+  metaDescription String?
   content       String
   coverPhotoUrl String?
   /// More photos for the article, shown as a gallery under the text. The

@@ -38,7 +38,7 @@ export default async function SeoDashboardPage() {
     prisma.destination.findMany({ select: { id: true, name: true, description: true, metaDescription: true, photoUrl: true } }),
     prisma.article.findMany({
       where: { status: "PUBLISHED" },
-      select: { id: true, title: true, excerpt: true, content: true, coverPhotoUrl: true, updatedAt: true },
+      select: { id: true, title: true, excerpt: true, metaDescription: true, content: true, coverPhotoUrl: true, updatedAt: true },
     }),
     prisma.hotel.count({ where: { status: "APPROVED" } }),
     prisma.guideProfile.count({ where: { status: "APPROVED" } }),
@@ -134,7 +134,8 @@ export default async function SeoDashboardPage() {
   const articleIssues: Issue[] = [];
   for (const a of articles) {
     const problems: string[] = [];
-    if (len(a.excerpt) < 70 || len(a.excerpt) > 160) problems.push("Excerpt should be 70–160 characters (it becomes the search description)");
+    const meta = len(a.metaDescription) || len(a.excerpt);
+    if (meta < 70 || meta > 160) problems.push("Google description should be 70–160 characters");
     if (len(a.content) < 1500) problems.push("Article is short — in-depth pages rank better (aim for 300+ words)");
     if (!a.coverPhotoUrl) problems.push("No cover photo");
     if (problems.length) articleIssues.push({ title: a.title, href: `/chim/travel-guide/${a.id}/edit`, problems });

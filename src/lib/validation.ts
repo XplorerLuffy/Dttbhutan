@@ -299,6 +299,7 @@ export const articleAdminSchema = z.object({
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens only"),
   category: z.string().min(2).max(60),
   excerpt: z.string().min(2).max(300),
+  metaDescription: z.string().trim().max(200).nullish(),
   content: z.string().min(2).max(20000),
   // nullish, not optional: an edit that removes the cover has to be able to
   // clear the column, which an absent key would leave untouched.

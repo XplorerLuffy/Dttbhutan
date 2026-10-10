@@ -28,14 +28,16 @@ export async function generateMetadata({
   const article = await prisma.article.findUnique({ where: { slug } });
   if (!article || article.status !== "PUBLISHED") return { title: "Article not found" };
 
+  const description = article.metaDescription?.trim() || article.excerpt.slice(0, 160);
+
   return {
     title: article.title,
-    description: article.excerpt.slice(0, 160),
+    description,
     alternates: { canonical: `/travel-guide/${article.slug}` },
     openGraph: {
       type: "article",
       title: article.title,
-      description: article.excerpt.slice(0, 160),
+      description,
       url: `/travel-guide/${article.slug}`,
       publishedTime: article.createdAt.toISOString(),
       modifiedTime: article.updatedAt.toISOString(),

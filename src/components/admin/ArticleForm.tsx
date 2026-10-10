@@ -13,6 +13,7 @@ type InitialValues = {
   slug: string;
   category: string;
   excerpt: string;
+  metaDescription: string;
   content: string;
   coverPhotoUrl: string;
   photoUrls: string[];
@@ -41,6 +42,7 @@ export default function ArticleForm({ initial }: { initial?: InitialValues }) {
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [category, setCategory] = useState(initial?.category ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
+  const [metaDescription, setMetaDescription] = useState(initial?.metaDescription ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
   // One list in the form; the first photo is saved as the cover, the rest
   // as the article's gallery.
@@ -64,6 +66,7 @@ export default function ArticleForm({ initial }: { initial?: InitialValues }) {
       slug: slugify(slug),
       category,
       excerpt,
+      metaDescription: metaDescription.trim() || null,
       content,
       // null, not undefined: removing every photo has to clear the cover.
       coverPhotoUrl: photos[0]?.url ?? null,
@@ -151,6 +154,17 @@ export default function ArticleForm({ initial }: { initial?: InitialValues }) {
           maxLength={300}
           required
           className="input"
+        />
+      </Field>
+
+      <Field label={`Google description (${metaDescription.trim().length}/160 characters)`}>
+        <textarea
+          value={metaDescription}
+          onChange={(e) => setMetaDescription(e.target.value)}
+          rows={2}
+          maxLength={200}
+          className="input"
+          placeholder="The text Google shows under this article's title. Aim for 70–160 characters; leave blank to use the excerpt."
         />
       </Field>
 
