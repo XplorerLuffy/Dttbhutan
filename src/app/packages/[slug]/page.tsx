@@ -500,7 +500,7 @@ export default async function PackageDetailPage({
                 Photographs from this trip. Tap any of them to see it full size.
               </p>
               <div className="mt-6">
-                <TripGallery photos={photos} />
+                <TripGallery photos={photos} subject={`${itinerary.title}, Bhutan tour`} />
               </div>
             </>
           ) : (

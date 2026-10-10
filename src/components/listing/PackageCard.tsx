@@ -67,7 +67,7 @@ export default function PackageCard({
       <Link href={href} className="block">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-brand-50">
           {imageUrl ? (
-            <Image src={imageUrl} alt={title} fill unoptimized className="object-cover" />
+            <Image src={imageUrl} alt={`${title}: Bhutan tour package`} fill unoptimized className="object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center font-display text-4xl text-brand-300">
               {imageFallback}

@@ -38,7 +38,7 @@ export default async function DestinationsPage() {
             {d.photoUrl ? (
               <Image
                 src={d.photoUrl}
-                alt={d.name}
+                alt={`${d.name}, Bhutan: landscape and landmarks of the ${d.name} district`}
                 fill
                 unoptimized
                 className="object-cover transition-transform duration-300 group-hover:scale-105"

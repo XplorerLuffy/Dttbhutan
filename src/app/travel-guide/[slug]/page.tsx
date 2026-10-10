@@ -99,6 +99,7 @@ export default async function ArticleDetailPage({
         <section className="mt-8" aria-label="Photos">
           <TripGallery
             photos={article.photoUrls.map((url, i) => ({ id: `${i}`, url, caption: null }))}
+            subject={article.title}
           />
         </section>
       )}

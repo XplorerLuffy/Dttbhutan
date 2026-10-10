@@ -21,7 +21,21 @@ export type GalleryPhoto = {
  * opened it on close, and the page behind it can't scroll. That is the
  * difference between a lightbox and a picture that happens to be on top.
  */
-export default function TripGallery({ photos }: { photos: GalleryPhoto[] }) {
+export default function TripGallery({
+  photos,
+  subject,
+}: {
+  photos: GalleryPhoto[];
+  /** What the photos are of, e.g. "7-Day Essential Bhutan Journey". Used to
+   * write alt text that says more than the caption alone — or when there is none. */
+  subject?: string;
+}) {
+  const altFor = (photo: GalleryPhoto, i: number) => {
+    if (!subject) return photo.caption ?? "";
+    return photo.caption
+      ? `${photo.caption}: ${subject}`
+      : `${subject}: photo ${i + 1} of ${photos.length}`;
+  };
   const [openAt, setOpenAt] = useState<number | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const returnFocusTo = useRef<HTMLElement | null>(null);
@@ -84,7 +98,7 @@ export default function TripGallery({ photos }: { photos: GalleryPhoto[] }) {
             >
               <Image
                 src={photo.url}
-                alt={photo.caption ?? ""}
+                alt={altFor(photo, i)}
                 fill
                 unoptimized
                 sizes="(min-width: 1024px) 25vw, 50vw"
@@ -132,7 +146,7 @@ export default function TripGallery({ photos }: { photos: GalleryPhoto[] }) {
             <div className="relative h-full w-full">
               <Image
                 src={active.url}
-                alt={active.caption ?? ""}
+                alt={altFor(active, openAt ?? 0)}
                 fill
                 unoptimized
                 sizes="100vw"

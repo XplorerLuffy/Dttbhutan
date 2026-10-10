@@ -98,7 +98,7 @@ export default function TripPageHeader({
 
       <div className="relative h-[38vh] min-h-[260px] w-full bg-gradient-to-br from-brand-600 to-brand-950 sm:h-[54vh]">
         {imageUrl && (
-          <Image src={imageUrl} alt={title} fill priority unoptimized className="object-cover" />
+          <Image src={imageUrl} alt={`${title}: Bhutan tour package`} fill priority unoptimized className="object-cover" />
         )}
         {galleryHref && (
           <a

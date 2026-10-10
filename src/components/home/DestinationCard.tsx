@@ -18,7 +18,7 @@ export default function DestinationCard({
     <MotionCard href={href} className="card block overflow-hidden p-0">
       <div className="relative h-40 w-full overflow-hidden bg-brand-50">
         {photoUrl ? (
-          <Image src={photoUrl} alt={name} fill unoptimized className="object-cover" />
+          <Image src={photoUrl} alt={`${name}, Bhutan: landscape and landmarks of the ${name} district`} fill unoptimized className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center font-display text-3xl text-brand-300">
             {name[0]}
