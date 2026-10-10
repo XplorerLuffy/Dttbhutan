@@ -57,3 +57,9 @@ export function vehicleAlt(typeName: string, operator: string, index = 0, total 
   const base = `${typeName} with driver for hire in Bhutan, operated by ${operator}`;
   return total > 1 ? `${base} (photo ${index + 1} of ${total})` : base;
 }
+
+/** Alt text for a photo of a transport business. */
+export function operatorAlt(businessName: string, index = 0, total = 1): string {
+  const base = `${businessName}, a vehicle hire and transport operator in Bhutan`;
+  return total > 1 ? `${base} (photo ${index + 1} of ${total})` : base;
+}

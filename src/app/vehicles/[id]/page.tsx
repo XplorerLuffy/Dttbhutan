@@ -1,4 +1,4 @@
-import { vehicleAlt, vehicleMeta } from "@/lib/metaDescriptions";
+import { operatorAlt, vehicleAlt, vehicleMeta } from "@/lib/metaDescriptions";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import VehicleBookingForm from "@/components/booking/VehicleBookingForm";
@@ -117,6 +117,24 @@ export default async function VehicleDetailPage({
               planned route, and you&apos;ll get a live tracking link once your
               trip starts.
             </p>
+          )}
+
+          {vehicle.operator.photoUrls.length > 0 && (
+            <section className="mt-8" aria-label={`About ${vehicle.operator.businessName}`}>
+              <h2 className="mb-3 text-lg font-semibold">About {vehicle.operator.businessName}</h2>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {vehicle.operator.photoUrls.slice(0, 6).map((url, i, all) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={url}
+                    src={url}
+                    alt={operatorAlt(vehicle.operator.businessName, i, all.length)}
+                    className="aspect-[4/3] w-full rounded-lg object-cover"
+                    loading="lazy"
+                  />
+                ))}
+              </div>
+            </section>
           )}
 
           <div className="mt-8">

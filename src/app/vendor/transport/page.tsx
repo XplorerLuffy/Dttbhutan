@@ -66,6 +66,18 @@ export default async function TransportVendorDashboard() {
         ]}
       />
 
+      <VendorPanel title="Business photos">
+        <p className="mb-2 text-sm text-stone-600">
+          Photos of your office, fleet or team. They are shown on your vehicles&apos; pages so travellers can see who they are booking with.
+        </p>
+        <VehiclePhotos
+          endpoint="/api/vendors/transport/photos"
+          initial={operator.photoUrls}
+          title="Business photos"
+          hint="The first photo is shown first. Photos of your fleet lined up, your office or your team work well."
+        />
+      </VendorPanel>
+
       <VendorPanel title="Vehicles">
         {operator.vehicles.length === 0 ? (
           <EmptyRow>No vehicles yet — add your first below.</EmptyRow>
@@ -95,7 +107,7 @@ export default async function TransportVendorDashboard() {
                   <StatusBadge status={v.status} />
                 </div>
                 <div className="basis-full">
-                  <VehiclePhotos vehicleId={v.id} initial={v.photoUrls} />
+                  <VehiclePhotos endpoint={`/api/vendors/transport/vehicles/${v.id}`} initial={v.photoUrls} />
                 </div>
               </li>
             ))}

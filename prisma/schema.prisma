@@ -226,6 +226,8 @@ model TransportOperator {
   owner              User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   businessName       String
   businessLicenseUrl String?
+  /// Photos of the business itself (office, fleet, team), shown on its vehicles' pages.
+  photoUrls          String[]     @default([])
   status             VendorStatus @default(PENDING)
   adminNote          String?
   createdAt          DateTime     @default(now())
