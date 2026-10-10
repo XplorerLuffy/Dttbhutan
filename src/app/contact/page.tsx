@@ -54,7 +54,7 @@ export default async function ContactPage({
           className="-z-10 object-cover opacity-45"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-950/70 via-brand-950/40 to-brand-950/80" />
-        <div className="mx-auto flex max-w-4xl flex-col items-center px-4 py-14 text-center sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-14">
           {content("contact.eyebrow") && (
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">
               {content("contact.eyebrow")}
@@ -64,24 +64,24 @@ export default async function ContactPage({
             {content("contact.heading")}
           </h1>
           {content("contact.intro") && (
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg">
+            <p className="mt-3 text-base leading-relaxed text-white/90 sm:text-[17px]">
               {content("contact.intro")}
             </p>
           )}
         </div>
       </section>
 
-      <div className="mx-auto mt-10 grid max-w-5xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_340px]">
+      <div className="mx-auto mt-8 grid max-w-5xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_340px]">
         <div>
           {content("contact.form.heading") && (
-            <h2 className="mb-4 font-display text-2xl font-semibold text-stone-900">
+            <h2 className="mb-3 font-display text-2xl font-semibold text-stone-900">
               {content("contact.form.heading")}
             </h2>
           )}
           <ContactForm defaultSubject={subject} defaultMessage={message} departureId={departure} />
         </div>
 
-        <aside className="space-y-4 lg:pt-12">
+        <aside className="space-y-4 lg:pt-11">
           <div className={card}>
             <h2 className={cardHeading}>{content("contact.direct.heading")}</h2>
             <dl className="space-y-3 text-sm">

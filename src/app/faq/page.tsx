@@ -52,7 +52,7 @@ export default async function FaqPage() {
           className="-z-10 object-cover opacity-45"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-950/70 via-brand-950/40 to-brand-950/80" />
-        <div className="mx-auto flex max-w-4xl flex-col items-center px-4 py-14 text-center sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-14">
           {content("faq.eyebrow") && (
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">
               {content("faq.eyebrow")}
@@ -62,14 +62,14 @@ export default async function FaqPage() {
             {content("faq.heading")}
           </h1>
           {content("faq.intro") && (
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg">
+            <p className="mt-3 text-base leading-relaxed text-white/90 sm:text-[17px]">
               {content("faq.intro")}
             </p>
           )}
           {content("faq.ask.label") && (
             <Link
               href="/contact"
-              className="mt-7 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand-900 hover:bg-stone-100"
+              className="mt-5 inline-block rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand-900 hover:bg-stone-100"
             >
               {content("faq.ask.label")}
             </Link>
@@ -77,9 +77,9 @@ export default async function FaqPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
         {categories.length > 1 && (
-          <nav aria-label="Question topics" className="mt-8 flex flex-wrap justify-center gap-2">
+          <nav aria-label="Question topics" className="mt-6 flex flex-wrap gap-2">
             {categories.map((category) => (
               <a
                 key={category.name}
@@ -93,7 +93,7 @@ export default async function FaqPage() {
         )}
 
         {categories.map((category) => (
-          <section key={category.name} id={slug(category.name)} className="mt-10 scroll-mt-24">
+          <section key={category.name} id={slug(category.name)} className="mt-8 scroll-mt-24">
             <h2 className="mb-4 font-display text-2xl font-semibold text-stone-900">{category.name}</h2>
             <div className="space-y-3">
               {category.items.map((item) => (
@@ -121,14 +121,14 @@ export default async function FaqPage() {
           </section>
         ))}
 
-        <section className="mt-14 rounded-3xl bg-brand-900 px-6 py-10 text-center sm:px-12">
+        <section className="mt-10 flex flex-col gap-4 rounded-3xl bg-brand-900 px-6 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           {content("faq.cta.text") && (
-            <p className="mx-auto max-w-xl font-display text-xl text-white sm:text-2xl">{content("faq.cta.text")}</p>
+            <p className="max-w-md font-display text-lg text-white sm:text-xl">{content("faq.cta.text")}</p>
           )}
           {content("faq.cta.button") && (
             <Link
               href="/contact"
-              className="mt-6 inline-block rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand-900 hover:bg-stone-100"
+              className="inline-block shrink-0 self-start rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand-900 hover:bg-stone-100 sm:self-auto"
             >
               {content("faq.cta.button")}
             </Link>

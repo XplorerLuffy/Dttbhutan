@@ -56,7 +56,7 @@ export default async function AboutPage() {
           className="-z-10 object-cover opacity-45"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-950/70 via-brand-950/40 to-brand-950/80" />
-        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-6xl px-4 py-12 text-center sm:px-6 sm:py-16">
           {content("about.eyebrow") && (
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">
               {content("about.eyebrow")}
@@ -66,11 +66,11 @@ export default async function AboutPage() {
             {company.name}
           </h1>
           {content("about.intro") && (
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-[17px]">
+            <p className="mt-4 text-base leading-relaxed text-white/90 sm:text-lg">
               {content("about.intro")}
             </p>
           )}
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             {content("about.hero.primaryLabel") && (
               <Link
                 href="/packages"
@@ -91,7 +91,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {cards.length > 0 && (
           <section className="pt-10 sm:pt-12">
             <SectionHeading title={content("about.whatWeDo.heading")} />
@@ -119,7 +119,7 @@ export default async function AboutPage() {
         {(travelling.length > 0 || content("about.travelling.linkText")) && (
           <section className="mt-10 rounded-3xl bg-[#fcf6e9] px-6 py-8 sm:mt-12 sm:px-10">
             <SectionHeading title={content("about.travelling.heading")} />
-            <div className="mt-5 max-w-3xl space-y-3 text-[15px] leading-relaxed text-stone-700">
+            <div className="mt-5 space-y-3 text-base leading-relaxed text-stone-700">
               {travelling.map((para, i) => (
                 <p key={i}>{para}</p>
               ))}
@@ -139,7 +139,7 @@ export default async function AboutPage() {
 
         <section className="mt-10 sm:mt-12">
           <SectionHeading title={content("about.companyDetails.heading")} />
-          <dl className="mt-5 max-w-2xl divide-y divide-stone-100 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+          <dl className="mt-5 divide-y divide-stone-100 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
             {details.map(({ label, value, plain }) =>
               !plain &&
               !value.trim() &&
@@ -170,7 +170,7 @@ export default async function AboutPage() {
 
         <section className="mt-10 flex flex-col gap-5 overflow-hidden rounded-3xl bg-brand-900 px-6 py-8 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:px-10">
           {content("about.cta.text") && (
-            <p className="max-w-xl font-display text-xl text-white sm:text-2xl">
+            <p className="font-display text-xl text-white sm:text-2xl">
               {content("about.cta.text")}
             </p>
           )}
