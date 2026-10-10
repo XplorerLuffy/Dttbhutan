@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LogoLockup } from "@/components/Logo";
-import DestinationsMenu from "@/components/nav/DestinationsMenu";
+import ServicesMenu from "@/components/nav/ServicesMenu";
 import PackagesMenu from "@/components/nav/PackagesMenu";
 import MobileMenu from "@/components/nav/MobileMenu";
 import CurrencySelector from "@/components/CurrencySelector";
@@ -22,8 +22,8 @@ import { getSiteContent, companyFrom } from "@/lib/content";
  */
 
 const MAIN_LINKS = [
-  { href: "/travel-guide", label: "Travel Guide" },
   { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export default async function NavBar() {
@@ -52,7 +52,7 @@ export default async function NavBar() {
 
         <nav className="hidden items-center gap-9 text-[15px] font-semibold lg:flex">
           <PackagesMenu packages={packages} triggerClassName={link} label="Tours" />
-          <DestinationsMenu destinations={destinations} triggerClassName={link} />
+          <ServicesMenu triggerClassName={link} />
           {MAIN_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className={link}>
               {l.label}

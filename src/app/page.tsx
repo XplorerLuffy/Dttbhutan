@@ -10,6 +10,7 @@ import DestinationCard from "@/components/home/DestinationCard";
 import ArticleCard from "@/components/ArticleCard";
 import AiPlannerTeaser from "@/components/home/AiPlannerTeaser";
 import SectionHeading from "@/components/home/SectionHeading";
+import BookServices from "@/components/home/BookServices";
 import ValueBand from "@/components/home/ValueBand";
 import FeaturedCollections, { type Collection } from "@/components/home/FeaturedCollections";
 import GuideSpotlight, { type SpotlightGuide } from "@/components/home/GuideSpotlight";
@@ -245,6 +246,8 @@ export default async function HomePage() {
           </div>
         </Container>
       )}
+
+      <BookServices content={content} />
 
       {featuredGuides.length > 0 && (
         <div className="bg-stone-100/70 py-20 sm:py-24">

@@ -130,6 +130,26 @@ export default function MobileMenu({
                 </div>
               </Accordion>
 
+              <Accordion label="Book Services">
+                <ul className="space-y-3">
+                  {[
+                    { href: "/hotels", label: "Book a Hotel" },
+                    { href: "/guides", label: "Book a Guide" },
+                    { href: "/vehicles", label: "Book Transport" },
+                  ].map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className="block text-sm font-medium text-stone-800 hover:text-brand-700"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Accordion>
+
               <Accordion label="Destinations">
                 <div className="space-y-4">
                   <ul className="space-y-2">

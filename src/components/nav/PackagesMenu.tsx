@@ -55,12 +55,19 @@ export default function PackagesMenu({
           )}
         </div>
       </div>
-      <Link
-        href="/packages"
-        className="mt-4 block border-t border-stone-100 pt-3 text-sm font-medium text-brand-700 hover:underline"
-      >
-        Browse all packages →
-      </Link>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-stone-100 pt-3 text-sm font-medium">
+        <Link href="/packages" className="text-brand-700 hover:underline">
+          Browse all packages →
+        </Link>
+        <span className="flex gap-5 text-stone-600">
+          <Link href="/destinations" className="hover:text-brand-700">
+            Destinations
+          </Link>
+          <Link href="/travel-guide" className="hover:text-brand-700">
+            Travel guide
+          </Link>
+        </span>
+      </div>
     </NavMenu>
   );
 }
