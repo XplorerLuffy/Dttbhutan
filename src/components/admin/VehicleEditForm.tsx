@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Field, readError, nullableNumber } from "@/components/admin/vendorFormFields";
+import { Field, readError, nullableNumber, nullableText } from "@/components/admin/vendorFormFields";
 
 const VEHICLE_TYPES = ["SEDAN", "SUV", "VAN", "BUS"] as const;
 
@@ -19,6 +19,7 @@ export default function VehicleEditForm({
     driverLicenseNumber: string;
     ratePerDay: string;
     ratePerKm: string;
+    metaDescription: string;
   };
 }) {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function VehicleEditForm({
   const [driverLicenseNumber, setDriverLicenseNumber] = useState(initial.driverLicenseNumber);
   const [ratePerDay, setRatePerDay] = useState(initial.ratePerDay);
   const [ratePerKm, setRatePerKm] = useState(initial.ratePerKm);
+  const [metaDescription, setMetaDescription] = useState(initial.metaDescription);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,6 +51,7 @@ export default function VehicleEditForm({
         driverLicenseNumber,
         ratePerDay,
         ratePerKm: nullableNumber(ratePerKm),
+        metaDescription: nullableText(metaDescription),
       }),
     });
 
@@ -131,6 +134,17 @@ export default function VehicleEditForm({
           />
         </Field>
       </div>
+
+      <Field label={`Google description (${metaDescription.trim().length}/160 characters)`}>
+        <textarea
+          value={metaDescription}
+          onChange={(e) => setMetaDescription(e.target.value)}
+          rows={2}
+          maxLength={200}
+          className="input"
+          placeholder="The text Google shows under this vehicle's title. Leave blank and one is written from its details."
+        />
+      </Field>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

@@ -252,6 +252,8 @@ model Vehicle {
   driverLicenseNumber String
   ratePerDay          Decimal           @db.Decimal(10, 2)
   ratePerKm           Decimal?          @db.Decimal(10, 2)
+  /// Search-result description (70–160 characters); a generated one is used when blank.
+  metaDescription     String?
   status              VendorStatus      @default(PENDING)
   adminNote           String?
   createdAt           DateTime          @default(now())

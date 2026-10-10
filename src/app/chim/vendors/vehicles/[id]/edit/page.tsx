@@ -40,6 +40,7 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
           driverLicenseNumber: vehicle.driverLicenseNumber,
           ratePerDay: vehicle.ratePerDay.toString(),
           ratePerKm: vehicle.ratePerKm?.toString() ?? "",
+          metaDescription: vehicle.metaDescription ?? "",
         }}
       />
 

@@ -39,3 +39,15 @@ export function guideMeta(g: {
   const speaks = g.languages.length ? ` Speaks ${g.languages.slice(0, 4).join(", ")}.` : "";
   return fit(`${g.name} is a licensed Bhutanese tour guide${years}${focus}.${speaks} Book through Droelma Tours & Travels.`);
 }
+
+export function vehicleMeta(v: {
+  metaDescription: string | null;
+  typeName: string;
+  capacity: number;
+  operator: string;
+}): string {
+  if (v.metaDescription?.trim()) return fit(v.metaDescription.trim());
+  return fit(
+    `Hire a ${v.typeName.toLowerCase()} with a licensed driver for your Bhutan trip: seats ${v.capacity}, operated by ${v.operator}. Book with Droelma Tours & Travels.`
+  );
+}

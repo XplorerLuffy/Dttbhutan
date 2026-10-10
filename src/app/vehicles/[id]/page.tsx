@@ -1,3 +1,4 @@
+import { vehicleMeta } from "@/lib/metaDescriptions";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import VehicleBookingForm from "@/components/booking/VehicleBookingForm";
@@ -36,13 +37,18 @@ export async function generateMetadata({
   const { id } = await params;
   const vehicle = await prisma.vehicle.findUnique({
     where: { id },
-    select: { status: true, type: true, capacity: true, operator: { select: { businessName: true } } },
+    select: { status: true, type: true, capacity: true, metaDescription: true, operator: { select: { businessName: true } } },
   });
   if (!vehicle || vehicle.status !== "APPROVED") return { title: "Vehicle not found" };
 
   const name = VEHICLE_NAME[vehicle.type] ?? vehicle.type;
   const title = `${name} Hire with Driver in Bhutan`;
-  const description = `Hire a ${name.toLowerCase()} with a licensed driver for your Bhutan trip — seats ${vehicle.capacity}, operated by ${vehicle.operator.businessName}. Book online with Droelma Tours & Travels.`.slice(0, 160);
+  const description = vehicleMeta({
+    metaDescription: vehicle.metaDescription,
+    typeName: name,
+    capacity: vehicle.capacity,
+    operator: vehicle.operator.businessName,
+  });
 
   return {
     title,

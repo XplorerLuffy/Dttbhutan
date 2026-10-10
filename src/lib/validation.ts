@@ -433,6 +433,7 @@ export const vehicleAdminDetailsSchema = z.object({
   driverLicenseNumber: z.string().min(2).max(50),
   ratePerDay: z.coerce.number().positive(),
   ratePerKm: z.number().positive().nullish(),
+  metaDescription: z.string().trim().max(200).nullish(),
 });
 
 /**
