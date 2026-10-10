@@ -41,6 +41,7 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
           ratePerDay: vehicle.ratePerDay.toString(),
           ratePerKm: vehicle.ratePerKm?.toString() ?? "",
           metaDescription: vehicle.metaDescription ?? "",
+          photoUrls: vehicle.photoUrls,
         }}
       />
 

@@ -1,3 +1,4 @@
+import { vehicleAlt } from "@/lib/metaDescriptions";
 import { pageMetadata } from "@/lib/pageMeta";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content";
@@ -21,6 +22,7 @@ type SearchParams = {
 };
 
 const VEHICLE_TYPES = ["SEDAN", "SUV", "VAN", "BUS"] as const;
+const VEHICLE_NAME: Record<string, string> = { SEDAN: "Sedan", SUV: "SUV", VAN: "Van", BUS: "Coaster bus" };
 
 export default async function VehiclesSearchPage({
   searchParams,
@@ -110,6 +112,8 @@ export default async function VehiclesSearchPage({
                   <ListingRow
                     key={v.id}
                     href={`/vehicles/${v.id}`}
+                    imageUrl={v.photoUrls[0]}
+                    imageAlt={vehicleAlt(VEHICLE_NAME[v.type] ?? v.type, v.operator.businessName)}
                     imageFallback={v.type[0]}
                     badge={v.gpsDevice ? "GPS-tracked" : undefined}
                     title={`${v.type} · ${v.operator.businessName}`}

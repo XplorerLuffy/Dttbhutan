@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   const folder = typeof form?.get("folder") === "string" ? String(form.get("folder")) : "uploads";
   // Only allow a short allowlist through — this ends up in a storage path.
-  const safeFolder = ["uploads", "guides", "hotels", "packages", "articles", "applications"].includes(folder)
+  const safeFolder = ["uploads", "guides", "hotels", "vehicles", "packages", "articles", "applications"].includes(folder)
     ? folder
     : "uploads";
 

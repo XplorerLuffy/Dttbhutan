@@ -434,6 +434,7 @@ export const vehicleAdminDetailsSchema = z.object({
   ratePerDay: z.coerce.number().positive(),
   ratePerKm: z.number().positive().nullish(),
   metaDescription: z.string().trim().max(200).nullish(),
+  photoUrls: z.array(z.string().min(1).max(500)).max(20).default([]),
 });
 
 /**

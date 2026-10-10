@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImageListUpload, { type ImageItem } from "@/components/admin/ImageListUpload";
 import { Field, readError, nullableNumber, nullableText } from "@/components/admin/vendorFormFields";
 
 const VEHICLE_TYPES = ["SEDAN", "SUV", "VAN", "BUS"] as const;
@@ -20,6 +21,7 @@ export default function VehicleEditForm({
     ratePerDay: string;
     ratePerKm: string;
     metaDescription: string;
+    photoUrls: string[];
   };
 }) {
   const router = useRouter();
@@ -32,6 +34,7 @@ export default function VehicleEditForm({
   const [ratePerDay, setRatePerDay] = useState(initial.ratePerDay);
   const [ratePerKm, setRatePerKm] = useState(initial.ratePerKm);
   const [metaDescription, setMetaDescription] = useState(initial.metaDescription);
+  const [photos, setPhotos] = useState<ImageItem[]>(() => initial.photoUrls.map((url) => ({ url })));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,6 +55,7 @@ export default function VehicleEditForm({
         ratePerDay,
         ratePerKm: nullableNumber(ratePerKm),
         metaDescription: nullableText(metaDescription),
+        photoUrls: photos.map((p) => p.url),
       }),
     });
 
@@ -134,6 +138,16 @@ export default function VehicleEditForm({
           />
         </Field>
       </div>
+
+      <ImageListUpload
+        images={photos}
+        onChange={setPhotos}
+        folder="vehicles"
+        max={10}
+        label="Photos"
+        hint="The first photo is the one shown on the transport list. Each photo gets alt text automatically, such as “Van with driver for hire in Bhutan, operated by …”."
+        leadLabel="Main"
+      />
 
       <Field label={`Google description (${metaDescription.trim().length}/160 characters)`}>
         <textarea

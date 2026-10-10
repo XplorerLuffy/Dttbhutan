@@ -1,4 +1,4 @@
-import { vehicleMeta } from "@/lib/metaDescriptions";
+import { vehicleAlt, vehicleMeta } from "@/lib/metaDescriptions";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import VehicleBookingForm from "@/components/booking/VehicleBookingForm";
@@ -93,7 +93,11 @@ export default async function VehicleDetailPage({
           { name: `${VEHICLE_NAME[vehicle.type] ?? vehicle.type} · ${vehicle.operator.businessName}`, path: `/vehicles/${vehicle.id}` },
         ])}
       />
-      <DetailGallery photos={[]} label={vehicle.type} />
+      <DetailGallery
+        photos={vehicle.photoUrls}
+        label={vehicle.type}
+        alt={vehicleAlt(VEHICLE_NAME[vehicle.type] ?? vehicle.type, vehicle.operator.businessName)}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">

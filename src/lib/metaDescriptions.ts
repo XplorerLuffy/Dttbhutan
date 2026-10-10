@@ -51,3 +51,9 @@ export function vehicleMeta(v: {
     `Hire a ${v.typeName.toLowerCase()} with a licensed driver for your Bhutan trip: seats ${v.capacity}, operated by ${v.operator}. Book with Droelma Tours & Travels.`
   );
 }
+
+/** Alt text for a vehicle photo: what it is, who runs it and that it is for hire in Bhutan. */
+export function vehicleAlt(typeName: string, operator: string, index = 0, total = 1): string {
+  const base = `${typeName} with driver for hire in Bhutan, operated by ${operator}`;
+  return total > 1 ? `${base} (photo ${index + 1} of ${total})` : base;
+}

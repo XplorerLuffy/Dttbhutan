@@ -1,0 +1,1 @@
+ALTER TABLE "Vehicle" ADD COLUMN "photoUrls" TEXT[] DEFAULT ARRAY[]::TEXT[];
