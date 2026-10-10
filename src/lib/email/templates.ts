@@ -628,7 +628,6 @@ export function enquiryReplyToSender(input: {
         </td></tr>
         <tr><td style="padding:0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${flags}</tr></table></td></tr>
         <tr><td style="padding:36px 36px 8px;font-family:${sans};">
-          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:${GOLD};font-weight:700;">A personal reply</p>
           <h1 style="margin:0 0 22px;font-family:${serif};font-size:27px;line-height:1.25;font-weight:700;color:${NAVY};">${escapeHtml(input.subject.replace(/^re:\s*/i, ""))}</h1>
           ${paragraphs}
           ${quoteHtml}
