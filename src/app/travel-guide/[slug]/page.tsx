@@ -75,7 +75,7 @@ export default async function ArticleDetailPage({
 
       {article.coverPhotoUrl ? (
         <div className="relative mt-4 h-64 w-full overflow-hidden rounded-lg">
-          <Image src={article.coverPhotoUrl} alt={article.title} fill unoptimized className="object-cover" />
+          <Image src={article.coverPhotoUrl} alt={`${article.title}: Bhutan travel guide, ${article.category}`} fill unoptimized className="object-cover" />
         </div>
       ) : (
         <div className="mt-4 flex h-64 w-full items-center justify-center rounded-lg bg-gradient-to-br from-brand-600 to-brand-900">
@@ -99,7 +99,7 @@ export default async function ArticleDetailPage({
         <section className="mt-8" aria-label="Photos">
           <TripGallery
             photos={article.photoUrls.map((url, i) => ({ id: `${i}`, url, caption: null }))}
-            subject={article.title}
+            subject={`${article.title}, Bhutan travel guide`}
           />
         </section>
       )}

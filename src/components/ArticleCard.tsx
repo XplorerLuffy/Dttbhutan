@@ -27,7 +27,7 @@ export default function ArticleCard({
         <div className="-mx-4 -mt-4 mb-3 h-36 w-[calc(100%+2rem)] overflow-hidden">
           <Image
             src={coverPhotoUrl}
-            alt={title}
+            alt={`${title}: Bhutan travel guide, ${category}`}
             width={400}
             height={200}
             unoptimized
