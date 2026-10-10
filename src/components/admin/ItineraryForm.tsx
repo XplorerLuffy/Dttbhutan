@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageListUpload from "@/components/admin/ImageListUpload";
+import { apiErrorMessage } from "@/lib/apiError";
 
 type Day = {
   dayNumber: number;
@@ -210,7 +211,7 @@ export default function ItineraryForm({
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error?.formErrors?.[0] ?? data.error ?? "Something went wrong");
+      setError(apiErrorMessage(data));
       return;
     }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiErrorMessage } from "@/lib/apiError";
 
 export default function TransportRegisterForm() {
   const router = useRouter();
@@ -41,11 +42,7 @@ export default function TransportRegisterForm() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(
-        data.error?.formErrors?.[0] ??
-          JSON.stringify(data.error?.fieldErrors ?? data.error) ??
-          "Something went wrong",
-      );
+      setError(apiErrorMessage(data));
       return;
     }
 

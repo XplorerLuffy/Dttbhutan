@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiErrorMessage } from "@/lib/apiError";
 
 export default function AddVehicleForm() {
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function AddVehicleForm() {
     setIsSubmitting(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error?.formErrors?.[0] ?? data.error ?? "Could not add vehicle");
+      setError(apiErrorMessage(data, "Could not add vehicle"));
       return;
     }
 

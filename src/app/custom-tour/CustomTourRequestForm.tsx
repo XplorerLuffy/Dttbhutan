@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { VehicleType } from "@prisma/client";
 import Money from "@/components/Money";
+import { apiErrorMessage } from "@/lib/apiError";
 
 type Destination = { id: string; name: string };
 type Guide = {
@@ -161,7 +162,7 @@ export default function CustomTourRequestForm({
     }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error?.formErrors?.[0] ?? data.error ?? "Could not send your request");
+      setError(apiErrorMessage(data, "Could not send your request"));
       return;
     }
 

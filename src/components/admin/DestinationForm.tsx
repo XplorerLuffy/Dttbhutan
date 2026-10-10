@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DzongkhagRegion } from "@prisma/client";
 import { REGION_LABEL, REGION_ORDER } from "@/lib/regions";
+import { apiErrorMessage } from "@/lib/apiError";
 
 type InitialValues = {
   id: string;
@@ -77,11 +78,7 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(
-        data.error?.formErrors?.[0] ??
-          (typeof data.error === "string" ? data.error : null) ??
-          "Something went wrong"
-      );
+      setError(apiErrorMessage(data));
       return;
     }
 

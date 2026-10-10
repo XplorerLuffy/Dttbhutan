@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiErrorMessage } from "@/lib/apiError";
 
 /** `endpoint` defaults to the owner's own route; the admin hotel page passes
  * its own, for hotels the agency manages without an owner login. */
@@ -35,7 +36,7 @@ export default function AddRoomTypeForm({
     setIsSubmitting(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error?.formErrors?.[0] ?? "Could not add room type");
+      setError(apiErrorMessage(data, "Could not add room type"));
       return;
     }
 

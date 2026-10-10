@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PhotoUpload from "@/components/PhotoUpload";
+import { apiErrorMessage } from "@/lib/apiError";
 
 function splitList(value: FormDataEntryValue | null) {
   return String(value ?? "")
@@ -61,11 +62,7 @@ export default function GuideRegisterForm({
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(
-        data.error?.formErrors?.[0] ??
-          JSON.stringify(data.error?.fieldErrors ?? data.error) ??
-          "Something went wrong"
-      );
+      setError(apiErrorMessage(data));
       return;
     }
 

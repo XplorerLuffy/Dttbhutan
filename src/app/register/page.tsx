@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthLayout from "@/components/auth/AuthLayout";
+import { apiErrorMessage } from "@/lib/apiError";
 
 const ROLE_OPTIONS = [
   { value: "TRAVELER", label: "Traveler — booking a trip" },
@@ -61,7 +62,7 @@ export default function RegisterPage() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error?.formErrors?.[0] ?? data.error ?? "Registration failed");
+      setError(apiErrorMessage(data, "Registration failed"));
       return;
     }
 
