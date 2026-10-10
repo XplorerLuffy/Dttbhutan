@@ -1,3 +1,4 @@
+import { guideMeta } from "@/lib/metaDescriptions";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import GuideBookingForm from "@/components/booking/GuideBookingForm";
@@ -32,6 +33,7 @@ export async function generateMetadata({
     select: {
       status: true,
       bio: true,
+      metaDescription: true,
       languages: true,
       specialties: true,
       yearsExperience: true,
@@ -42,12 +44,13 @@ export async function generateMetadata({
   if (!guide || guide.status !== "APPROVED") return { title: "Guide not found" };
 
   const title = `${guide.user.name} — Licensed Bhutan Tour Guide`;
-  const description = (
-    guide.bio?.trim() ||
-    `Licensed Bhutanese tour guide with ${guide.yearsExperience} years' experience` +
-      (guide.specialties.length ? ` in ${guide.specialties.join(", ").toLowerCase()} tours` : "") +
-      (guide.languages.length ? `. Speaks ${guide.languages.join(", ")}.` : ".")
-  ).slice(0, 160);
+  const description = guideMeta({
+    name: guide.user.name,
+    metaDescription: guide.metaDescription,
+    yearsExperience: guide.yearsExperience,
+    specialties: guide.specialties,
+    languages: guide.languages,
+  });
 
   return {
     title,

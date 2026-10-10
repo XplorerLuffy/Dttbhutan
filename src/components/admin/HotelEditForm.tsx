@@ -28,6 +28,7 @@ export default function HotelEditForm({
   initial: {
     name: string;
     description: string;
+    metaDescription: string;
     destinationId: string;
     address: string;
     latitude: string;
@@ -45,6 +46,7 @@ export default function HotelEditForm({
 
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
+  const [metaDescription, setMetaDescription] = useState(initial.metaDescription);
   const [destinationId, setDestinationId] = useState(initial.destinationId);
   const [address, setAddress] = useState(initial.address);
   const [latitude, setLatitude] = useState(initial.latitude);
@@ -62,6 +64,7 @@ export default function HotelEditForm({
     const details = {
       name,
       description: nullableText(description),
+      metaDescription: nullableText(metaDescription),
       destinationId,
       address: nullableText(address),
       latitude: nullableNumber(latitude),
@@ -118,6 +121,10 @@ export default function HotelEditForm({
           rows={5}
           className="input"
         />
+      </Field>
+
+      <Field label={`Google description (${metaDescription.trim().length}/160 characters)`} help="The text Google shows under this hotel's title. Leave blank and one is written from the hotel's details.">
+        <textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} rows={2} maxLength={200} className="input" />
       </Field>
 
       <Field label="Address" help="Area or street within the dzongkhag.">

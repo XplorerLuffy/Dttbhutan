@@ -18,6 +18,7 @@ export const EMPTY_GUIDE = {
   yearsExperience: 0,
   ratePerDay: "",
   bio: "",
+  metaDescription: "",
   photoUrl: "",
   destinationIds: [] as string[],
 };
@@ -40,6 +41,7 @@ export default function GuideEditForm({
     yearsExperience: number;
     ratePerDay: string;
     bio: string;
+    metaDescription: string;
     photoUrl: string;
     destinationIds: string[];
   };
@@ -54,6 +56,7 @@ export default function GuideEditForm({
   const [yearsExperience, setYearsExperience] = useState(String(initial.yearsExperience));
   const [ratePerDay, setRatePerDay] = useState(initial.ratePerDay);
   const [bio, setBio] = useState(initial.bio);
+  const [metaDescription, setMetaDescription] = useState(initial.metaDescription);
   const [photoUrl, setPhotoUrl] = useState(initial.photoUrl);
   const [coverage, setCoverage] = useState<string[]>(initial.destinationIds);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +80,7 @@ export default function GuideEditForm({
       yearsExperience,
       ratePerDay,
       bio: nullableText(bio),
+      metaDescription: nullableText(metaDescription),
       photoUrl: nullableText(photoUrl),
       destinationIds: coverage,
     };
@@ -146,6 +150,10 @@ export default function GuideEditForm({
 
       <Field label="Bio" help="Shown on the guide's card and on the homepage spotlight.">
         <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={5} className="input" />
+      </Field>
+
+      <Field label={`Google description (${metaDescription.trim().length}/160 characters)`} help="The text Google shows under this guide's title. Leave blank and one is written from the guide's details.">
+        <textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} rows={2} maxLength={200} className="input" />
       </Field>
 
       <PhotoUpload

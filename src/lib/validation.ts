@@ -406,6 +406,7 @@ export const guideAdminDetailsSchema = z.object({
   yearsExperience: z.coerce.number().int().min(0).max(60),
   ratePerDay: z.coerce.number().positive(),
   bio: z.string().max(2000).nullish(),
+  metaDescription: z.string().trim().max(200).nullish(),
   photoUrl: z.string().max(500).nullish(),
   /** Replaces the guide's dzongkhag coverage wholesale — see the `set` in the
    * route, which is why this is required rather than nullish. */
@@ -415,6 +416,7 @@ export const guideAdminDetailsSchema = z.object({
 export const hotelAdminDetailsSchema = z.object({
   name: z.string().min(2).max(150),
   description: z.string().max(3000).nullish(),
+  metaDescription: z.string().trim().max(200).nullish(),
   destinationId: z.string().min(1),
   address: z.string().max(300).nullish(),
   latitude: z.number().min(-90).max(90).nullish(),

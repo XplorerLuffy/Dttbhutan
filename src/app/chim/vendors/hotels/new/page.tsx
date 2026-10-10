@@ -29,6 +29,7 @@ export default async function NewHotelPage() {
         initial={{
           name: "",
           description: "",
+          metaDescription: "",
           destinationId: destinations[0]?.id ?? "",
           address: "",
           latitude: "",

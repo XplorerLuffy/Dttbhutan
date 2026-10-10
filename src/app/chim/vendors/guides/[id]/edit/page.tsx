@@ -44,6 +44,7 @@ export default async function EditGuidePage({ params }: { params: Promise<{ id: 
           // Decimal — toString avoids the float rounding a Number() would risk.
           ratePerDay: guide.ratePerDay.toString(),
           bio: guide.bio ?? "",
+          metaDescription: guide.metaDescription ?? "",
           photoUrl: guide.photoUrl ?? "",
           destinationIds: guide.destinations.map((d) => d.id),
         }}

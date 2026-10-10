@@ -149,6 +149,8 @@ model GuideProfile {
   yearsExperience Int          @default(0)
   ratePerDay      Decimal      @db.Decimal(10, 2)
   bio             String?
+  /// Search-result description (70–160 characters); a generated one is used when blank.
+  metaDescription String?
   photoUrl        String?
   status          VendorStatus @default(PENDING)
   adminNote       String? // reason for rejection/suspension, or verification notes
@@ -184,6 +186,8 @@ model Hotel {
   description        String?
   destinationId      String
   destination        Destination  @relation(fields: [destinationId], references: [id])
+  /// Search-result description (70–160 characters); a generated one is used when blank.
+  metaDescription    String?
   address            String? // specific address/area within the destination
   latitude           Float?
   longitude          Float?

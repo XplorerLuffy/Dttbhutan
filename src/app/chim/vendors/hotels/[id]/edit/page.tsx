@@ -42,6 +42,7 @@ export default async function EditHotelPage({ params }: { params: Promise<{ id: 
         initial={{
           name: hotel.name,
           description: hotel.description ?? "",
+          metaDescription: hotel.metaDescription ?? "",
           destinationId: hotel.destinationId,
           address: hotel.address ?? "",
           latitude: hotel.latitude?.toString() ?? "",

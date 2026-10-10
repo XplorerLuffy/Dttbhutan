@@ -1,3 +1,4 @@
+import { hotelMeta } from "@/lib/metaDescriptions";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -34,6 +35,8 @@ export async function generateMetadata({
       status: true,
       name: true,
       description: true,
+      metaDescription: true,
+      amenities: true,
       photoUrls: true,
       destination: { select: { name: true } },
     },
@@ -41,10 +44,12 @@ export async function generateMetadata({
   if (!hotel || hotel.status !== "APPROVED") return { title: "Hotel not found" };
 
   const title = `${hotel.name}, ${hotel.destination.name}, Bhutan`;
-  const description = (
-    hotel.description?.trim() ||
-    `Stay at ${hotel.name} in ${hotel.destination.name}, Bhutan. See rooms and prices and book directly with Droelma Tours & Travels.`
-  ).slice(0, 160);
+  const description = hotelMeta({
+    name: hotel.name,
+    metaDescription: hotel.metaDescription,
+    destination: hotel.destination.name,
+    amenities: hotel.amenities,
+  });
 
   return {
     title,
