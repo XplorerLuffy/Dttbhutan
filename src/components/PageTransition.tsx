@@ -20,7 +20,10 @@ export default function PageTransition({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const prefersReducedMotion = useReducedMotion();
 
-  if (prefersReducedMotion) {
+  // The admin area keeps its sidebar on screen between pages. Keying the whole
+  // tree on the path would re-mount it (and fade it in from nothing) on every
+  // click, which is exactly what makes a dashboard feel like it reloads.
+  if (prefersReducedMotion || pathname.startsWith("/chim")) {
     return <>{children}</>;
   }
 

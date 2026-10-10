@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
+    // Keep a visited page's data for 30 seconds so going back and forth
+    // between admin pages is instant. Saving always refreshes it (the forms
+    // call router.refresh()), so an admin never sees their own change stale.
+    staleTimes: { dynamic: 30, static: 180 },
+
     // pdfkit is loaded from node_modules at runtime rather than bundled.
     serverComponentsExternalPackages: ["pdfkit", "nodemailer"],
 

@@ -63,10 +63,16 @@ export default function DashboardShell({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  // The link just clicked, highlighted at once. The server takes a moment to
+  // answer; without this the sidebar looks like the click did nothing.
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => setMounted(true), []);
   // A navigation closes the drawer.
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    setOpen(false);
+    setPendingHref(null);
+  }, [pathname]);
   // Stop the page scrolling behind an open drawer.
   useEffect(() => {
     if (!open) return;
@@ -92,6 +98,8 @@ export default function DashboardShell({
     .filter((n) => isActive(n.href))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
+  const shownHref = pendingHref ?? activeHref;
+
   const navList = (
     <nav aria-label={`${title} navigation`} className="space-y-5">
       {sections.map((section, i) => (
@@ -103,12 +111,15 @@ export default function DashboardShell({
           )}
           <ul className="space-y-0.5">
             {section.items.map((item) => {
-              const active = item.href === activeHref;
+              const active = item.href === shownHref;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    prefetch={false}
+                    onClick={() => {
+                      if (item.href !== activeHref) setPendingHref(item.href);
+                      else setOpen(false);
+                    }}
                     aria-current={active ? "page" : undefined}
                     className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-colors ${
                       active
@@ -144,6 +155,15 @@ export default function DashboardShell({
 
   return (
     <div className="admin-ui min-h-screen bg-[#fbf8f3] text-stone-900">
+      {pendingHref && (
+        <div
+          role="progressbar"
+          aria-label="Loading page"
+          className="fixed inset-x-0 top-0 z-[60] h-1 overflow-hidden bg-[#f3e3bd]"
+        >
+          <div className="h-full w-1/3 animate-[admin-progress_1s_ease-in-out_infinite] rounded-full bg-brand-800" />
+        </div>
+      )}
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r border-stone-200/80 bg-[#fcf6e9] px-3 py-5 lg:flex">
         {brand}
