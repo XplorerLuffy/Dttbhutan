@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { LogoLockup } from "@/components/Logo";
 import CompanyFact from "@/components/company/CompanyFact";
 import {
   getSiteContent,
@@ -57,7 +56,7 @@ export default async function AboutPage() {
           className="-z-10 object-cover opacity-45"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-950/70 via-brand-950/40 to-brand-950/80" />
-        <div className="mx-auto flex max-w-4xl flex-col items-center px-4 py-16 text-center sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
           {content("about.eyebrow") && (
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">
               {content("about.eyebrow")}
@@ -67,11 +66,11 @@ export default async function AboutPage() {
             {company.name}
           </h1>
           {content("about.intro") && (
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg">
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-[17px]">
               {content("about.intro")}
             </p>
           )}
-          <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             {content("about.hero.primaryLabel") && (
               <Link
                 href="/packages"
@@ -94,18 +93,18 @@ export default async function AboutPage() {
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         {cards.length > 0 && (
-          <section className="pt-14 sm:pt-16">
+          <section className="pt-10 sm:pt-12">
             <SectionHeading title={content("about.whatWeDo.heading")} />
-            <div className="mt-8 grid gap-5 sm:grid-cols-2">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {cards.map((item, i) => (
                 <div
                   key={item.title}
-                  className="group rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                  className="group rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
                 >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold-100 font-display text-lg font-semibold text-gold-700">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold-100 font-display text-base font-semibold text-gold-700">
                     {i + 1}
                   </span>
-                  <p className="mt-4 font-display text-lg font-semibold text-stone-900">
+                  <p className="mt-3 font-display text-lg font-semibold text-stone-900">
                     {item.title}
                   </p>
                   <p className="mt-2 text-sm leading-relaxed text-stone-600">
@@ -118,15 +117,15 @@ export default async function AboutPage() {
         )}
 
         {(travelling.length > 0 || content("about.travelling.linkText")) && (
-          <section className="mt-14 rounded-3xl bg-[#fcf6e9] px-6 py-10 sm:mt-16 sm:px-12 sm:py-12">
+          <section className="mt-10 rounded-3xl bg-[#fcf6e9] px-6 py-8 sm:mt-12 sm:px-10">
             <SectionHeading title={content("about.travelling.heading")} />
-            <div className="mx-auto mt-6 max-w-3xl space-y-4 text-[15px] leading-relaxed text-stone-700">
+            <div className="mt-5 max-w-3xl space-y-3 text-[15px] leading-relaxed text-stone-700">
               {travelling.map((para, i) => (
                 <p key={i}>{para}</p>
               ))}
             </div>
             {content("about.travelling.linkText") && (
-              <p className="mt-6 text-center">
+              <p className="mt-5">
                 <Link
                   href="/travel-guide"
                   className="inline-block rounded-full bg-brand-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-800"
@@ -138,9 +137,9 @@ export default async function AboutPage() {
           </section>
         )}
 
-        <section className="mt-14 sm:mt-16">
+        <section className="mt-10 sm:mt-12">
           <SectionHeading title={content("about.companyDetails.heading")} />
-          <dl className="mx-auto mt-8 max-w-2xl divide-y divide-stone-100 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+          <dl className="mt-5 max-w-2xl divide-y divide-stone-100 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
             {details.map(({ label, value, plain }) =>
               !plain &&
               !value.trim() &&
@@ -169,14 +168,13 @@ export default async function AboutPage() {
           </dl>
         </section>
 
-        <section className="mt-14 overflow-hidden rounded-3xl bg-brand-900 px-6 py-12 text-center sm:mt-16 sm:px-12">
-          <LogoLockup className="mx-auto mb-5 h-auto w-40 brightness-0 invert" />
+        <section className="mt-10 flex flex-col gap-5 overflow-hidden rounded-3xl bg-brand-900 px-6 py-8 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:px-10">
           {content("about.cta.text") && (
-            <p className="mx-auto max-w-xl font-display text-xl text-white sm:text-2xl">
+            <p className="max-w-xl font-display text-xl text-white sm:text-2xl">
               {content("about.cta.text")}
             </p>
           )}
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <div className="flex shrink-0 flex-wrap gap-3">
             {content("about.cta.contactLabel") && (
               <Link
                 href="/contact"
@@ -202,14 +200,11 @@ export default async function AboutPage() {
 
 function SectionHeading({ title }: { title: string }) {
   return (
-    <div className="text-center">
-      <h2 className="font-display text-2xl font-semibold text-stone-900 sm:text-3xl">
+    <div>
+      <h2 className="font-display text-2xl font-semibold text-stone-900 sm:text-[1.7rem]">
         {title}
       </h2>
-      <span
-        aria-hidden
-        className="mx-auto mt-3 block h-0.5 w-12 rounded bg-gold-500"
-      />
+      <span aria-hidden className="mt-2 block h-0.5 w-10 rounded bg-gold-500" />
     </div>
   );
 }
