@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireRole, AuthError } from "@/lib/auth";
+import { revalidateSite } from "@/lib/revalidate";
 import { refreshRatesFromLiveSource } from "@/lib/fx";
 
 export async function POST() {
   try {
     await requireRole("ADMIN");
     const result = await refreshRatesFromLiveSource();
+    revalidateSite();
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof AuthError) {

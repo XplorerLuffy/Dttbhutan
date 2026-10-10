@@ -18,5 +18,19 @@ import { revalidatePath } from "next/cache";
  * site so the reason lives in one place and the call reads as intent.
  */
 export function revalidateHomepage(): void {
-  revalidatePath("/");
+  revalidateSite();
+}
+
+/**
+ * Throws away every cached public page, so the next visitor gets fresh ones.
+ *
+ * Detail pages (a package, a destination, an article, a hotel…) are cached for
+ * a few minutes so they open instantly instead of waiting on the database each
+ * time. This is what keeps that safe: any admin change that could show up on a
+ * public page calls it, so an edit appears straight away rather than after the
+ * cache runs out. The layout-wide form also refreshes shared wording (footer,
+ * header, company details) that every page carries.
+ */
+export function revalidateSite(): void {
+  revalidatePath("/", "layout");
 }

@@ -7,6 +7,18 @@ import JsonLd from "@/components/JsonLd";
 import TripGallery from "@/components/listing/TripGallery";
 import { articleJsonLd, breadcrumbJsonLd, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
+/** Cached for five minutes so the page opens instantly; admin edits clear it at once (see lib/revalidate.ts). */
+export const revalidate = 300;
+
+/**
+ * Nothing is built ahead of time, but declaring this is what lets Next keep
+ * each page after its first visit (a route with a dynamic segment and no
+ * generateStaticParams is otherwise rendered fresh for every request).
+ */
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({
   params,
 }: {

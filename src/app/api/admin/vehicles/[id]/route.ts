@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole, AuthError } from "@/lib/auth";
+import { revalidateSite } from "@/lib/revalidate";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { vendorStatusUpdateSchema } from "@/lib/adminVendor";
@@ -27,7 +28,8 @@ export async function PATCH(
         return NextResponse.json({ error: details.error.flatten() }, { status: 400 });
       }
       const updated = await prisma.vehicle.update({ where: { id }, data: details.data });
-      return NextResponse.json(updated);
+      revalidateSite();
+    return NextResponse.json(updated);
     }
 
     const parsed = vendorStatusUpdateSchema.safeParse(body);
@@ -48,6 +50,7 @@ export async function PATCH(
       adminNote: parsed.data.adminNote,
     });
 
+    revalidateSite();
     return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof AuthError) {

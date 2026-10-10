@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
   const realm = realmForRequest(
     request.nextUrl.pathname,
     request.headers.get("referer"),
-    request.nextUrl.origin
+    request.nextUrl.origin,
   );
   // Always set here, replacing anything the client sent.
   const forward = () => {
@@ -57,10 +57,28 @@ export async function middleware(request: NextRequest) {
   // whole site down with a 500 on every route.
   if (!url || !key) return response;
 
+  // Most visitors are not signed in. With no login cookie there is nothing to
+  // refresh or verify, so skip the auth work (and its network calls) entirely.
+  const hasLogin = request.cookies
+    .getAll()
+    .some(
+      (c) =>
+        c.name === ADMIN_SESSION_COOKIE ||
+        isAuthCookieOf("admin", c.name) ||
+        isAuthCookieOf("public", c.name),
+    );
+  if (!hasLogin) return response;
+
   const isAdmin = realm === "admin";
-  const adminCookie = isAdmin ? request.cookies.get(ADMIN_SESSION_COOKIE)?.value : undefined;
+  const adminCookie = isAdmin
+    ? request.cookies.get(ADMIN_SESSION_COOKIE)?.value
+    : undefined;
   const now = Date.now();
-  const adminSession = await readAdminSession(adminCookie, undefined, now).catch(() => null);
+  const adminSession = await readAdminSession(
+    adminCookie,
+    undefined,
+    now,
+  ).catch(() => null);
 
   const supabase = createServerClient(url, key, {
     ...supabaseCookieOptions(realm),
@@ -73,7 +91,11 @@ export async function middleware(request: NextRequest) {
         response = forward();
         for (const { name, value, options } of toSet) {
           // The admin's sign-in stays a browser-session cookie when refreshed.
-          response.cookies.set(name, value, isAdmin ? asBrowserSessionCookie(options) : options);
+          response.cookies.set(
+            name,
+            value,
+            isAdmin ? asBrowserSessionCookie(options) : options,
+          );
         }
       },
     },
@@ -85,18 +107,25 @@ export async function middleware(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
 
   const signedInAs = data?.claims?.sub;
-  if (adminCookie && (!adminSession || (signedInAs && adminSession.uid !== signedInAs))) {
+  if (
+    adminCookie &&
+    (!adminSession || (signedInAs && adminSession.uid !== signedInAs))
+  ) {
     // Lapsed, or left behind by a different sign-in: end the admin's session.
     // Only the admin's cookies — the public site's login is someone else's.
     response.cookies.set(ADMIN_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
     for (const { name } of request.cookies.getAll()) {
-      if (isAuthCookieOf("admin", name)) response.cookies.set(name, "", { path: "/", maxAge: 0 });
+      if (isAuthCookieOf("admin", name))
+        response.cookies.set(name, "", { path: "/", maxAge: 0 });
     }
-  } else if (adminSession && now - adminSession.lastSeen > ADMIN_TOUCH_EVERY_MS) {
+  } else if (
+    adminSession &&
+    now - adminSession.lastSeen > ADMIN_TOUCH_EVERY_MS
+  ) {
     response.cookies.set(
       ADMIN_SESSION_COOKIE,
       await encodeAdminSession({ ...adminSession, lastSeen: now }),
-      adminSessionCookieOptions
+      adminSessionCookieOptions,
     );
   }
 

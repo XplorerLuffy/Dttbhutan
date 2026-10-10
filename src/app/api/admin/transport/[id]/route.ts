@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole, AuthError } from "@/lib/auth";
+import { revalidateSite } from "@/lib/revalidate";
 import { prisma } from "@/lib/prisma";
 import { vendorStatusUpdateSchema } from "@/lib/adminVendor";
 import { notifyVendorStatusChanged } from "@/lib/email/notify";
@@ -30,6 +31,7 @@ export async function PATCH(
       adminNote: parsed.data.adminNote,
     });
 
+    revalidateSite();
     return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof AuthError) {
