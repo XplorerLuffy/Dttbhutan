@@ -88,7 +88,7 @@ export default function MobileMenu({
             </div>
 
             <nav className="flex-1 overflow-y-auto px-4">
-              <Accordion label="Tour Packages">
+              <Accordion label="Tours">
                 <div className="space-y-4">
                   <ul className="space-y-2">
                     <li>
@@ -135,6 +135,7 @@ export default function MobileMenu({
                   {[
                     { href: "/hotels", label: "Book a Hotel" },
                     { href: "/guides", label: "Book a Guide" },
+                    { href: "/flights", label: "Book Tickets" },
                     { href: "/vehicles", label: "Book Transport" },
                   ].map((item) => (
                     <li key={item.href}>

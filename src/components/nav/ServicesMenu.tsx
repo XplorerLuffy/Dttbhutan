@@ -33,6 +33,15 @@ const ITEMS = [
     ),
   },
   {
+    href: "/flights",
+    label: "Book Tickets",
+    icon: (
+      <svg {...ICON}>
+        <path d="M3 13l18-8-5 15-4-6-9-1zM12 14l4-5" />
+      </svg>
+    ),
+  },
+  {
     href: "/vehicles",
     label: "Book Transport",
     icon: (

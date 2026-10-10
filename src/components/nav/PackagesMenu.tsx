@@ -13,8 +13,8 @@ export default function PackagesMenu({
   label?: string;
 }) {
   return (
-    <NavMenu label={label} panelClassName="sm:max-w-2xl" triggerClassName={triggerClassName}>
-      <div className="grid gap-6 sm:grid-cols-2">
+    <NavMenu label={label} panelClassName="sm:!w-[40rem] sm:max-w-none" triggerClassName={triggerClassName}>
+      <div className="grid gap-8 sm:grid-cols-[1fr_1fr]">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-400">Plan your trip</p>
           <ul className="space-y-3">
@@ -38,16 +38,19 @@ export default function PackagesMenu({
         </div>
 
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-400">Featured packages</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-400">Popular packages</p>
           {packages.length === 0 ? (
             <p className="text-sm text-stone-500">Packages coming soon.</p>
           ) : (
             <ul className="space-y-1.5">
-              {packages.map((p) => (
+              {packages.slice(0, 8).map((p) => (
                 <li key={p.id}>
-                  <Link href={`/packages/${p.slug}`} className="text-sm text-stone-700 hover:text-brand-700">
-                    {p.title}
-                    <span className="text-stone-400"> · {p.durationDays}d</span>
+                  <Link
+                    href={`/packages/${p.slug}`}
+                    className="flex items-baseline justify-between gap-3 rounded-md py-0.5 text-sm text-stone-700 hover:text-brand-700"
+                  >
+                    <span className="truncate">{p.title}</span>
+                    <span className="shrink-0 text-xs text-stone-400">{p.durationDays} days</span>
                   </Link>
                 </li>
               ))}
@@ -60,9 +63,6 @@ export default function PackagesMenu({
           Browse all packages →
         </Link>
         <span className="flex gap-5 text-stone-600">
-          <Link href="/destinations" className="hover:text-brand-700">
-            Destinations
-          </Link>
           <Link href="/travel-guide" className="hover:text-brand-700">
             Travel guide
           </Link>

@@ -45,7 +45,7 @@ export default function NavMenu({
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className={`fixed inset-x-4 top-[4.5rem] z-30 rounded-lg border border-stone-200 bg-white p-5 shadow-xl sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-3 sm:w-screen sm:max-w-md sm:max-h-none sm:overflow-visible max-h-[70vh] overflow-y-auto ${panelClassName ?? ""}`}
+          className={`fixed inset-x-4 top-[4.5rem] z-30 whitespace-normal rounded-xl border border-stone-200 bg-white p-5 text-left font-normal shadow-xl sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-3 sm:w-screen sm:max-w-md sm:max-h-none sm:overflow-visible max-h-[70vh] overflow-y-auto ${panelClassName ?? ""}`}
         >
           {children}
         </div>
