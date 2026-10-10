@@ -245,7 +245,10 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     description:
       "Everything written on /about. The company facts lower down that page (licence number, registration, address) come from Company details instead, so they can't say two different things in two places.",
     fields: [
-      { key: "about.intro", label: "Opening line, under the logo", type: "textarea", default: "A Bhutan-based tour operator arranging guides, accommodation, transport and complete itineraries for travellers visiting the kingdom.", help: "The heading above it is \"About\" followed by your trading name, so it always matches Company details." },
+      { key: "about.intro", label: "Opening line, under the company name", type: "textarea", default: "A Bhutan-based tour operator arranging guides, accommodation, transport and complete itineraries for travellers visiting the kingdom.", help: "The heading above it is \"About\" followed by your trading name, so it always matches Company details." },
+      { key: "about.eyebrow", label: "Small label above the company name", type: "text", default: "About us", help: "Clear it to hide the label." },
+      { key: "about.hero.primaryLabel", label: "Top banner — first button (links to Tours)", type: "text", default: "Explore our tours", help: "Clear it to hide the button." },
+      { key: "about.hero.secondaryLabel", label: "Top banner — second button (links to Contact)", type: "text", default: "Talk to our team", help: "Clear it to hide the button." },
 
       { key: "about.whatWeDo.heading", label: "\"What we do\" — heading", type: "text", default: "What we do" },
       { key: "about.whatWeDo.1.title", label: "Card 1 — title", type: "text", default: "Licensed guides" },

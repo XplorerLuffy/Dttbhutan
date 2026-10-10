@@ -58,9 +58,11 @@ export default async function AboutPage() {
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-950/70 via-brand-950/40 to-brand-950/80" />
         <div className="mx-auto flex max-w-4xl flex-col items-center px-4 py-16 text-center sm:px-6 sm:py-24">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">
-            About us
-          </p>
+          {content("about.eyebrow") && (
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">
+              {content("about.eyebrow")}
+            </p>
+          )}
           <h1 className="text-balance font-display text-3xl font-semibold leading-tight text-white sm:text-5xl">
             {company.name}
           </h1>
@@ -70,18 +72,22 @@ export default async function AboutPage() {
             </p>
           )}
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/packages"
-              className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand-900 hover:bg-stone-100"
-            >
-              Explore our tours
-            </Link>
-            <Link
-              href="/contact"
-              className="rounded-full border border-white/70 px-6 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
-            >
-              Talk to our team
-            </Link>
+            {content("about.hero.primaryLabel") && (
+              <Link
+                href="/packages"
+                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand-900 hover:bg-stone-100"
+              >
+                {content("about.hero.primaryLabel")}
+              </Link>
+            )}
+            {content("about.hero.secondaryLabel") && (
+              <Link
+                href="/contact"
+                className="rounded-full border border-white/70 px-6 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+              >
+                {content("about.hero.secondaryLabel")}
+              </Link>
+            )}
           </div>
         </div>
       </section>
