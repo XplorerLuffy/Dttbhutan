@@ -121,6 +121,8 @@ model Destination {
   slug        String          @unique
   region      DzongkhagRegion
   description String?
+  /// The text search engines show under the page title (70–160 characters). Falls back to the description.
+  metaDescription String?
   highlights  String[] // notable sites/attractions
   photoUrl    String?
   latitude    Float?

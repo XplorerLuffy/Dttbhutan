@@ -12,6 +12,7 @@ type InitialValues = {
   slug: string;
   region: DzongkhagRegion;
   description: string;
+  metaDescription: string;
   highlights: string[];
   photoUrl: string;
   latitude: string;
@@ -48,6 +49,7 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
   const [name, setName] = useState(initial.name);
   const [region, setRegion] = useState<DzongkhagRegion>(initial.region);
   const [description, setDescription] = useState(initial.description);
+  const [metaDescription, setMetaDescription] = useState(initial.metaDescription);
   const [highlights, setHighlights] = useState(initial.highlights.join("\n"));
   const [photoUrl, setPhotoUrl] = useState(initial.photoUrl);
   const [latitude, setLatitude] = useState(initial.latitude);
@@ -67,6 +69,7 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
         name,
         region,
         description: nullableText(description),
+        metaDescription: nullableText(metaDescription),
         highlights: splitLines(highlights),
         photoUrl: nullableText(photoUrl),
         latitude: nullableNumber(latitude),
@@ -123,6 +126,17 @@ export default function DestinationForm({ initial }: { initial: InitialValues })
           onChange={(e) => setDescription(e.target.value)}
           rows={5}
           className="input"
+        />
+      </Field>
+
+      <Field label={`Google description (${metaDescription.trim().length}/160 characters)`}>
+        <textarea
+          value={metaDescription}
+          onChange={(e) => setMetaDescription(e.target.value)}
+          rows={2}
+          maxLength={200}
+          className="input"
+          placeholder="The text Google shows under this destination's title. Aim for 70–160 characters."
         />
       </Field>
 

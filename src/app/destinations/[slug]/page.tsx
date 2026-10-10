@@ -30,7 +30,8 @@ export async function generateMetadata({
   if (!destination) return { title: "Destination not found" };
 
   const description =
-    destination.description?.slice(0, 155) ??
+    destination.metaDescription?.trim() ||
+    destination.description?.slice(0, 155) ||
     `Plan a trip to ${destination.name}, Bhutan — hotels, licensed guides and package tours.`;
   // "Things to do" and "tours" are how people search for a place they are
   // thinking of visiting; the bare name competes with every encyclopedia.

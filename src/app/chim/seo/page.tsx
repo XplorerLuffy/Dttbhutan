@@ -35,7 +35,7 @@ export default async function SeoDashboardPage() {
       where: { status: "PUBLISHED" },
       select: { id: true, title: true, summary: true, metaDescription: true, description: true, coverPhotoUrl: true, _count: { select: { days: true, photos: true } } },
     }),
-    prisma.destination.findMany({ select: { id: true, name: true, description: true, photoUrl: true } }),
+    prisma.destination.findMany({ select: { id: true, name: true, description: true, metaDescription: true, photoUrl: true } }),
     prisma.article.findMany({
       where: { status: "PUBLISHED" },
       select: { id: true, title: true, excerpt: true, content: true, coverPhotoUrl: true, updatedAt: true },
@@ -125,6 +125,9 @@ export default async function SeoDashboardPage() {
   for (const d of destinations) {
     const problems: string[] = [];
     if (len(d.description) < 200) problems.push("Description is thin (aim for 200+ characters)");
+    const meta = len(d.metaDescription) || len(d.description);
+    if (meta < 70) problems.push("Google description is too short (aim for 70–160 characters)");
+    if (len(d.metaDescription) > 160) problems.push("Google description is longer than Google shows (over 160 characters)");
     if (!d.photoUrl) problems.push("No photo");
     if (problems.length) destinationIssues.push({ title: d.name, href: `/chim/destinations/${d.id}/edit`, problems });
   }

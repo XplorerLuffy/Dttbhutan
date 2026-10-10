@@ -375,6 +375,7 @@ export const destinationAdminSchema = z.object({
   name: z.string().min(2).max(100),
   region: z.enum(["WEST", "CENTRAL", "EAST", "NORTH", "SOUTH"]),
   description: z.string().max(3000).nullish(),
+  metaDescription: z.string().trim().max(200).nullish(),
   highlights: z.array(z.string().min(1).max(200)).max(40),
   photoUrl: z.string().max(500).nullish(),
   latitude: z.number().min(-90).max(90).nullish(),

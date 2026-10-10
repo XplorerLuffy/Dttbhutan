@@ -35,6 +35,7 @@ export default async function EditDestinationPage({
           slug: destination.slug,
           region: destination.region,
           description: destination.description ?? "",
+          metaDescription: destination.metaDescription ?? "",
           highlights: destination.highlights,
           photoUrl: destination.photoUrl ?? "",
           latitude: destination.latitude?.toString() ?? "",
