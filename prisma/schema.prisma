@@ -778,6 +778,10 @@ model ContactReply {
   /// SENT, or FAILED when the mail server refused it (the text is still kept).
   status    String
   error     String?
+  /// A price quoted in the email: { label, amount, basis, travelers, validUntil, note }.
+  quote     Json?
+  /// What was attached: [{ name, kind }] — names only, the files are not kept.
+  attachments Json?
   createdAt DateTime       @default(now())
 
   @@index([messageId, createdAt])

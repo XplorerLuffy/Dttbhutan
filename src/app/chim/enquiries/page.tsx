@@ -3,7 +3,7 @@ import Image from "next/image";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import EnquiryStatusControls from "@/components/admin/EnquiryStatusControls";
-import EnquiryReply from "@/components/admin/EnquiryReply";
+import EnquiryReply, { type PastReply } from "@/components/admin/EnquiryReply";
 
 const STATUS_BADGE: Record<string, string> = {
   NEW: "badge-pending",
@@ -40,6 +40,19 @@ export default async function AdminEnquiriesPage({
       },
     },
   });
+
+  const packages = (
+    await prisma.itinerary.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { title: "asc" },
+      select: { slug: true, title: true, pricePerPerson: true, durationDays: true },
+    })
+  ).map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    durationDays: p.durationDays,
+    pricePerPerson: Number(p.pricePerPerson),
+  }));
 
   const countOf = (st: string) => all.filter((m) => m.status === st).length;
   const newCount = countOf("NEW");
@@ -199,6 +212,7 @@ export default async function AdminEnquiriesPage({
               id={m.id}
               email={m.email}
               firstName={m.name.trim().split(/\s+/)[0]}
+              packages={packages}
               defaultSubject={`Re: ${m.subject || "Your enquiry to Droelma Tours & Travels"}`}
               past={m.replies.map((r) => ({
                 id: r.id,
@@ -208,6 +222,8 @@ export default async function AdminEnquiriesPage({
                 error: r.error,
                 by: r.sentBy?.name ?? null,
                 at: r.createdAt.toISOString(),
+                quote: (r.quote as PastReply["quote"]) ?? null,
+                attachments: (r.attachments as PastReply["attachments"]) ?? null,
               }))}
             />
           </div>

@@ -38,6 +38,21 @@ export const SCHEDULE_ZONE_NOTE = "Bhutan time (UTC+6)";
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export const DEFAULT_SLOT: Slot = { open: "09:00", close: "17:00" };
+/** "Open 24 hours" is stored as one period running the whole day. */
+export const ALL_DAY_SLOT: Slot = { open: "00:00", close: "23:59" };
+
+export function isAllDay(day: DayHours): boolean {
+  return (
+    !day.closed &&
+    day.slots.length === 1 &&
+    day.slots[0].open === ALL_DAY_SLOT.open &&
+    day.slots[0].close === ALL_DAY_SLOT.close
+  );
+}
+
+export function isOpenAlways(schedule: Schedule): boolean {
+  return DAY_KEYS.every((d) => isAllDay(schedule[d]));
+}
 
 export const DEFAULT_SCHEDULE: Schedule = Object.fromEntries(
   DAY_KEYS.map((d) => [
@@ -128,6 +143,7 @@ export function formatTime(time: string): string {
 /** What one day's hours read as: "9:00 am – 5:00 pm", or "Closed". */
 export function describeDay(day: DayHours): string {
   if (day.closed) return "Closed";
+  if (isAllDay(day)) return "Open 24 hours";
   return day.slots.map((s) => `${formatTime(s.open)} – ${formatTime(s.close)}`).join(", ");
 }
 
@@ -137,6 +153,7 @@ export function describeDay(day: DayHours): string {
  * table won't fit — the itinerary PDF, the assistant's knowledge.
  */
 export function summariseSchedule(schedule: Schedule): string {
+  if (isOpenAlways(schedule)) return "Open 24 hours, 7 days a week";
   const groups: { from: DayKey; to: DayKey; text: string }[] = [];
   for (const d of DAY_KEYS) {
     const text = describeDay(schedule[d]);
@@ -180,6 +197,7 @@ export function openStatus(
   if (todayIndex < 0) return { open: false, note: "" };
 
   const today = schedule[DAY_KEYS[todayIndex]];
+  if (isAllDay(today)) return { open: true, note: "Open now · open 24 hours today" };
   if (!today.closed) {
     const current = today.slots.find((s) => time >= s.open && time < s.close);
     if (current) return { open: true, note: `Open now · closes at ${formatTime(current.close)}` };

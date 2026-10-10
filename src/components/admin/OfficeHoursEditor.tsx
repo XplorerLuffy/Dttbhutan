@@ -3,7 +3,11 @@
 import {
   DAY_KEYS,
   DAY_LABELS,
+  ALL_DAY_SLOT,
   DEFAULT_SCHEDULE,
+  DEFAULT_SLOT,
+  isAllDay,
+  isOpenAlways,
   MAX_SLOTS_PER_DAY,
   SCHEDULE_ZONE_NOTE,
   parseSchedule,
@@ -63,6 +67,16 @@ export default function OfficeHoursEditor({
     setDay(day, { slots: schedule[day].slots.filter((_, i) => i !== index) });
   }
 
+  function setAllDay(day: DayKey, on: boolean) {
+    setDay(day, { closed: false, slots: [on ? { ...ALL_DAY_SLOT } : { ...DEFAULT_SLOT }] });
+  }
+
+  function openAlways() {
+    const next = { ...schedule };
+    for (const d of DAY_KEYS) next[d] = { closed: false, slots: [{ ...ALL_DAY_SLOT }] };
+    update(next);
+  }
+
   function copyMondayToWeekdays() {
     const monday = schedule.mon;
     const next = { ...schedule };
@@ -87,6 +101,13 @@ export default function OfficeHoursEditor({
           <strong>+</strong> to add a second period, such as after a lunch break.
         </p>
         <div className="flex gap-3 text-sm">
+          <button
+            type="button"
+            onClick={openAlways}
+            className={`font-medium hover:underline ${isOpenAlways(schedule) ? "text-emerald-700" : "text-brand-700"}`}
+          >
+            {isOpenAlways(schedule) ? "Open 24/7 ✓" : "Open 24/7"}
+          </button>
           <button
             type="button"
             onClick={copyMondayToWeekdays}
@@ -120,6 +141,15 @@ export default function OfficeHoursEditor({
                   />
                   Closed
                 </label>
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-stone-700">
+                  <input
+                    type="checkbox"
+                    checked={isAllDay(hours)}
+                    onChange={(e) => setAllDay(day, e.target.checked)}
+                    className="h-5 w-5 rounded border-stone-400 accent-brand-700"
+                  />
+                  Open 24 hours
+                </label>
               </div>
 
               <div className="space-y-3">
@@ -128,20 +158,20 @@ export default function OfficeHoursEditor({
                     <TimeBox
                       label="Opens at"
                       value={slot.open}
-                      disabled={hours.closed}
+                      disabled={hours.closed || isAllDay(hours)}
                       onChange={(v) => setSlot(day, i, { open: v })}
                     />
                     <TimeBox
                       label="Closes at"
                       value={slot.close}
-                      disabled={hours.closed}
+                      disabled={hours.closed || isAllDay(hours)}
                       onChange={(v) => setSlot(day, i, { close: v })}
                     />
                     {i === 0 ? (
                       <IconButton
                         label={`Add another period for ${DAY_LABELS[day].long}`}
                         onClick={() => addSlot(day)}
-                        disabled={hours.closed || hours.slots.length >= MAX_SLOTS_PER_DAY}
+                        disabled={hours.closed || isAllDay(hours) || hours.slots.length >= MAX_SLOTS_PER_DAY}
                       >
                         +
                       </IconButton>

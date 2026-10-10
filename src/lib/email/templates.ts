@@ -514,10 +514,30 @@ export function vendorStatusToVendor(input: {
 // A personal reply to an enquiry, written by the team
 // ---------------------------------------------------------------------------
 
+export type ReplyQuote = {
+  /** What is being priced, e.g. the package's name. */
+  label: string;
+  /** In ngultrum. */
+  amount: number;
+  basis: "PER_PERSON" | "TOTAL";
+  /** Only meaningful for a per-person price; turns it into a total. */
+  travelers?: number | null;
+  /** ISO date (yyyy-mm-dd). */
+  validUntil?: string | null;
+  note?: string | null;
+};
+
+/** The total this quote comes to, when it can be worked out. */
+export function quoteTotal(q: ReplyQuote): number | null {
+  if (q.basis === "TOTAL") return q.amount;
+  return q.travelers && q.travelers > 0 ? q.amount * q.travelers : null;
+}
+
 /**
- * Looks like a letter, not a notification: the team's own words, a signature,
- * and the traveller's original message quoted underneath so the thread makes
- * sense in their inbox.
+ * A letter from the team, on the company's letterhead: logo, their own words,
+ * an optional price card, a list of what is attached, a signature and the
+ * company's contact lines. The traveller's original message is quoted
+ * underneath so the thread makes sense in their inbox.
  */
 export function enquiryReplyToSender(input: {
   subject: string;
@@ -525,7 +545,12 @@ export function enquiryReplyToSender(input: {
   signedBy: string;
   originalMessage: string;
   originalDate: Date;
+  quote?: ReplyQuote | null;
+  attachmentNames?: string[];
+  contact?: { phone?: string; email?: string };
 }): RenderedEmail {
+  const logo = `${siteUrl()}/logo/dtt-logo.png`;
+  const web = siteUrl().replace(/^https?:\/\//, "");
   const paragraphs = input.body
     .split(/\n{2,}/)
     .map(
@@ -533,19 +558,66 @@ export function enquiryReplyToSender(input: {
         `<p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:${INK};">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`
     )
     .join("");
+
+  const q = input.quote ?? null;
+  const total = q ? quoteTotal(q) : null;
+  const basisText = q ? (q.basis === "PER_PERSON" ? "per person" : "in total") : "";
+  const validText = q?.validUntil
+    ? formatDate(new Date(`${q.validUntil}T12:00:00Z`))
+    : null;
+  const quoteHtml = q
+    ? `
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;border:1px solid #f1d9a8;background:#fdf6e7;border-radius:10px;">
+            <tr><td style="padding:18px 20px;">
+              <p style="margin:0 0 4px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#a54f15;font-weight:700;">Your quotation</p>
+              <p style="margin:0;font-size:15px;color:${INK};font-weight:600;">${escapeHtml(q.label)}</p>
+              <p style="margin:10px 0 0;font-family:Georgia,serif;font-size:28px;line-height:1.1;color:#0a3159;font-weight:700;">${escapeHtml(formatBTN(q.amount))} <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;font-weight:500;color:${MUTED};">${basisText}</span></p>
+              ${
+                q.basis === "PER_PERSON" && total
+                  ? `<p style="margin:8px 0 0;font-size:14px;color:${INK};">${q.travelers} traveller${q.travelers === 1 ? "" : "s"} &times; ${escapeHtml(formatBTN(q.amount))} = <strong>${escapeHtml(formatBTN(total))}</strong></p>`
+                  : ""
+              }
+              ${q.note ? `<p style="margin:10px 0 0;font-size:13px;line-height:1.55;color:${INK};">${escapeHtml(q.note).replace(/\n/g, "<br>")}</p>` : ""}
+              <p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:${MUTED};">Prices are in Bhutanese ngultrum (BTN).${validText ? ` This quotation is valid until ${escapeHtml(validText)}.` : ""} Rates and government fees can change, and we confirm them when you book.</p>
+            </td></tr>
+          </table>`
+    : "";
+
+  const names = input.attachmentNames ?? [];
+  const attachHtml = names.length
+    ? `
+          <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:${INK};">Attached to this email</p>
+          <ul style="margin:0 0 16px;padding-left:18px;font-size:13px;line-height:1.7;color:${INK};">${names.map((n) => `<li>${escapeHtml(n)}</li>`).join("")}</ul>`
+    : "";
+
+  const contactBits = [
+    input.contact?.phone ? `Tel ${escapeHtml(input.contact.phone)}` : "",
+    input.contact?.email ? escapeHtml(input.contact.email) : "",
+    `<a href="${siteUrl()}" style="color:${MUTED};">${escapeHtml(web)}</a>`,
+  ].filter(Boolean);
+
   const quoted = `On ${formatDate(input.originalDate)} you wrote:`;
+  const font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
   const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f4f1;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4f1;padding:24px 12px;">
     <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid ${BORDER};border-radius:10px;">
-        <tr><td style="padding:28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-          ${paragraphs}
-          <p style="margin:22px 0 0;font-size:15px;line-height:1.6;color:${INK};">Warm regards,<br><strong>${escapeHtml(input.signedBy)}</strong><br><span style="color:${MUTED};">${BRAND}</span></p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${BORDER};border-radius:12px;overflow:hidden;">
+        <tr><td style="padding:22px 28px 18px;border-bottom:3px solid #e8871a;">
+          <a href="${siteUrl()}" style="text-decoration:none;"><img src="${logo}" width="190" alt="${BRAND}" style="display:block;border:0;height:auto;max-width:190px;"></a>
         </td></tr>
-        <tr><td style="padding:16px 28px 22px;border-top:1px solid ${BORDER};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+        <tr><td style="padding:28px;font-family:${font};">
+          ${paragraphs}
+          ${quoteHtml}
+          ${attachHtml}
+          <p style="margin:18px 0 0;font-size:15px;line-height:1.6;color:${INK};">Warm regards,<br><strong>${escapeHtml(input.signedBy)}</strong><br><span style="color:${MUTED};">${BRAND}</span></p>
+        </td></tr>
+        <tr><td style="padding:14px 28px;background:#fbf8f3;border-top:1px solid ${BORDER};font-family:${font};">
+          <p style="margin:0;font-size:12px;line-height:1.6;color:${MUTED};">${BRAND}, Bhutan<br>${contactBits.join(" &nbsp;·&nbsp; ")}</p>
+        </td></tr>
+        <tr><td style="padding:16px 28px 22px;border-top:1px solid ${BORDER};font-family:${font};">
           <p style="margin:0 0 6px;font-size:12px;color:${MUTED};">${escapeHtml(quoted)}</p>
           <p style="margin:0;font-size:13px;line-height:1.55;color:${MUTED};border-left:3px solid ${BORDER};padding-left:10px;">${escapeHtml(input.originalMessage).replace(/\n/g, "<br>")}</p>
         </td></tr>
@@ -554,12 +626,30 @@ export function enquiryReplyToSender(input: {
   </table>
 </body>
 </html>`;
+
+  const quoteText = q
+    ? [
+        "",
+        "YOUR QUOTATION",
+        q.label,
+        `${formatBTN(q.amount)} ${basisText}`,
+        ...(q.basis === "PER_PERSON" && total
+          ? [`${q.travelers} traveller${q.travelers === 1 ? "" : "s"} x ${formatBTN(q.amount)} = ${formatBTN(total)}`]
+          : []),
+        ...(q.note ? [q.note] : []),
+        `Prices are in Bhutanese ngultrum (BTN).${validText ? ` Valid until ${validText}.` : ""}`,
+        "",
+      ]
+    : [];
   const text = [
     input.body,
+    ...quoteText,
+    ...(names.length ? ["", "Attached:", ...names.map((n) => `- ${n}`)] : []),
     "",
     "Warm regards,",
     input.signedBy,
     BRAND,
+    [input.contact?.phone, input.contact?.email, web].filter(Boolean).join(" | "),
     "",
     "—",
     quoted,

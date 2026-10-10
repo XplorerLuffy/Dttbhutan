@@ -27,7 +27,10 @@ export type EmailMessage = {
   html: string;
   text: string;
   replyTo?: string;
+  attachments?: EmailAttachment[];
 };
+
+export type EmailAttachment = { filename: string; content: Buffer; contentType?: string };
 
 export type SendResult =
   | { ok: true; id: string }
@@ -77,6 +80,7 @@ async function sendViaSmtp(
       html: message.html,
       text: message.text,
       ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+      ...(message.attachments?.length ? { attachments: message.attachments } : {}),
     });
     return { ok: true, id: info.messageId };
   } catch (err) {
@@ -124,6 +128,14 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
         html: message.html,
         text: message.text,
         ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+        ...(message.attachments?.length
+          ? {
+              attachments: message.attachments.map((a) => ({
+                filename: a.filename,
+                content: a.content.toString("base64"),
+              })),
+            }
+          : {}),
       }),
       cache: "no-store",
       // Same reasoning as the SMTP timeouts: never let email hold a request.
