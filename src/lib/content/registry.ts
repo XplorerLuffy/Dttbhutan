@@ -297,6 +297,21 @@ export const CONTENT_GROUPS: ContentGroup[] = [
   },
 
   {
+    id: "faq",
+    label: "FAQ page",
+    description:
+      "The wording around the questions on /faq. The questions and answers themselves are edited under Page content.",
+    fields: [
+      { key: "faq.eyebrow", label: "Small label above the heading", type: "text", default: "Help centre", help: "Clear it to hide the label." },
+      { key: "faq.heading", label: "Heading", type: "text", default: "Frequently asked questions" },
+      { key: "faq.intro", label: "Intro", type: "textarea", default: "The things travellers ask us most — visas, fees, guides, booking and payment." },
+      { key: "faq.ask.label", label: "Banner button (links to Contact)", type: "text", default: "Ask us a question", help: "Clear it to hide the button." },
+      { key: "faq.cta.text", label: "Closing prompt", type: "text", default: "Still have a question? We usually reply within one working day." },
+      { key: "faq.cta.button", label: "Closing button (links to Contact)", type: "text", default: "Contact us", help: "Clear it to hide the button." },
+    ],
+  },
+
+  {
     id: "assistant",
     label: "AI assistant (DRUKA)",
     description:

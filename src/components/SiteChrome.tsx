@@ -36,7 +36,7 @@ const FULL_BLEED_PATHS = ["/"];
  * does not. /assistant is a full-screen workspace with its own rails, so the
  * shared max-w-6xl would squeeze three columns into two-thirds of the screen.
  */
-const FULL_BLEED_PREFIXES = ["/packages/", "/assistant", "/chim", "/about", "/contact"];
+const FULL_BLEED_PREFIXES = ["/packages/", "/assistant", "/chim", "/about", "/contact", "/faq"];
 
 export default function SiteChrome({
   nav,
