@@ -132,7 +132,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const email = enquiryReplyToSender({
       subject: text.data.subject,
       body: text.data.body,
-      signedBy: admin.name,
+      signedBy: "Chimi",
       originalMessage: enquiry.message,
       originalDate: enquiry.createdAt,
       quote,

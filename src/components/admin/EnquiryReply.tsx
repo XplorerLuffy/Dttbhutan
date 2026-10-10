@@ -301,7 +301,7 @@ export default function EnquiryReply({
           </div>
 
           <p className="text-xs text-stone-500">
-            Sent on the company letterhead with the DTT logo. Their original message is quoted underneath, and your name is added
+            Sent on the company letterhead with the DTT logo. Their original message is quoted underneath, and the signature is Chimi
             as the signature. When they answer, it arrives in your own inbox.
           </p>
           {error && (
