@@ -35,7 +35,7 @@ export default function BookServices({ content }: { content: Content }) {
             key={c.href}
             className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-md"
           >
-            <Link href={c.href} className="relative block aspect-[4/3] overflow-hidden bg-stone-100">
+            <Link href={c.href} className="relative block aspect-[23/12] overflow-hidden bg-stone-100">
               {c.image.trim() &&
                 (c.image.startsWith("/") ? (
                   <Image
