@@ -567,11 +567,11 @@ export function enquiryReplyToSender(input: {
     : null;
   const quoteHtml = q
     ? `
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;border:1px solid #f1d9a8;background:#fdf6e7;border-radius:10px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;border:1px solid #ecd79f;background:linear-gradient(135deg,#fffaf0,#fbf0d4);border-left:5px solid #c8962e;border-radius:12px;">
             <tr><td style="padding:18px 20px;">
-              <p style="margin:0 0 4px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#a54f15;font-weight:700;">Your quotation</p>
+              <p style="margin:0 0 4px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9a6b12;font-weight:700;">✦ Your quotation</p>
               <p style="margin:0;font-size:15px;color:${INK};font-weight:600;">${escapeHtml(q.label)}</p>
-              <p style="margin:10px 0 0;font-family:Georgia,serif;font-size:28px;line-height:1.1;color:#0a3159;font-weight:700;">${escapeHtml(formatBTN(q.amount))} <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;font-weight:500;color:${MUTED};">${basisText}</span></p>
+              <p style="margin:10px 0 0;font-family:Georgia,serif;font-size:32px;line-height:1.1;color:#0a2540;font-weight:700;">${escapeHtml(formatBTN(q.amount))} <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;font-weight:500;color:${MUTED};">${basisText}</span></p>
               ${
                 q.basis === "PER_PERSON" && total
                   ? `<p style="margin:8px 0 0;font-size:14px;color:${INK};">${q.travelers} traveller${q.travelers === 1 ? "" : "s"} &times; ${escapeHtml(formatBTN(q.amount))} = <strong>${escapeHtml(formatBTN(total))}</strong></p>`
@@ -597,27 +597,63 @@ export function enquiryReplyToSender(input: {
   ].filter(Boolean);
 
   const quoted = `On ${formatDate(input.originalDate)} you wrote:`;
-  const font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+  const sans = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+  const serif = "Georgia,'Times New Roman',serif";
+  const NAVY = "#0a2540";
+  const GOLD = "#c8962e";
+  const hero = `${siteUrl()}/media/email/hero.jpg`;
+  const logoLight = `${siteUrl()}/logo/dtt-logo-reverse.png`;
+  // Prayer-flag colours, in the traditional order: blue, white, red, green, yellow.
+  const flags = ["#1d6fb8", "#f4f1ea", "#c8372d", "#2f8f4e", "#f2b705"]
+    .map((c) => `<td width="20%" height="6" style="background:${c};font-size:0;line-height:0;">&nbsp;</td>`)
+    .join("");
+  const cta = (label: string, href: string, solid: boolean) =>
+    `<a href="${href}" style="display:inline-block;margin:0 6px 8px 0;padding:11px 22px;border-radius:999px;font-family:${sans};font-size:14px;font-weight:600;text-decoration:none;${
+      solid ? `background:${GOLD};color:#fff;border:1px solid ${GOLD};` : `background:transparent;color:#fff;border:1px solid rgba(255,255,255,.55);`
+    }">${label}</a>`;
+  const phoneDigits = (input.contact?.phone ?? "").replace(/[^\d+]/g, "");
+  const replyHref = `mailto:${input.contact?.email ?? ""}?subject=${encodeURIComponent(input.subject)}`;
   const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f4f1;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4f1;padding:24px 12px;">
+<body style="margin:0;padding:0;background:#ece7dc;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(input.body.slice(0, 110))}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ece7dc;padding:28px 12px;">
     <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${BORDER};border-radius:12px;overflow:hidden;">
-        <tr><td style="padding:22px 28px 18px;border-bottom:3px solid #e8871a;">
-          <a href="${siteUrl()}" style="text-decoration:none;"><img src="${logo}" width="190" alt="${BRAND}" style="display:block;border:0;height:auto;max-width:190px;"></a>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px rgba(10,37,64,.14);">
+        <tr><td style="background:${NAVY};padding:22px 32px;">
+          <a href="${siteUrl()}" style="text-decoration:none;"><img src="${logoLight}" width="170" alt="${BRAND}" style="display:block;border:0;height:auto;max-width:170px;"></a>
         </td></tr>
-        <tr><td style="padding:28px;font-family:${font};">
+        <tr><td style="padding:0;line-height:0;font-size:0;background:${NAVY};">
+          <img src="${hero}" width="620" alt="Prayer flags above a Bhutanese mountain pass" style="display:block;width:100%;height:auto;border:0;">
+        </td></tr>
+        <tr><td style="padding:0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${flags}</tr></table></td></tr>
+        <tr><td style="padding:36px 36px 8px;font-family:${sans};">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:${GOLD};font-weight:700;">A personal reply</p>
+          <h1 style="margin:0 0 22px;font-family:${serif};font-size:27px;line-height:1.25;font-weight:700;color:${NAVY};">${escapeHtml(input.subject.replace(/^re:\s*/i, ""))}</h1>
           ${paragraphs}
           ${quoteHtml}
           ${attachHtml}
-          <p style="margin:18px 0 0;font-size:15px;line-height:1.6;color:${INK};">Warm regards,<br><strong>${escapeHtml(input.signedBy)}</strong><br><span style="color:${MUTED};">${BRAND}</span></p>
         </td></tr>
-        <tr><td style="padding:14px 28px;background:#fbf8f3;border-top:1px solid ${BORDER};font-family:${font};">
-          <p style="margin:0;font-size:12px;line-height:1.6;color:${MUTED};">${BRAND}, Bhutan<br>${contactBits.join(" &nbsp;·&nbsp; ")}</p>
+        <tr><td style="padding:6px 36px 34px;font-family:${sans};">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="border-left:3px solid ${GOLD};padding-left:14px;">
+              <p style="margin:0;font-family:${serif};font-size:19px;font-style:italic;color:${NAVY};">Tashi Delek,</p>
+              <p style="margin:6px 0 0;font-size:15px;font-weight:700;color:${INK};">${escapeHtml(input.signedBy)}</p>
+              <p style="margin:2px 0 0;font-size:13px;color:${MUTED};">${BRAND}</p>
+            </td>
+          </tr></table>
         </td></tr>
-        <tr><td style="padding:16px 28px 22px;border-top:1px solid ${BORDER};font-family:${font};">
+        <tr><td style="background:${NAVY};padding:28px 36px;font-family:${sans};text-align:left;">
+          <p style="margin:0 0 4px;font-family:${serif};font-size:19px;color:#fff;">Ready to plan your Bhutan journey?</p>
+          <p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#b8c7d9;">Reply to this email, or reach us directly — we answer personally.</p>
+          ${cta("Reply to us", replyHref, true)}${phoneDigits ? cta("Call " + escapeHtml(input.contact?.phone ?? ""), `tel:${phoneDigits}`, false) : ""}${cta("Visit website", siteUrl(), false)}
+        </td></tr>
+        <tr><td style="padding:0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${flags}</tr></table></td></tr>
+        <tr><td style="padding:18px 36px;background:#fbf8f3;font-family:${sans};">
+          <p style="margin:0;font-size:12px;line-height:1.7;color:${MUTED};">${BRAND}, Bhutan<br>${contactBits.join(" &nbsp;·&nbsp; ")}</p>
+        </td></tr>
+        <tr><td style="padding:18px 36px 26px;border-top:1px solid ${BORDER};font-family:${sans};">
           <p style="margin:0 0 6px;font-size:12px;color:${MUTED};">${escapeHtml(quoted)}</p>
           <p style="margin:0;font-size:13px;line-height:1.55;color:${MUTED};border-left:3px solid ${BORDER};padding-left:10px;">${escapeHtml(input.originalMessage).replace(/\n/g, "<br>")}</p>
         </td></tr>
