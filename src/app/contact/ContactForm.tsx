@@ -62,7 +62,10 @@ export default function ContactForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-7"
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className="mb-1 block text-sm font-medium">

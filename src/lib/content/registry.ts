@@ -279,6 +279,10 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     fields: [
       { key: "contact.heading", label: "Heading", type: "text", default: "Contact us" },
       { key: "contact.intro", label: "Intro", type: "textarea", default: "Ask us anything about visiting Bhutan — you don't need an account. We usually reply within one working day.", help: "It promises a reply time. Only say one you can keep." },
+      { key: "contact.eyebrow", label: "Small label above the heading", type: "text", default: "Contact", help: "Clear it to hide the label." },
+      { key: "contact.form.heading", label: "Form — heading", type: "text", default: "Send us a message" },
+      { key: "contact.hours.heading", label: "Sidebar — opening hours heading", type: "text", default: "Opening hours" },
+      { key: "contact.social.heading", label: "Sidebar — social media heading", type: "text", default: "Follow us" },
 
       { key: "contact.direct.heading", label: "Sidebar — contact details heading", type: "text", default: "Get in touch directly" },
 
