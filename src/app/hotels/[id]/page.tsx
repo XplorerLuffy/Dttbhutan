@@ -99,7 +99,11 @@ export default async function HotelDetailPage({
           { name: hotel.name, path: `/hotels/${hotel.id}` },
         ])}
       />
-      <DetailGallery photos={hotel.photoUrls} label={hotel.name} />
+      <DetailGallery
+        photos={hotel.photoUrls}
+        label={hotel.name}
+        alt={`${hotel.name}, a hotel in ${hotel.destination.name}, Bhutan`}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">

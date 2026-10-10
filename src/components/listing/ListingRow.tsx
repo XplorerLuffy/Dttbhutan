@@ -11,6 +11,7 @@ import RatingBadge from "./RatingBadge";
 export default function ListingRow({
   href,
   imageUrl,
+  imageAlt,
   imageFallback,
   badge,
   title,
@@ -24,6 +25,8 @@ export default function ListingRow({
 }: {
   href: string;
   imageUrl?: string | null;
+  /** Describes the photo for screen readers and image search; defaults to the title. */
+  imageAlt?: string;
   imageFallback: string;
   badge?: string;
   title: string;
@@ -39,7 +42,7 @@ export default function ListingRow({
     <MotionCard href={href} className="listing-row">
       <div className="relative h-48 w-full shrink-0 overflow-hidden bg-brand-50 sm:h-auto sm:w-64">
         {imageUrl ? (
-          <Image src={imageUrl} alt={title} fill unoptimized className="object-cover" />
+          <Image src={imageUrl} alt={imageAlt ?? title} fill unoptimized className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center font-display text-4xl text-brand-300">
             {imageFallback}

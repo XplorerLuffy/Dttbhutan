@@ -119,6 +119,7 @@ export default async function GuidesSearchPage({
                     key={g.id}
                     href={`/guides/${g.id}`}
                     imageUrl={g.photoUrl}
+                    imageAlt={`${g.user.name}, licensed Bhutanese tour guide`}
                     imageFallback={g.user.name[0]}
                     title={g.user.name}
                     subtitle={g.languages.join(", ")}

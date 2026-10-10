@@ -25,7 +25,7 @@ export default function GuideCard({
     <MotionCard href={href} className="card block overflow-hidden p-0">
       <div className="relative h-44 w-full overflow-hidden bg-brand-50">
         {photoUrl ? (
-          <Image src={photoUrl} alt={name} fill unoptimized className="object-cover" />
+          <Image src={photoUrl} alt={`${name}, licensed Bhutanese tour guide`} fill unoptimized className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center font-display text-3xl text-brand-300">
             {name[0]}

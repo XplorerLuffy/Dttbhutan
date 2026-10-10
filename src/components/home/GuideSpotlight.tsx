@@ -39,7 +39,7 @@ export default function GuideSpotlight({ guides }: { guides: SpotlightGuide[] })
           <div className="relative">
             {g.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={g.photoUrl} alt={g.name} className="h-52 w-full object-cover" />
+              <img src={g.photoUrl} alt={`${g.name}, licensed Bhutanese tour guide`} className="h-52 w-full object-cover" />
             ) : (
               <PhotoPlaceholder label={g.name} className="h-52 w-full" />
             )}

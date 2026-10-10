@@ -129,6 +129,7 @@ export default async function HotelsSearchPage({
                     key={h.id}
                     href={`/hotels/${h.id}`}
                     imageUrl={h.photoUrls[0]}
+                    imageAlt={`${h.name}, a hotel in ${h.destination.name}, Bhutan`}
                     imageFallback={h.name[0]}
                     title={h.name}
                     subtitle={h.destination.name}

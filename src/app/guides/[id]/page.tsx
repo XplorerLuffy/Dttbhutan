@@ -100,7 +100,11 @@ export default async function GuideDetailPage({
           { name: guide.user.name, path: `/guides/${guide.id}` },
         ])}
       />
-      <DetailGallery photos={[guide.photoUrl]} label={guide.user.name} />
+      <DetailGallery
+        photos={[guide.photoUrl]}
+        label={guide.user.name}
+        alt={`${guide.user.name}, licensed Bhutanese tour guide`}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
