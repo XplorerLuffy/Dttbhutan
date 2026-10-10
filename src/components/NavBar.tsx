@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LogoLockup } from "@/components/Logo";
+import DestinationsMenu from "@/components/nav/DestinationsMenu";
 import ServicesMenu from "@/components/nav/ServicesMenu";
 import PackagesMenu from "@/components/nav/PackagesMenu";
 import MobileMenu from "@/components/nav/MobileMenu";
@@ -50,9 +51,10 @@ export default async function NavBar() {
           <LogoLockup className="h-11 w-auto max-w-full sm:h-12" />
         </Link>
 
-        <nav className="hidden items-center gap-9 text-[15px] font-semibold lg:flex">
+        <nav className="hidden items-center gap-6 whitespace-nowrap text-[15px] font-semibold lg:flex xl:gap-9">
           <PackagesMenu packages={packages} triggerClassName={link} label="Tours" />
           <ServicesMenu triggerClassName={link} />
+          <DestinationsMenu destinations={destinations} triggerClassName={link} />
           {MAIN_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className={link}>
               {l.label}
@@ -60,8 +62,8 @@ export default async function NavBar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-5 text-sm lg:flex">
-          <CurrencySelector className="rounded-lg border border-brand-900/30 bg-transparent px-3 py-1.5 text-sm font-medium text-brand-900 hover:border-brand-900/60" />
+        <div className="hidden items-center gap-5 whitespace-nowrap text-sm lg:flex">
+          <CurrencySelector className="hidden rounded-lg border border-brand-900/30 bg-transparent px-3 py-1.5 text-sm font-medium text-brand-900 hover:border-brand-900/60 xl:block" />
           <Link href="/login" className="font-semibold text-brand-900 hover:text-brand-600">
             Log in
           </Link>
