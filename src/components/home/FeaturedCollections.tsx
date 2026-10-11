@@ -50,7 +50,7 @@ export default function FeaturedCollections({
           loses. Negative margins let the cards run to the screen edge while
           the section itself stays in the page container. */}
       <ScrollReveal
-        className="no-scrollbar -mx-4 mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6"
+        className="no-scrollbar -mx-4 mt-12 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6"
         stagger={0.06}
       >
         {collections.map((c) => (
