@@ -8,8 +8,9 @@ import Link from "next/link";
  *
  * On a phone the cards sit in a swipeable row that snaps card by card, with
  * the next card peeking in from the edge so it is obvious there is more to
- * swipe (the same way Backroads' "Featured Collections" row works). From
- * tablet width up all three fit, so they become an even row.
+ * swipe (the way Backroads' "Featured Collections" row works). On wider
+ * screens it is the same row at the same card width as the Featured
+ * Collections row below it, centred once all three fit.
  */
 const STYLES = [
   {
@@ -39,20 +40,20 @@ export default function FindYourBhutan() {
         Find Your Bhutan
       </h2>
       <ul
-        className="no-scrollbar -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0"
+        className="no-scrollbar -mx-4 mt-10 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:scroll-px-6 sm:px-6 min-[1120px]:justify-center"
         aria-label="Kinds of trip"
       >
         {STYLES.map((s, i) => (
-          <li key={s.label} className="w-[78vw] max-w-[340px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+          <li key={s.label} className="w-[78vw] max-w-[340px] shrink-0 snap-start sm:w-[340px]">
             <Link
               href={s.href}
-              className="group relative block aspect-[4/5] overflow-hidden rounded-2xl shadow-md sm:aspect-[4/5]"
+              className="group relative block aspect-[4/5] overflow-hidden rounded-2xl"
             >
               <Image
                 src={s.image}
                 alt={`${s.label}: ${s.subtitle}`}
                 fill
-                sizes="(min-width: 640px) 33vw, 78vw"
+                sizes="(min-width: 640px) 340px, 78vw"
                 priority={i === 0}
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
