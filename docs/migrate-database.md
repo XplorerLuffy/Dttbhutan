@@ -9,13 +9,14 @@ again → keep the old one for two weeks. Nothing in the old database is changed
 ## Before you start
 - A quiet moment (about 20 minutes). Don't edit content or take bookings while copying.
 - PostgreSQL client tools on your computer (`pg_dump`, `pg_restore`, `psql`), version 15 or newer.
-- Two connection strings, each from Supabase → project → **Connect** → **Session pooler** (port 5432):
-  - **OLD**: the one the live site uses — Vercel → Settings → Environment Variables → `DATABASE_URL` (use the `DIRECT_URL` value if it is a session pooler string).
+- Connection strings, each from Supabase, project, **Connect**, **Session pooler** (port 5432):
+  - **OLD** (the app's data): the one the live site uses. In Vercel, Settings, Environment Variables, `DATABASE_URL` (use `DIRECT_URL` if that is a session pooler string).
+  - **AUTH** (the logins): the site's logins live in the Supabase project named in `NEXT_PUBLIC_SUPABASE_URL` (`tltywycvczqdhsxutkfz`, Sydney). The app's data is in a different project, so this is a separate connection string from that project's Connect page.
   - **NEW**: the Droelma project. Replace `[YOUR-PASSWORD]` with its database password (Project Settings → Database → Reset password if you don't have it).
 
 ## 1. Copy the data
 ```bash
-OLD_DB="postgresql://…old…" NEW_DB="postgresql://…new…" bash scripts/migrate-db.sh
+OLD_DB="postgresql://…data…" AUTH_DB="postgresql://…logins…" NEW_DB="postgresql://…new…" bash scripts/migrate-db.sh
 ```
 It refuses to run if the new database isn't empty, and prints row counts for old
 and new at the end. Every number must match.
