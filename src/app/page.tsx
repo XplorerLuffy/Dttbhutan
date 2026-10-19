@@ -169,7 +169,9 @@ export default async function HomePage() {
         category,
         count: inCategory.length,
         fromPrice: Math.min(...inCategory.map((p) => Number(p.pricePerPerson))),
-        photoUrl: inCategory.find((p) => p.coverPhotoUrl)?.coverPhotoUrl ?? null,
+        photoUrl:
+          content(`home.collections.${category}.image`).trim() ||
+          (inCategory.find((p) => p.coverPhotoUrl)?.coverPhotoUrl ?? null),
       };
     })
     .filter((c) => c.count > 0);
@@ -326,6 +328,8 @@ export default async function HomePage() {
         subtitle={content("home.banner.subtitle")}
         cta={content("home.banner.cta")}
         ctaHref={content("home.banner.ctaHref")}
+        posterUrl={content("home.banner.posterUrl")}
+        videoUrl={content("home.banner.videoUrl")}
       />
 
       {articles.length > 0 && (

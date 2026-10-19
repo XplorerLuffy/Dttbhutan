@@ -18,11 +18,15 @@ export default function FeatureBanner({
   subtitle,
   cta,
   ctaHref,
+  posterUrl,
+  videoUrl,
 }: {
   heading: string;
   subtitle: string;
   cta: string;
   ctaHref: string;
+  posterUrl: string;
+  videoUrl: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -48,8 +52,8 @@ export default function FeatureBanner({
     <section className="relative isolate overflow-hidden bg-brand-950">
       <video
         ref={videoRef}
-        src="/media/hero.mp4"
-        poster="/media/hero-poster.jpg"
+        src={videoUrl}
+        poster={posterUrl}
         muted
         loop
         playsInline

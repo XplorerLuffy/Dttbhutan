@@ -47,12 +47,12 @@ export default async function NavBar() {
 
   return (
     <header className="border-b border-stone-200/70 bg-[#fbf8f4] text-brand-900">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link href="/" aria-label={`${company.name} — home`} className="flex min-w-0 shrink-0 items-center">
-          <LogoLockup className="h-10 w-auto max-w-full sm:h-11 xl:h-12" />
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 min-[1100px]:gap-6 xl:gap-8">
+        <Link href="/" aria-label={`${company.name} — home`} className="flex min-w-0 shrink-0 items-center min-[1100px]:mr-4 xl:mr-6">
+          <LogoLockup className="h-8 w-auto max-w-full sm:h-9 xl:h-10" />
         </Link>
 
-        <nav className="hidden items-center gap-3.5 whitespace-nowrap text-[13.5px] font-semibold min-[1100px]:flex xl:gap-8 xl:text-[15px]">
+        <nav className="hidden items-center gap-3.5 whitespace-nowrap text-[13.5px] font-semibold min-[1100px]:flex xl:gap-6 xl:text-[15px]">
           <PackagesMenu packages={packages} triggerClassName={link} label="Tours" />
           <ServicesMenu triggerClassName={link} />
           <DestinationsMenu destinations={destinations} triggerClassName={link} />

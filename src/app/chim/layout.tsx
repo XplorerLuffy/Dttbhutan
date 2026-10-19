@@ -71,6 +71,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/chim/destinations", label: "Destinations", icon: "destinations", section: "Catalogue" },
     { href: "/chim/travel-guide", label: "Travel guide", icon: "guide", section: "Catalogue" },
 
+    { href: "/chim/images", label: "Site photos", icon: "pages", section: "Content" },
     { href: "/chim/content", label: "Site content", icon: "content", section: "Content" },
     { href: "/chim/content/pages", label: "Page content", icon: "pages", section: "Content" },
     { href: "/chim/seo", label: "SEO", icon: "seo", section: "Content" },
