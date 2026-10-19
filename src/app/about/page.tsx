@@ -46,7 +46,8 @@ export default async function AboutPage() {
       {/* Opening banner */}
       <section className="relative isolate overflow-hidden bg-brand-950">
         <Image
-          src="/media/packages/dzong-ridge.webp"
+          src={content("about.banner.image")}
+          unoptimized
           alt=""
           fill
           priority

@@ -42,7 +42,8 @@ export default async function FaqPage() {
 
       <section className="relative isolate overflow-hidden bg-brand-950">
         <Image
-          src="/media/packages/dzong-ridge.webp"
+          src={content("faq.banner.image")}
+          unoptimized
           alt=""
           fill
           priority

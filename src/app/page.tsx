@@ -190,7 +190,7 @@ export default async function HomePage() {
         posterUrl={content("home.hero.posterUrl")}
       />
 
-      <FindYourBhutan />
+      <FindYourBhutan content={content} />
 
       {collections.length > 0 && (
         <Container className="py-20 sm:py-24">

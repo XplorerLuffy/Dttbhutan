@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { SiteContent } from "@/lib/content";
 
 /**
  * Three ways in, as tall photo cards straight under the hero: the visitor who
@@ -12,32 +13,23 @@ import Link from "next/link";
  * screens it is the same row at the same card width as the Featured
  * Collections row below it, centred once all three fit.
  */
-const STYLES = [
-  {
-    label: "Culture & Heritage",
-    subtitle: "Dzongs, festivals and living traditions",
-    href: "/packages?category=CULTURAL",
-    image: "/media/packages/cham-dance.webp",
-  },
-  {
-    label: "Trekking & Adventure",
-    subtitle: "High passes, prayer flags and big views",
-    href: "/packages?category=TREKKING",
-    image: "/media/packages/pass-prayer-flags.webp",
-  },
-  {
-    label: "Wellness & Retreats",
-    subtitle: "Quiet lodges and slow mornings",
-    href: "/packages?category=HONEYMOON",
-    image: "/media/packages/lodge-terrace.webp",
-  },
+const HREFS = [
+  "/packages?category=CULTURAL",
+  "/packages?category=TREKKING",
+  "/packages?category=HONEYMOON",
 ];
 
-export default function FindYourBhutan() {
+export default function FindYourBhutan({ content }: { content: SiteContent }) {
+  const STYLES = [1, 2, 3].map((n) => ({
+    label: content(`home.fyb.${n}.title`),
+    subtitle: content(`home.fyb.${n}.subtitle`),
+    image: content(`home.fyb.${n}.image`),
+    href: HREFS[n - 1],
+  }));
   return (
     <section className="mx-auto max-w-6xl px-4 pb-4 pt-14 sm:px-6 sm:pt-16">
       <h2 className="text-center font-display text-3xl font-bold text-brand-900 sm:text-4xl">
-        Find Your Bhutan
+        {content("home.fyb.heading")}
       </h2>
       <ul
         className="no-scrollbar -mx-4 mt-10 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:scroll-px-6 sm:px-6 min-[1120px]:justify-center"
@@ -53,6 +45,7 @@ export default function FindYourBhutan() {
                 src={s.image}
                 alt={`${s.label}: ${s.subtitle}`}
                 fill
+                unoptimized
                 sizes="(min-width: 640px) 340px, 78vw"
                 priority={i === 0}
                 className="object-cover transition-transform duration-500 group-hover:scale-105"

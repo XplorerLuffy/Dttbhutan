@@ -44,7 +44,8 @@ export default async function ContactPage({
     <div className="pb-10">
       <section className="relative isolate overflow-hidden bg-brand-950">
         <Image
-          src="/media/packages/dzong-ridge.webp"
+          src={content("contact.banner.image")}
+          unoptimized
           alt=""
           fill
           priority

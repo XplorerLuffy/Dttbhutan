@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { ContentGroup } from "@/lib/content/registry";
 import OfficeHoursEditor from "@/components/admin/OfficeHoursEditor";
+import ImageListUpload from "@/components/admin/ImageListUpload";
 import { parseSchedule, scheduleError } from "@/lib/officeHours";
 
 /**
@@ -197,6 +198,26 @@ export default function ContentEditor({
                       value={values[f.key] ?? ""}
                       onChange={(next) => setValues((v) => ({ ...v, [f.key]: next }))}
                     />
+                  ) : f.type === "image" ? (
+                    <div className="space-y-2">
+                      <ImageListUpload
+                        images={(values[f.key] || f.default) ? [{ url: values[f.key] || f.default }] : []}
+                        onChange={(next) => setValues((v) => ({ ...v, [f.key]: next[0]?.url ?? "" }))}
+                        folder="site"
+                        max={1}
+                        label=""
+                        aspect="aspect-[16/9]"
+                      />
+                      {values[f.key] && values[f.key] !== f.default && (
+                        <button
+                          type="button"
+                          onClick={() => setValues((v) => ({ ...v, [f.key]: "" }))}
+                          className="text-xs font-medium text-stone-600 underline hover:text-stone-900"
+                        >
+                          Go back to the original photo
+                        </button>
+                      )}
+                    </div>
                   ) : f.type === "textarea" ? (
                     <textarea
                       id={id}

@@ -15,7 +15,7 @@ import { DEFAULT_SCHEDULE, serializeSchedule } from "@/lib/officeHours";
 
 /** "hours" is the weekly opening-hours editor; its value is the JSON text of a
  * Schedule (src/lib/officeHours.ts). */
-export type FieldType = "text" | "textarea" | "url" | "email" | "tel" | "hours";
+export type FieldType = "text" | "textarea" | "url" | "email" | "tel" | "hours" | "image";
 
 export type ContentField = {
   key: string;
@@ -81,7 +81,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "home.hero.customLinkHref", label: "Custom-trip link target", type: "text", default: "/custom-tour" },
       { key: "home.hero.customSuffix", label: "Custom-trip line, after the link", type: "text", default: "" },
       { key: "home.hero.videoUrl", label: "Background video URL", type: "text", default: "/media/hero.mp4", help: "Attached only once the page is idle, and skipped entirely on reduced-motion or metered connections — so the poster below has to stand on its own. Leave blank to show the poster only." },
-      { key: "home.hero.posterUrl", label: "Poster image URL", type: "text", default: "/media/hero-poster.jpg", help: "What every visitor sees first. Use a still from the video so there is no jump when it starts." },
+      { key: "home.hero.posterUrl", label: "Poster image", type: "image", default: "/media/hero-poster.jpg", help: "What every visitor sees first. Use a still from the video so there is no jump when it starts." },
     ],
   },
 
@@ -144,15 +144,15 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "home.services.1.title", label: "Card 1 — title", type: "text", default: "Book a Hotel" },
       { key: "home.services.1.body", label: "Card 1 — line under the title", type: "text", default: "Find a stay that suits your journey." },
       { key: "home.services.1.button", label: "Card 1 — button (links to Hotels)", type: "text", default: "Check Availability" },
-      { key: "home.services.1.image", label: "Card 1 — photo URL", type: "text", default: "/media/services/hotel.webp", help: "A /media/... path or a full https:// address." },
+      { key: "home.services.1.image", label: "Card 1 — photo", type: "image", default: "/media/services/hotel.webp", help: "A /media/... path or a full https:// address." },
       { key: "home.services.2.title", label: "Card 2 — title", type: "text", default: "Book a Guide" },
       { key: "home.services.2.body", label: "Card 2 — line under the title", type: "text", default: "Explore with a local expert." },
       { key: "home.services.2.button", label: "Card 2 — button (links to Guides)", type: "text", default: "Check Availability" },
-      { key: "home.services.2.image", label: "Card 2 — photo URL", type: "text", default: "/media/services/guide.webp", help: "A /media/... path or a full https:// address." },
+      { key: "home.services.2.image", label: "Card 2 — photo", type: "image", default: "/media/services/guide.webp", help: "A /media/... path or a full https:// address." },
       { key: "home.services.3.title", label: "Card 3 — title", type: "text", default: "Book Transport" },
       { key: "home.services.3.body", label: "Card 3 — line under the title", type: "text", default: "Airport transfers and private journeys." },
       { key: "home.services.3.button", label: "Card 3 — button (links to Transport)", type: "text", default: "Check Availability" },
-      { key: "home.services.3.image", label: "Card 3 — photo URL", type: "text", default: "/media/services/transport.webp", help: "A /media/... path or a full https:// address." },
+      { key: "home.services.3.image", label: "Card 3 — photo", type: "image", default: "/media/services/transport.webp", help: "A /media/... path or a full https:// address." },
     ],
   },
 
@@ -345,7 +345,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "assistant.hero.eyebrow", label: "Hero — small line above", type: "text", default: "Your AI travel assistant" },
       { key: "assistant.hero.headline", label: "Hero — headline", type: "text", default: "Discover Bhutan with DRUKA" },
       { key: "assistant.hero.subtitle", label: "Hero — sub-line", type: "textarea", default: "Ask anything — from travel plans to local tips.\nI'm here to help you create the perfect journey." },
-      { key: "assistant.hero.imageUrl", label: "Hero — background image", type: "text", default: "/media/packages/dzong-ridge.webp" },
+      { key: "assistant.hero.imageUrl", label: "Hero — background image", type: "image", default: "/media/packages/dzong-ridge.webp" },
 
       { key: "assistant.intro", label: "Who the assistant is", type: "textarea", default: "I'm DRUKA — your Bhutan travel assistant. Ask me anything about itineraries, destinations, permits, local culture, guides, and more." },
       { key: "assistant.greeting", label: "Opening message", type: "textarea", default: "Kuzuzangpo la! I'm DRUKA. Tell me what kind of trip you have in mind — how long you have, what you'd like to see, how much walking you enjoy — and I'll suggest something. Or pick one of the suggested questions." },
@@ -370,7 +370,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
 
       { key: "assistant.questions", label: "Popular questions", type: "textarea", default: "Best time to visit Bhutan\nVisa & entry requirements\nHiking in Bhutan\nCultural etiquette\nTop places to visit", help: "One per line. Each is sent as a message when tapped." },
 
-      { key: "assistant.closing.imageUrl", label: "Closing image", type: "text", default: "/media/packages/alpine-camp.webp", help: "Leave blank to hide the card at the foot of the right rail." },
+      { key: "assistant.closing.imageUrl", label: "Closing image", type: "image", default: "/media/packages/alpine-camp.webp", help: "Leave blank to hide the card at the foot of the right rail." },
       { key: "assistant.closing.line", label: "Closing image caption", type: "textarea", default: "More than a trip,\nit's a journey within." },
     ],
   },
@@ -401,6 +401,33 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "legal.tier4.refund", label: "Tier 4 — refund", type: "text", default: "25% of the trip cost" },
       { key: "legal.tier5.window", label: "Tier 5 — when", type: "text", default: "Less than 7 days before departure, or no-show" },
       { key: "legal.tier5.refund", label: "Tier 5 — refund", type: "text", default: "No refund" },
+    ],
+  },
+  {
+    id: "home.findyourbhutan",
+    label: "Homepage — Find Your Bhutan",
+    description: "The three photo cards under the hero. Each card opens the tour list filtered to that kind of trip.",
+    fields: [
+      { key: "home.fyb.heading", label: "Heading", type: "text", default: "Find Your Bhutan" },
+      { key: "home.fyb.1.title", label: "Card 1 — title", type: "text", default: "Culture & Heritage" },
+      { key: "home.fyb.1.subtitle", label: "Card 1 — sub-line", type: "text", default: "Dzongs, festivals and living traditions" },
+      { key: "home.fyb.1.image", label: "Card 1 — photo", type: "image", default: "/media/packages/cham-dance.webp" },
+      { key: "home.fyb.2.title", label: "Card 2 — title", type: "text", default: "Trekking & Adventure" },
+      { key: "home.fyb.2.subtitle", label: "Card 2 — sub-line", type: "text", default: "High passes, prayer flags and big views" },
+      { key: "home.fyb.2.image", label: "Card 2 — photo", type: "image", default: "/media/packages/pass-prayer-flags.webp" },
+      { key: "home.fyb.3.title", label: "Card 3 — title", type: "text", default: "Wellness & Retreats" },
+      { key: "home.fyb.3.subtitle", label: "Card 3 — sub-line", type: "text", default: "Quiet lodges and slow mornings" },
+      { key: "home.fyb.3.image", label: "Card 3 — photo", type: "image", default: "/media/packages/lodge-terrace.webp" },
+    ],
+  },
+  {
+    id: "banners",
+    label: "Page banner photos",
+    description: "The wide photo at the top of the About, Contact and FAQ pages.",
+    fields: [
+      { key: "about.banner.image", label: "About — banner photo", type: "image", default: "/media/packages/dzong-ridge.webp" },
+      { key: "contact.banner.image", label: "Contact — banner photo", type: "image", default: "/media/packages/dzong-ridge.webp" },
+      { key: "faq.banner.image", label: "FAQ — banner photo", type: "image", default: "/media/packages/dzong-ridge.webp" },
     ],
   },
   {
