@@ -24,7 +24,7 @@ export default function FindYourBhutan({ content }: { content: SiteContent }) {
     label: content(`home.fyb.${n}.title`),
     subtitle: content(`home.fyb.${n}.subtitle`),
     image: content(`home.fyb.${n}.image`),
-    href: HREFS[n - 1],
+    href: content(`home.fyb.${n}.link`).trim() || HREFS[n - 1],
   }));
   return (
     <section className="mx-auto max-w-6xl px-4 pb-4 pt-14 sm:px-6 sm:pt-16">
