@@ -33,6 +33,7 @@ export default function ImageListUpload({
   captions = false,
   action,
   aspect = "aspect-[4/3]",
+  allowRemove = true,
 }: {
   images: ImageItem[];
   onChange: (next: ImageItem[]) => void;
@@ -48,6 +49,8 @@ export default function ImageListUpload({
   action?: { label: string; run: (url: string) => void };
   /** Thumbnail shape — match where the photo is shown, so bad crops show here. */
   aspect?: string;
+  /** False where an empty list isn't meaningful (the caller shows a fallback photo). */
+  allowRemove?: boolean;
 }) {
   const single = max === 1;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -191,9 +194,11 @@ export default function ImageListUpload({
                     <TextButton onClick={() => move(i, 0)}>Make {leadLabel.toLowerCase()}</TextButton>
                   )}
                   {action && <TextButton onClick={() => action.run(img.url)}>{action.label}</TextButton>}
-                  <TextButton danger onClick={() => onChange(images.filter((_, j) => j !== i))}>
-                    Remove
-                  </TextButton>
+                  {allowRemove && (
+                    <TextButton danger onClick={() => onChange(images.filter((_, j) => j !== i))}>
+                      Remove
+                    </TextButton>
+                  )}
                 </div>
               </div>
             </li>

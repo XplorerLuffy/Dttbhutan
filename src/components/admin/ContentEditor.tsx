@@ -205,6 +205,7 @@ export default function ContentEditor({
                         onChange={(next) => setValues((v) => ({ ...v, [f.key]: next[0]?.url ?? "" }))}
                         folder="site"
                         max={1}
+                        allowRemove={false}
                         label=""
                         aspect="aspect-[16/9]"
                       />
