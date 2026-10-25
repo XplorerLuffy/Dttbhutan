@@ -1,0 +1,17 @@
+{
+  "name": "dtt-gps-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JT808 TCP listener that forwards tracker positions to the DTT website's /api/gps/ingest",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "simulate": "tsx src/simulator.ts",
+    "auth-code": "tsx src/authCodeCli.ts",
+    "typecheck": "tsc -p . --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": { "tsx": "^4.23.13" },
+  "devDependencies": { "@types/node": "^20", "typescript": "^5" }
+}

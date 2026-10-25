@@ -29,7 +29,8 @@
     "check:ai:live": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/ai/tests/liveAssistant.check.ts",
     "test:admin:account": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/tests/adminAccount.test.ts",
     "auth:migrate-users": "tsx prisma/migrate-users-to-supabase-auth.ts",
-    "test:auth:migration": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/tests/authMigration.test.ts"
+    "test:auth:migration": "NODE_OPTIONS=--require=./src/lib/ai/tests/serverOnlyPreload.cjs tsx src/lib/tests/authMigration.test.ts",
+    "test:gps": "node --import tsx --test --test-force-exit gps-server/test/*.test.ts src/lib/tests/gpsIngest.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",

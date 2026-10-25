@@ -1,0 +1,32 @@
+# systemd unit for the JT808 listener. Install steps are in docs/gps-jt808-server.md.
+[Unit]
+Description=DTT Bhutan JT808 GPS listener
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dttgps
+Group=dttgps
+WorkingDirectory=/opt/dtt-gps-server/gps-server
+EnvironmentFile=/etc/dtt-gps-server.env
+ExecStart=/usr/bin/node --import tsx src/main.ts
+Restart=always
+RestartSec=3
+# Give in-flight positions time to finish before systemd kills the process.
+TimeoutStopSec=15
+KillSignal=SIGTERM
+
+# Hardening: it only needs the network.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

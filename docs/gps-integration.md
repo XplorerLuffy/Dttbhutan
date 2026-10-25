@@ -1,5 +1,10 @@
 # GPS integration notes
 
+> **Update:** for trackers that speak JT808 (the supplier's protocol document), a
+> dedicated listener now exists in `gps-server/`, with no Traccar needed. See
+> `docs/gps-jt808-server.md`. The Traccar route below still works through the same
+> `/api/gps/ingest` endpoint.
+
 This app's GPS pipeline is hardware-agnostic by design: anything that can
 POST a JSON position update to `/api/gps/ingest` works. This doc covers how
 to connect real devices via Traccar (the recommended path from the build

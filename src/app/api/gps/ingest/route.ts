@@ -1,23 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { gpsIngestSchema } from "@/lib/validation";
+import { ingestPosition, secretMatches, type IngestDb } from "@/lib/gps/ingest";
 
 /**
- * Inbound webhook for GPS position updates. Point Traccar's "Forwarding"
- * feature (or any bridging script for a vendor-provided GPS platform) at
- * this URL, sending the shared secret as `x-ingest-secret`.
+ * Inbound webhook for GPS position updates. Callers: Traccar's "Forwarding"
+ * feature, a bridging script, or the JT808 TCP server in /gps-server. Each
+ * sends the shared secret as `x-ingest-secret`.
  *
  * Each position is matched to a GpsDevice by `deviceIdentifier`, then
- * attached to that device's vehicle's currently IN_PROGRESS trip, if any.
- * A position that arrives with no active trip (device idling between
- * bookings) is still stored against the device, just with tripId null —
- * useful for last-known-location diagnostics, but excluded from any trip's
- * mileage report.
+ * attached to that device's vehicle's currently IN_PROGRESS trip, if any (and
+ * only if it was recorded after the trip started). A position with no active
+ * trip is still stored against the device, with tripId null — useful for
+ * last-known-location diagnostics, but excluded from any trip's mileage
+ * report. Re-sending a position (same device, same recordedAt) is a no-op that
+ * answers 200 { duplicate: true }; a new position answers 201.
  */
+const db: IngestDb = {
+  findDevice: (deviceIdentifier) =>
+    prisma.gpsDevice.findUnique({
+      where: { deviceIdentifier },
+      select: { id: true, vehicleId: true, status: true },
+    }),
+  findActiveTrip: (vehicleId) =>
+    prisma.trip.findFirst({
+      where: { vehicleId, status: "IN_PROGRESS" },
+      select: { id: true, startedAt: true },
+    }),
+  findPosition: (deviceId, recordedAt) =>
+    prisma.gpsPosition.findFirst({ where: { deviceId, recordedAt }, select: { id: true, tripId: true } }),
+  createPosition: (data) =>
+    prisma.gpsPosition.create({
+      data: { ...data, tripId: data.tripId ?? undefined },
+      select: { id: true, tripId: true },
+    }),
+};
+
 export async function POST(req: NextRequest) {
-  const expectedSecret = process.env.GPS_INGEST_SECRET;
-  const providedSecret = req.headers.get("x-ingest-secret");
-  if (!expectedSecret || providedSecret !== expectedSecret) {
+  if (!secretMatches(process.env.GPS_INGEST_SECRET, req.headers.get("x-ingest-secret"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,32 +46,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const { deviceIdentifier, latitude, longitude, speedKmh, heading, recordedAt } =
-    parsed.data;
 
-  const device = await prisma.gpsDevice.findUnique({
-    where: { deviceIdentifier },
-  });
-  if (!device) {
-    return NextResponse.json({ error: "Unknown device" }, { status: 404 });
-  }
-
-  const activeTrip = await prisma.trip.findFirst({
-    where: { vehicleId: device.vehicleId, status: "IN_PROGRESS" },
-    select: { id: true },
-  });
-
-  const position = await prisma.gpsPosition.create({
-    data: {
-      deviceId: device.id,
-      tripId: activeTrip?.id,
-      latitude,
-      longitude,
-      speedKmh,
-      heading,
-      recordedAt,
-    },
-  });
-
-  return NextResponse.json({ id: position.id, tripId: position.tripId }, { status: 201 });
+  const result = await ingestPosition(db, parsed.data);
+  return NextResponse.json(result.body, { status: result.status });
 }
