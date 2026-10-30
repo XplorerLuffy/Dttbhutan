@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { VehicleType } from "@prisma/client";
@@ -64,6 +64,7 @@ export default function CustomTourRequestForm({
   const [needsLogin, setNeedsLogin] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const messageRef = useRef<HTMLDivElement>(null);
 
   function toggleDestination(id: string) {
     setSelectedDestinations((prev) => {
@@ -123,6 +124,10 @@ export default function CustomTourRequestForm({
 
   const hasAnySelection = Boolean(guideId || roomTypeId || vehicleId);
 
+  useEffect(() => {
+    if (error || needsLogin) messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [error, needsLogin]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -138,21 +143,28 @@ export default function CustomTourRequestForm({
     }
     setIsSubmitting(true);
 
-    const res = await fetch("/api/custom-tour-requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        startDate,
-        endDate,
-        travelers,
-        budgetPerPerson: budgetPerPerson || undefined,
-        notes: notes || undefined,
-        destinationIds: Array.from(selectedDestinations),
-        guideId: guideId || undefined,
-        roomTypeId: roomTypeId || undefined,
-        vehicleId: vehicleId || undefined,
-      }),
-    });
+    let res: Response;
+    try {
+      res = await fetch("/api/custom-tour-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startDate,
+          endDate,
+          travelers,
+          budgetPerPerson: budgetPerPerson || undefined,
+          notes: notes || undefined,
+          destinationIds: Array.from(selectedDestinations),
+          guideId: guideId || undefined,
+          roomTypeId: roomTypeId || undefined,
+          vehicleId: vehicleId || undefined,
+        }),
+      });
+    } catch {
+      setIsSubmitting(false);
+      setError("Couldn't reach the server. Check your connection and try again.");
+      return;
+    }
 
     setIsSubmitting(false);
 
@@ -396,15 +408,6 @@ export default function CustomTourRequestForm({
           />
         </div>
 
-        {needsLogin && (
-          <p className="text-sm text-amber-700">
-            <Link href="/login" className="underline">
-              Log in
-            </Link>{" "}
-            as a traveler to send a custom tour request.
-          </p>
-        )}
-        {error && <p className="text-sm text-red-600">{error}</p>}
       </div>
 
       <div className="card h-fit space-y-3 lg:sticky lg:top-4">
@@ -460,6 +463,24 @@ export default function CustomTourRequestForm({
             )}
           </>
         )}
+        {/* Next to the button, not at the foot of the form: the button sits in
+            the side column, and a message further down the page was never seen. */}
+        <div ref={messageRef} role="alert" aria-live="assertive">
+          {needsLogin && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+              Please{" "}
+              <Link href="/login" className="font-semibold underline">
+                log in
+              </Link>{" "}
+              (or{" "}
+              <Link href="/register" className="font-semibold underline">
+                create a free account
+              </Link>
+              ) as a traveler to send your request.
+            </p>
+          )}
+          {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        </div>
         <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
           {isSubmitting ? "Sending..." : "Send request"}
         </button>
