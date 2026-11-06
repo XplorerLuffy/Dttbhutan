@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
 import TripGallery from "@/components/listing/TripGallery";
+import ArticleBody from "@/components/article/ArticleBody";
 import { articleJsonLd, breadcrumbJsonLd, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 /** Cached for five minutes so the page opens instantly; admin edits clear it at once (see lib/revalidate.ts). */
@@ -56,10 +57,8 @@ export default async function ArticleDetailPage({
   const article = await prisma.article.findUnique({ where: { slug } });
   if (!article || article.status !== "PUBLISHED") notFound();
 
-  const paragraphs = article.content.split(/\n\s*\n/).filter(Boolean);
-
   return (
-    <article className="mx-auto max-w-2xl">
+    <article className="mx-auto max-w-3xl">
       <JsonLd
         data={[
           articleJsonLd(article),
@@ -74,7 +73,7 @@ export default async function ArticleDetailPage({
       </Link>
 
       {article.coverPhotoUrl ? (
-        <div className="relative mt-4 h-64 w-full overflow-hidden rounded-lg">
+        <div className="relative mt-4 h-64 w-full overflow-hidden rounded-2xl sm:h-80">
           <Image src={article.coverPhotoUrl} alt={`${article.title}: Bhutan travel guide, ${article.category}`} fill unoptimized className="object-cover" />
         </div>
       ) : (
@@ -83,16 +82,22 @@ export default async function ArticleDetailPage({
         </div>
       )}
 
-      <span className="badge mt-4 inline-block bg-stone-100 text-stone-600">{article.category.toUpperCase()}</span>
-      <h1 className="mt-2 text-3xl font-bold">{article.title}</h1>
-      <p className="mt-2 text-sm text-stone-400">{article.readMinutes} min read</p>
+      <span className="mt-6 inline-block rounded-full bg-gold-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold-700">
+        {article.category}
+      </span>
+      <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-brand-900 sm:text-4xl lg:text-[2.6rem]">
+        {article.title}
+      </h1>
+      <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-stone-200 pb-6 text-sm text-stone-500">
+        <span>{article.readMinutes} min read</span>
+        <span aria-hidden>·</span>
+        <span>Updated {article.updatedAt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+        <span aria-hidden>·</span>
+        <span>By Droelma Tours &amp; Travels</span>
+      </p>
 
-      <div className="mt-6">
-        {paragraphs.map((p, i) => (
-          <p key={i} className="mb-4 leading-relaxed text-stone-700">
-            {p}
-          </p>
-        ))}
+      <div className="mt-8">
+        <ArticleBody content={article.content} />
       </div>
 
       {article.photoUrls.length > 0 && (

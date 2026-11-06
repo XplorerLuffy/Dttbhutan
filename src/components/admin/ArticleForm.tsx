@@ -185,6 +185,26 @@ export default function ArticleForm({ initial }: { initial?: InitialValues }) {
           required
           className="input font-mono text-sm"
         />
+        <details className="mt-2 text-sm text-stone-600">
+          <summary className="cursor-pointer font-medium text-brand-700">How to format the article</summary>
+          <p className="mt-2">
+            Leave a blank line between paragraphs. The page picks out short headings, &quot;Label: sentence&quot; lists
+            and simple tables by itself, but for exact control use these markers:
+          </p>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-stone-100 p-3 text-xs leading-5 text-stone-800">{`## A section heading
+### A smaller heading
+- a bullet point
+1. a numbered step
+> a tip or quotation
+
+| Colour | Element |
+|---|---|
+| Blue | Sky |
+| White | Air |
+
+**bold text** and [a link](/packages)`}</pre>
+          <p className="mt-2">Three or more section headings add an &quot;In this article&quot; list at the top.</p>
+        </details>
       </Field>
 
       <Field label="Status">
