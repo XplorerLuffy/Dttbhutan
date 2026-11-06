@@ -48,6 +48,16 @@ export async function PUT(req: NextRequest) {
         const schedule = parseSchedule(value);
         const problem = schedule ? scheduleError(schedule) : "Opening hours weren't understood.";
         if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+      } else if (field.type === "choice") {
+        if (!field.options?.some((o) => o.value === value)) {
+          return NextResponse.json({ error: `${field.label}: choose one of the options.` }, { status: 400 });
+        }
+      } else if (field.type === "image" || field.type === "video") {
+        // A photo or clip is either on this site (/media/...) or a web address;
+        // anything else (javascript:, data:) is not a place media can come from.
+        if (!/^(https:\/\/|http:\/\/|\/(?!\/))/i.test(value.trim())) {
+          return NextResponse.json({ error: `${field.label}: use an uploaded file or a link starting with https://` }, { status: 400 });
+        }
       } else if (field.type === "url") {
         if (!webAddress(value)) {
           return NextResponse.json(

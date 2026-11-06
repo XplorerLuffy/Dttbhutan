@@ -21,7 +21,8 @@ export default async function SitePhotosPage() {
   const groups: ContentGroup[] = CONTENT_GROUPS.map((g) => ({
     id: g.id,
     label: g.label,
-    fields: g.fields.filter((f) => f.type === "image"),
+    // The hero's photo/video switch and its video sit with its photos here.
+    fields: g.fields.filter((f) => f.type === "image" || (g.id === "home.hero" && (f.type === "choice" || f.type === "video"))),
   })).filter((g) => g.fields.length > 0);
 
   const initial: Record<string, string> = {};
@@ -44,7 +45,7 @@ export default async function SitePhotosPage() {
           <h1 data-hero className="font-display text-3xl font-semibold text-stone-900 sm:text-4xl">Site photos</h1>
           <p className="mt-1.5 max-w-2xl text-sm text-stone-700 sm:text-base">
             Replace any photo on the website. Pick a section on the left, press the upload button on a photo, then save.
-            Changes appear on the live site straight away. {count} photos can be replaced here.
+            Changes appear on the live site straight away. {count} photos and clips can be replaced here.
           </p>
         </div>
       </section>

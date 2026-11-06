@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { ContentGroup } from "@/lib/content/registry";
 import OfficeHoursEditor from "@/components/admin/OfficeHoursEditor";
 import ImageListUpload from "@/components/admin/ImageListUpload";
+import VideoUpload from "@/components/admin/VideoUpload";
 import { parseSchedule, scheduleError } from "@/lib/officeHours";
 
 /**
@@ -198,6 +199,43 @@ export default function ContentEditor({
                       value={values[f.key] ?? ""}
                       onChange={(next) => setValues((v) => ({ ...v, [f.key]: next }))}
                     />
+                  ) : f.type === "choice" ? (
+                    <div role="radiogroup" aria-label={f.label} className="grid gap-3 sm:grid-cols-2">
+                      {f.options?.map((o) => {
+                        const selected = (values[f.key] || f.default) === o.value;
+                        return (
+                          <button
+                            key={o.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            onClick={() => setValues((v) => ({ ...v, [f.key]: o.value }))}
+                            className={`rounded-xl border p-4 text-left transition-colors ${
+                              selected ? "border-brand-700 bg-brand-50 ring-2 ring-brand-700/20" : "border-stone-200 bg-white hover:bg-stone-50"
+                            }`}
+                          >
+                            <span className="block text-sm font-semibold text-stone-900">{o.label}</span>
+                            {o.hint && <span className="mt-0.5 block text-xs text-stone-600">{o.hint}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : f.type === "video" ? (
+                    <div className="space-y-2">
+                      <VideoUpload
+                        value={values[f.key] || f.default}
+                        onChange={(url) => setValues((v) => ({ ...v, [f.key]: url }))}
+                      />
+                      {values[f.key] && values[f.key] !== f.default && (
+                        <button
+                          type="button"
+                          onClick={() => setValues((v) => ({ ...v, [f.key]: "" }))}
+                          className="text-xs font-medium text-stone-600 underline hover:text-stone-900"
+                        >
+                          Go back to the original video
+                        </button>
+                      )}
+                    </div>
                   ) : f.type === "image" ? (
                     <div className="space-y-2">
                       <ImageListUpload

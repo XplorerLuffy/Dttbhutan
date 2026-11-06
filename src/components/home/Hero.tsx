@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
@@ -31,6 +32,8 @@ export default function Hero({
   customLink,
   customHref,
   customSuffix,
+  mediaType,
+  imageUrl,
   videoUrl,
   posterUrl,
 }: {
@@ -48,6 +51,11 @@ export default function Hero({
    * that never gets the clip, so it should be a still from the same video. */
   videoUrl: string;
   posterUrl: string;
+  /** "image" shows one still photo and never loads the clip; "video" is the
+   * clip over its poster. Chosen in the admin, so a client can switch freely. */
+  mediaType: "video" | "image";
+  /** The still used for "image". Empty falls back to the poster. */
+  imageUrl: string;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -62,7 +70,7 @@ export default function Hero({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || mediaType !== "video") return;
 
     // The clip is several megabytes. Letting the browser fetch it as part of
     // the initial page load put it in direct competition with everything
@@ -115,7 +123,7 @@ export default function Hero({
       cancelled = true;
       window.removeEventListener("load", schedule);
     };
-  }, [videoUrl]);
+  }, [videoUrl, mediaType]);
 
   return (
     <section className="relative isolate flex min-h-[520px] flex-col justify-center overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-900 sm:min-h-[600px]">
@@ -123,16 +131,28 @@ export default function Hero({
           the page is idle. `poster` is what the visitor actually sees first,
           so the hero looks finished immediately, and it stays put for anyone
           on reduced motion or a metered connection. */}
-      <video
-        ref={videoRef}
-        poster={posterUrl}
-        muted
-        loop
-        playsInline
-        preload="none"
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 h-full w-full object-cover"
-      />
+      {mediaType === "image" ? (
+        <Image
+          src={imageUrl.trim() || posterUrl}
+          alt=""
+          fill
+          priority
+          unoptimized
+          sizes="100vw"
+          className="absolute inset-0 -z-10 h-full w-full object-cover"
+        />
+      ) : (
+        <video
+          ref={videoRef}
+          poster={posterUrl}
+          muted
+          loop
+          playsInline
+          preload="none"
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 h-full w-full object-cover"
+        />
+      )}
 
       {/* Kept light so the footage still reads as the subject. Legibility
           comes mostly from the headline's own shadow, not from dimming the

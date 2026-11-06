@@ -188,6 +188,8 @@ export default async function HomePage() {
         customLink={content("home.hero.customLink")}
         customHref={content("home.hero.customLinkHref")}
         customSuffix={content("home.hero.customSuffix")}
+        mediaType={content("home.hero.mediaType") === "image" ? "image" : "video"}
+        imageUrl={content("home.hero.imageUrl")}
         videoUrl={content("home.hero.videoUrl")}
         posterUrl={content("home.hero.posterUrl")}
       />

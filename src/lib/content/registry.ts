@@ -15,7 +15,7 @@ import { DEFAULT_SCHEDULE, serializeSchedule } from "@/lib/officeHours";
 
 /** "hours" is the weekly opening-hours editor; its value is the JSON text of a
  * Schedule (src/lib/officeHours.ts). */
-export type FieldType = "text" | "textarea" | "url" | "email" | "tel" | "hours" | "image";
+export type FieldType = "text" | "textarea" | "url" | "email" | "tel" | "hours" | "image" | "video" | "choice";
 
 export type ContentField = {
   key: string;
@@ -25,6 +25,8 @@ export type ContentField = {
   /** Shown under the input — use it for anything non-obvious about where
    * the value appears or what format it needs. */
   help?: string;
+  /** For `choice` fields: the allowed values, in the order shown. */
+  options?: { value: string; label: string; hint?: string }[];
 };
 
 export type ContentGroup = {
@@ -80,8 +82,10 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       { key: "home.hero.customLink", label: "Custom-trip link text", type: "text", default: "Let us plan your journey." },
       { key: "home.hero.customLinkHref", label: "Custom-trip link target", type: "text", default: "/custom-tour" },
       { key: "home.hero.customSuffix", label: "Custom-trip line, after the link", type: "text", default: "" },
-      { key: "home.hero.videoUrl", label: "Background video URL", type: "text", default: "/media/hero.mp4", help: "Attached only once the page is idle, and skipped entirely on reduced-motion or metered connections — so the poster below has to stand on its own. Leave blank to show the poster only." },
-      { key: "home.hero.posterUrl", label: "Poster image", type: "image", default: "/media/hero-poster.jpg", help: "What every visitor sees first. Use a still from the video so there is no jump when it starts." },
+      { key: "home.hero.mediaType", label: "Hero background", type: "choice", default: "video", options: [{ value: "video", label: "Video", hint: "A looping, silent clip, with the poster photo showing first." }, { value: "image", label: "Photo", hint: "One still photo, no video. Loads fastest." }], help: "Switch between the two whenever you like: both settings below are kept." },
+      { key: "home.hero.videoUrl", label: "Background video", type: "video", default: "/media/hero.mp4", help: "Used when the background is set to Video. MP4 or WebM, ideally under 15 MB (about 10-20 seconds, 1080p), no sound needed. It starts once the page is idle and is skipped on reduced-motion or metered connections, so the poster has to stand on its own." },
+      { key: "home.hero.posterUrl", label: "Poster photo (for the video)", type: "image", default: "/media/hero-poster.jpg", help: "What every visitor sees first, and what stays if the video can't play. Use a still from the video so there is no jump when it starts. Also the hero photo if you choose Photo and leave the next field empty." },
+      { key: "home.hero.imageUrl", label: "Hero photo", type: "image", default: "", help: "Used when the background is set to Photo. Leave empty to use the poster photo above." },
     ],
   },
 
