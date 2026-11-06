@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function ContactForm({
   defaultSubject,
@@ -14,6 +14,21 @@ export default function ContactForm({
 }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+
+  // A signed-in traveler shouldn't retype who they are. The page is cached and
+  // shared, so this is asked after it opens; anything already typed is kept.
+  useEffect(() => {
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((me: { signedIn?: boolean; name?: string; email?: string }) => {
+        if (!me.signedIn) return;
+        if (nameRef.current && !nameRef.current.value && me.name) nameRef.current.value = me.name;
+        if (emailRef.current && !emailRef.current.value && me.email) emailRef.current.value = me.email;
+      })
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -74,6 +89,7 @@ export default function ContactForm({
           <input
             id="name"
             name="name"
+            ref={nameRef}
             required
             minLength={2}
             className="w-full rounded-md border border-stone-300 px-3 py-2"
@@ -86,6 +102,7 @@ export default function ContactForm({
           <input
             id="email"
             name="email"
+            ref={emailRef}
             type="email"
             required
             className="w-full rounded-md border border-stone-300 px-3 py-2"

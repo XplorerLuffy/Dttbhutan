@@ -1,5 +1,6 @@
 "use client";
 
+import NavAccount from "@/components/nav/NavAccount";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CurrencySelector from "@/components/CurrencySelector";
@@ -191,6 +192,8 @@ export default function MobileMenu({
               <Link href="/contact" onClick={() => setOpen(false)} className="block border-b border-stone-100 py-3 text-base font-medium text-stone-800">
                 Contact Us
               </Link>
+
+              <NavAccount variant="mobile" onNavigate={() => setOpen(false)} />
 
               <div className="flex items-center justify-between py-3">
                 <span className="text-sm text-stone-600">Currency</span>

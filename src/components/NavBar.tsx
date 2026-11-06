@@ -1,3 +1,4 @@
+import NavAccount from "@/components/nav/NavAccount";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LogoLockup } from "@/components/Logo";
@@ -65,9 +66,7 @@ export default async function NavBar() {
 
         <div className="hidden items-center gap-3 whitespace-nowrap text-sm min-[1100px]:flex xl:gap-5">
           <CurrencySelector compact />
-          <Link href="/login" className="font-semibold text-brand-900 hover:text-brand-600">
-            Log in
-          </Link>
+          <NavAccount />
           <Link
             href="/custom-tour"
             className="rounded-xl bg-brand-900 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-brand-800 xl:px-5"
