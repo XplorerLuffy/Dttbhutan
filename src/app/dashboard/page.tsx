@@ -36,12 +36,28 @@ export default async function TravelerDashboardPage() {
     include: { destinations: true },
   });
 
+  // Enquiries and "request places" messages sent while signed in. Only those
+  // tied to this account by id: matching on email alone would let anyone who
+  // signs up with someone else's address read that person's replies.
+  const enquiries = await prisma.contactMessage.findMany({
+    where: { travelerId: user.id },
+    orderBy: { createdAt: "desc" },
+    include: {
+      departure: { include: { itinerary: { select: { title: true, slug: true } } } },
+      replies: {
+        where: { status: "SENT" },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, subject: true, body: true, createdAt: true },
+      },
+    },
+  });
+
   const first = user.name.trim().split(/\s+/)[0];
   const next = [...upcoming].sort((x, y) => x.startDate.getTime() - y.startDate.getTime())[0];
   const stats = [
     { label: "Upcoming & active", value: upcoming.length },
     { label: "Past & cancelled", value: past.length },
-    { label: "Custom requests", value: customTourRequests.length },
+    { label: "Requests", value: customTourRequests.length + enquiries.length },
   ];
 
   return (
@@ -81,6 +97,64 @@ export default async function TravelerDashboardPage() {
         ))}
       </section>
 
+      {enquiries.length > 0 && (
+        <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+          <h2 className="font-display text-lg font-semibold">Trip requests &amp; messages</h2>
+          <p className="mb-3 mt-0.5 text-sm text-stone-500">
+            Places you&apos;ve asked us to hold and questions you&apos;ve sent. We reply by email, and the
+            answer appears here too.
+          </p>
+          <ul className="divide-y divide-stone-100">
+            {enquiries.map((q) => {
+              const trip = q.departure?.itinerary.title;
+              const dates = q.departure
+                ? `${fmtDate(q.departure.startDate)} → ${fmtDate(q.departure.endDate)}`
+                : null;
+              const replied = q.replies.length > 0;
+              return (
+                <li key={q.id} className="py-3.5 first:pt-0 last:pb-0">
+                  <details className="group">
+                    <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                      <span className="min-w-0 flex-1 basis-56">
+                        <span className="block text-sm font-semibold text-stone-900">
+                          {trip ?? q.subject ?? "Message to our team"}
+                        </span>
+                        <span className="block text-xs text-stone-500">
+                          {dates ? `${dates} · ` : ""}Sent {fmtDate(q.createdAt)}
+                        </span>
+                      </span>
+                      <span className={enquiryBadge(q.status, replied).className}>{enquiryBadge(q.status, replied).label}</span>
+                    </summary>
+                    <div className="mt-3 space-y-3 rounded-xl bg-stone-50 p-4 text-sm">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Your message</p>
+                        <p className="mt-1 whitespace-pre-line text-stone-700">{q.message}</p>
+                      </div>
+                      {q.replies.map((r) => (
+                        <div key={r.id} className="border-l-4 border-gold-500 pl-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                            Our reply · {fmtDate(r.createdAt)}
+                          </p>
+                          <p className="mt-1 whitespace-pre-line text-stone-700">{r.body}</p>
+                        </div>
+                      ))}
+                      {!replied && q.status !== "CLOSED" && (
+                        <p className="text-stone-500">We haven&apos;t replied yet — usually within one working day.</p>
+                      )}
+                      {q.departure && (
+                        <Link href={`/packages/${q.departure.itinerary.slug}`} className="inline-block font-medium text-brand-700 hover:underline">
+                          View the trip →
+                        </Link>
+                      )}
+                    </div>
+                  </details>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <Section title="Upcoming & active" bookings={upcoming} />
       <Section title="Past & cancelled" bookings={past} />
 
@@ -107,6 +181,16 @@ export default async function TravelerDashboardPage() {
       )}
     </div>
   );
+}
+
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+function enquiryBadge(status: string, replied: boolean) {
+  if (status === "CLOSED") return { label: "Closed", className: "badge-suspended" };
+  if (replied) return { label: "We've replied", className: "badge-approved" };
+  if (status === "IN_PROGRESS") return { label: "Being handled", className: "badge-pending" };
+  return { label: "Received", className: "badge-pending" };
 }
 
 type BookingRow = Prisma.BookingGetPayload<{

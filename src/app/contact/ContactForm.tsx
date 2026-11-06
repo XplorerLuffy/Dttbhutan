@@ -14,6 +14,7 @@ export default function ContactForm({
 }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
@@ -23,6 +24,7 @@ export default function ContactForm({
     fetch("/api/auth/me", { cache: "no-store" })
       .then((r) => r.json())
       .then((me: { signedIn?: boolean; name?: string; email?: string }) => {
+        setSignedIn(Boolean(me.signedIn));
         if (!me.signedIn) return;
         if (nameRef.current && !nameRef.current.value && me.name) nameRef.current.value = me.name;
         if (emailRef.current && !emailRef.current.value && me.email) emailRef.current.value = me.email;
@@ -72,6 +74,13 @@ export default function ContactForm({
           Thanks for getting in touch — we&apos;ve emailed you a copy. One of our team will
           reply, usually within one working day.
         </p>
+        {signedIn && (
+          <p className="mt-3 text-sm">
+            <a href="/dashboard" className="font-medium text-brand-700 hover:underline">
+              Follow this request in My trips →
+            </a>
+          </p>
+        )}
       </div>
     );
   }
@@ -81,6 +90,14 @@ export default function ContactForm({
       onSubmit={handleSubmit}
       className="space-y-4 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-7"
     >
+      {signedIn === false && departureId && (
+        <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <a href="/login" className="font-semibold underline">Log in</a> or{" "}
+          <a href="/register" className="font-semibold underline">create a free account</a> first, and this request
+          will show under My trips so you can follow it. You can also send it as a guest.
+        </p>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className="mb-1 block text-sm font-medium">
