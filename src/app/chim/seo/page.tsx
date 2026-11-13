@@ -1,3 +1,4 @@
+import { verificationCode } from "@/lib/seoVerification";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
@@ -56,13 +57,13 @@ export default async function SeoDashboardPage() {
       weight: 3,
     },
     {
-      ok: Boolean(content("seo.googleVerification").trim()),
+      ok: Boolean(verificationCode(content("seo.googleVerification"))),
       label: "Verified with Google Search Console",
       fix: "Add the site in Google Search Console, choose the HTML tag method, and paste the code below. Then submit the sitemap.",
       weight: 3,
     },
     {
-      ok: Boolean(content("seo.bingVerification").trim()),
+      ok: Boolean(verificationCode(content("seo.bingVerification"))),
       label: "Verified with Bing Webmaster Tools",
       fix: "Bing also powers DuckDuckGo and Yahoo results. Add the site in Bing Webmaster Tools and paste its code below.",
     },

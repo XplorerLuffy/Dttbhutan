@@ -1,3 +1,4 @@
+import { verificationCode } from "@/lib/seoVerification";
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
@@ -78,8 +79,8 @@ const baseMetadata: Metadata = {
 /** The base metadata plus the Search Console / Bing codes saved in the SEO dashboard. */
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getSiteContent();
-  const google = content("seo.googleVerification").trim();
-  const bing = content("seo.bingVerification").trim();
+  const google = verificationCode(content("seo.googleVerification"));
+  const bing = verificationCode(content("seo.bingVerification"));
   if (!google && !bing) return baseMetadata;
   return {
     ...baseMetadata,

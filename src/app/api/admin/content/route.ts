@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { CONTENT_GROUPS, CONTENT_KEYS } from "@/lib/content/registry";
 import { webAddress } from "@/lib/content";
 import { parseSchedule, scheduleError } from "@/lib/officeHours";
+import { isVerificationCode, verificationCode } from "@/lib/seoVerification";
 
 const FIELDS = new Map(CONTENT_GROUPS.flatMap((g) => g.fields).map((f) => [f.key, f]));
 
@@ -31,6 +32,18 @@ export async function PUT(req: NextRequest) {
     // endpoint would let an admin (or anything that got hold of an admin
     // session) write unbounded arbitrary rows into the table.
     const entries = Object.entries(parsed.data.values).filter(([key]) => CONTENT_KEYS.has(key));
+    // Search-engine codes are saved as the bare code, whichever form was pasted.
+    for (const entry of entries) {
+      if (entry[0] === "seo.googleVerification" || entry[0] === "seo.bingVerification") {
+        entry[1] = verificationCode(entry[1]);
+        if (entry[1] && !isVerificationCode(entry[1])) {
+          return NextResponse.json(
+            { error: "That doesn't look like a verification code. Paste only the code from the HTML tag method (the long value inside content=\"…\")." },
+            { status: 400 }
+          );
+        }
+      }
+    }
     const rejected = Object.keys(parsed.data.values).filter((key) => !CONTENT_KEYS.has(key));
     if (rejected.length > 0) {
       return NextResponse.json(

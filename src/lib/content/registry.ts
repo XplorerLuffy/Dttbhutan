@@ -448,7 +448,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     label: "Search engines",
     description: "Codes that connect the site to Google Search Console and Bing Webmaster Tools. Managed from the SEO dashboard.",
     fields: [
-      { key: "seo.googleVerification", label: "Google Search Console verification code", type: "text", default: "", help: "Only the code, from the \"HTML tag\" method: the long value inside content=\"…\". Not the whole tag." },
+      { key: "seo.googleVerification", label: "Google Search Console verification code", type: "text", default: "", help: "The code from Google's \"HTML tag\" method: the long value inside content=\"…\". Pasting the whole tag, or a code starting google-site-verification=, also works: it is trimmed to the code on save." },
       { key: "seo.bingVerification", label: "Bing Webmaster verification code", type: "text", default: "", help: "Only the code from Bing's \"HTML meta tag\" method." },
     ],
   },
