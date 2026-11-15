@@ -12,7 +12,7 @@ import { usingBlobStorage } from "@/lib/storage";
  * site's server. The token is issued to admins only, for one file under
  * site/video/, of a video type, up to MAX_VIDEO_BYTES.
  */
-export const MAX_VIDEO_BYTES = 80 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 80 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   if (!usingBlobStorage()) {
