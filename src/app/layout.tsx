@@ -1,4 +1,3 @@
-import { verificationCode } from "@/lib/seoVerification";
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
@@ -28,7 +27,7 @@ const body = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-const baseMetadata: Metadata = {
+export const metadata: Metadata = {
   // Makes every relative canonical/OG URL below resolve absolutely.
   metadataBase: new URL(siteUrl()),
   title: {
@@ -75,21 +74,6 @@ const baseMetadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
 };
-
-/** The base metadata plus the Search Console / Bing codes saved in the SEO dashboard. */
-export async function generateMetadata(): Promise<Metadata> {
-  const content = await getSiteContent();
-  const google = verificationCode(content("seo.googleVerification"));
-  const bing = verificationCode(content("seo.bingVerification"));
-  if (!google && !bing) return baseMetadata;
-  return {
-    ...baseMetadata,
-    verification: {
-      ...(google ? { google } : {}),
-      ...(bing ? { other: { "msvalidate.01": bing } } : {}),
-    },
-  };
-}
 
 export default async function RootLayout({
   children,

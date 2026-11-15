@@ -1,4 +1,3 @@
-import { verificationCode } from "@/lib/seoVerification";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
@@ -21,7 +20,7 @@ const len = (s: string | null | undefined) => (s ?? "").trim().length;
  *
  * It checks what the site itself controls — titles and descriptions that fit a
  * results page, enough written content, photos, complete business details, a
- * real domain, a verified Search Console. It cannot see Google's rankings or
+ * real domain. It cannot see Google's rankings or
  * backlinks (nobody can without Google's own tools), so it points to those.
  */
 export default async function SeoDashboardPage() {
@@ -55,17 +54,6 @@ export default async function SeoDashboardPage() {
       label: "The site uses its own domain",
       fix: "Links, the sitemap and search results currently use a vercel.app address. Connect dttbhutan.com in Vercel and set it as the production domain.",
       weight: 3,
-    },
-    {
-      ok: Boolean(verificationCode(content("seo.googleVerification"))),
-      label: "Verified with Google Search Console",
-      fix: "Add the site in Google Search Console, choose the HTML tag method, and paste the code below. Then submit the sitemap.",
-      weight: 3,
-    },
-    {
-      ok: Boolean(verificationCode(content("seo.bingVerification"))),
-      label: "Verified with Bing Webmaster Tools",
-      fix: "Bing also powers DuckDuckGo and Yahoo results. Add the site in Bing Webmaster Tools and paste its code below.",
     },
     {
       ok: Boolean(content("company.phone").trim()) && Boolean(content("company.email").trim()),
@@ -152,18 +140,16 @@ export default async function SeoDashboardPage() {
   const score = Math.round((techScore * 0.5 + pageScore * 0.5) * 100);
   const tone = score >= 80 ? "text-emerald-700" : score >= 55 ? "text-amber-700" : "text-red-700";
 
-  const seoGroup = CONTENT_GROUPS.filter((g) => g.id === "seo" || g.id === "seoPages");
+  const seoGroup = CONTENT_GROUPS.filter((g) => g.id === "seoPages");
   const initial: Record<string, string> = {};
   for (const g of seoGroup) for (const f of g.fields) initial[f.key] = content(f.key);
 
   const host = base.replace(/^https?:\/\//, "");
   const tools = [
-    { label: "Google Search Console", note: "See your searches, clicks and position. Submit the sitemap.", href: "https://search.google.com/search-console" },
     { label: "Google Business Profile", note: "Appears in Google Maps and the local panel — the biggest single local-search win.", href: "https://business.google.com" },
-    { label: "Bing Webmaster Tools", note: "Covers Bing, Yahoo and DuckDuckGo.", href: "https://www.bing.com/webmasters" },
     { label: "PageSpeed Insights", note: "Speed is a ranking factor, mostly on phones.", href: `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(base)}` },
     { label: "Rich Results Test", note: "Checks the site's structured data.", href: `https://search.google.com/test/rich-results?url=${encodeURIComponent(base)}` },
-    { label: "Your sitemap", note: `${host}/sitemap.xml — list this in Search Console.`, href: `${base}/sitemap.xml` },
+    { label: "Your sitemap", note: `${host}/sitemap.xml — the list of pages search engines read.`, href: `${base}/sitemap.xml` },
   ];
 
   return (
@@ -225,7 +211,7 @@ export default async function SeoDashboardPage() {
 
       <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
         <h2 className="font-display text-lg font-semibold text-stone-900">Search settings</h2>
-        <p className="mb-3 text-sm text-stone-600">Edit the page titles and Google descriptions of the main pages, or paste your Google and Bing verification codes. Changes appear on the site straight away.</p>
+        <p className="mb-3 text-sm text-stone-600">Edit the page titles and Google descriptions of the main pages. Changes appear on the site straight away.</p>
         <ContentEditor groups={seoGroup} initial={initial} />
       </section>
 
@@ -254,7 +240,6 @@ export default async function SeoDashboardPage() {
           older sites. These are the steps that do move a new site up, in the order that matters:
         </p>
         <ol className="list-decimal space-y-1.5 pl-5 text-sm text-stone-800">
-          <li>Verify the site in Search Console and submit the sitemap (above).</li>
           <li>Claim your Google Business Profile and ask every happy guest for a Google review.</li>
           <li>Be listed on TripAdvisor, the Tourism Council of Bhutan operator list and travel directories — each is a backlink.</li>
           <li>Publish a helpful travel-guide article every week; target specific searches such as “Bhutan visa for Indians” or “best time to visit Bhutan”.</li>
