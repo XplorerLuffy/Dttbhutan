@@ -73,6 +73,11 @@ export const metadata: Metadata = {
     // Google's default is more conservative without these.
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
+  // Proves to Google Search Console that this site is ours. Fixed here rather
+  // than edited in the admin, so it cannot be changed or broken by accident.
+  // It must be the bare code: a "google-site-verification=" prefix is the DNS
+  // record form and does not match as a page tag.
+  verification: { google: "bHSghPIl8NYOuFuoz-gO0EUX2POKh6qbEZE112-XPBU" },
 };
 
 export default async function RootLayout({
