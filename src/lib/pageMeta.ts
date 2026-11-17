@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getSiteContent } from "@/lib/content";
 
 /**
- * Title and Google description for a main page, as saved in the SEO dashboard
+ * Title and Google description for a main page, as saved under Site content → Page titles & descriptions
  * (falling back to the wording shipped in the content registry).
  */
 export async function pageMetadata(

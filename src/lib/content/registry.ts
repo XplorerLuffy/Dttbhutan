@@ -446,7 +446,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
   {
     id: "seoPages",
     label: "Page titles & descriptions",
-    description: "What Google shows for each main page: the title (blue link) and the description under it. Managed from the SEO dashboard.",
+    description: "What Google shows for each main page: the title (blue link) and the description under it.",
     fields: [
       { key: "seo.page.home.title", label: "Home page — page title", type: "text", default: "Bhutan Tour Packages & Travel Agency | Droelma Tours & Travels (DTT)", help: "Shown as the blue link in Google. Aim for under 60 characters." },
       { key: "seo.page.home.description", label: "Home page — Google description", type: "textarea", default: "Plan your Bhutan trip with Droelma Tours & Travels (DTT): licensed local guides, tour packages, treks, festival tours and custom trips.", help: "Aim for 70–160 characters." },
