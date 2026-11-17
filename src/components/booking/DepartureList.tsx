@@ -1,20 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import Money from "@/components/Money";
+import ItineraryRequestDrawer, { type DrawerDeparture } from "@/components/listing/ItineraryRequestDrawer";
 
 /**
  * Scheduled departures for one package: a year/month filter over a list of
  * expandable date rows, alongside a "private dates" alternative.
  *
- * "Request to book" goes to the contact form rather than the booking form
- * on purpose: at this point the traveller is asking to hold a place on a
- * set date, and making a stranger create an account before they can ask is
- * a good way to lose them. The departure id rides along in the link so the
- * enquiry is tied to the real departure rather than parsed out of a subject
- * line someone could edit.
+ * "Book Now" creates a pending booking (see BookPanel) and needs a traveler
+ * account, with the way back to the date kept through login and sign-up.
+ * "Hold your spot" is the lighter step: it goes to the contact form rather
+ * than the booking form, for someone who only wants to ask. The departure id
+ * rides along in that link so the enquiry is tied to the real departure
+ * rather than parsed out of a subject line someone could edit.
  *
  * Each row opens to show its price and any note, rather than putting them
  * all on the closed row: a column of near-identical prices is noise, and
@@ -60,9 +61,15 @@ type Tab = "scheduled" | "private";
 export default function DepartureList({
   departures,
   packageTitle,
+  slug,
+  itineraryId,
+  drawerDepartures,
 }: {
   departures: DepartureView[];
   packageTitle: string;
+  slug: string;
+  itineraryId: string;
+  drawerDepartures: DrawerDeparture[];
 }) {
   const [tab, setTab] = useState<Tab>("scheduled");
   const [adults, setAdults] = useState(2);
@@ -76,6 +83,25 @@ export default function DepartureList({
   );
   const [year, setYear] = useState(years[0] ?? "");
   const [month, setMonth] = useState<string>("all");
+  /** A departure to open on arrival: where "Book Now" returns after logging in. */
+  const [preselect, setPreselect] = useState<string | null>(null);
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const id = q.get("departure");
+    const wanted = id ? departures.find((d) => d.id === id) : undefined;
+    if (!wanted) return;
+    const a = Number(q.get("adults"));
+    const r = Number(q.get("rooms"));
+    if (Number.isInteger(a) && a >= 1 && a <= 30) {
+      setAdults(a);
+      if (Number.isInteger(r) && r >= 1 && r <= a) setRooms(r);
+    }
+    setYear(wanted.startDate.slice(0, 4));
+    setMonth("all");
+    setPreselect(wanted.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const inYear = departures.filter((d) => d.startDate.startsWith(year));
   const monthsInYear = useMemo(
@@ -175,6 +201,10 @@ export default function DepartureList({
                 packageTitle={packageTitle}
                 adults={adults}
                 rooms={rooms}
+                slug={slug}
+                itineraryId={itineraryId}
+                drawerDepartures={drawerDepartures}
+                openOnArrival={preselect === d.id}
               />
             ))}
           </ul>
@@ -205,6 +235,10 @@ function DepartureRow({
   rooms,
   mode = "scheduled",
   groupSize = "",
+  slug,
+  itineraryId,
+  drawerDepartures,
+  openOnArrival = false,
 }: {
   departure: DepartureView;
   packageTitle: string;
@@ -212,8 +246,15 @@ function DepartureRow({
   rooms: number;
   mode?: Tab;
   groupSize?: string;
+  slug?: string;
+  itineraryId?: string;
+  drawerDepartures?: DrawerDeparture[];
+  openOnArrival?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (openOnArrival) setOpen(true);
+  }, [openOnArrival]);
   const isPrivate = mode === "private";
   // A private trip runs for one group alone, so it is never "sold out" the
   // way a shared departure is — the status only governs the shared list.
@@ -282,7 +323,22 @@ function DepartureRow({
         </button>
       </div>
 
-      {open && (
+      {open && !isPrivate && slug && itineraryId && drawerDepartures && (
+        <BookPanel
+          id={panelId}
+          departure={d}
+          slug={slug}
+          itineraryId={itineraryId}
+          packageTitle={packageTitle}
+          adults={adults}
+          rooms={rooms}
+          bookable={bookable}
+          holdHref={bookHref}
+          drawerDepartures={drawerDepartures}
+        />
+      )}
+
+      {open && !(!isPrivate && slug && itineraryId && drawerDepartures) && (
         <div id={panelId} className="border-t border-stone-100 bg-stone-50/60 px-5 py-4">
           <dl className="flex flex-wrap gap-x-10 gap-y-3">
             {/* The scheduled per-person price is deliberately absent in private
@@ -701,4 +757,247 @@ function DateBlock({ iso }: { iso: string }) {
 
 function fmtLong(iso: string) {
   return format(parseISO(iso), "d MMMM yyyy");
+}
+
+const DAY_MS = 86_400_000;
+const utcDay = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10));
+
+/**
+ * The trip's days marked on a week-by-week calendar, so the length of the
+ * trip is seen at a glance. Days outside the trip are dimmed.
+ */
+function TripCalendar({ startIso, endIso }: { startIso: string; endIso: string }) {
+  const start = utcDay(startIso);
+  const end = utcDay(endIso);
+  const days = Math.round((end - start) / DAY_MS) + 1;
+  const first = start - new Date(start).getUTCDay() * DAY_MS;
+  const last = end + (6 - new Date(end).getUTCDay()) * DAY_MS;
+  const cells: number[] = [];
+  for (let t = first; t <= last; t += DAY_MS) cells.push(t);
+
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-semibold text-stone-700">
+        {days} days &middot; {Math.max(0, days - 1)} nights
+      </p>
+      <div className="grid w-[8.75rem] grid-cols-7 gap-px text-center text-[11px]" aria-hidden>
+        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+          <span key={i} className="pb-0.5 font-semibold text-stone-500">
+            {d}
+          </span>
+        ))}
+        {cells.map((t) => {
+          const inTrip = t >= start && t <= end;
+          return (
+            <span
+              key={t}
+              className={`flex h-5 items-center justify-center rounded-sm ${
+                inTrip ? "bg-brand-800 font-semibold text-white" : "text-stone-300"
+              }`}
+            >
+              {new Date(t).getUTCDate()}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The open row for a scheduled departure: the price, the trip's days, and the
+ * ways forward — Book Now (a pending booking the agency then confirms and
+ * invoices), the detailed itinerary by email, or holding a place by asking.
+ *
+ * Book Now takes two presses on purpose: the first shows the party and the
+ * total, the second creates the booking. A booking appears in the agency's
+ * list and the traveler's inbox, so a stray click should not make one.
+ * Nothing is charged here; payment is arranged with the agency afterwards.
+ */
+function BookPanel({
+  id,
+  departure: d,
+  slug,
+  itineraryId,
+  packageTitle,
+  adults,
+  rooms,
+  bookable,
+  holdHref,
+  drawerDepartures,
+}: {
+  id: string;
+  departure: DepartureView;
+  slug: string;
+  itineraryId: string;
+  packageTitle: string;
+  adults: number;
+  rooms: number;
+  bookable: boolean;
+  holdHref: string;
+  drawerDepartures: DrawerDeparture[];
+}) {
+  const [step, setStep] = useState<"idle" | "confirm" | "sending" | "done">("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [booked, setBooked] = useState<{ id: string; reference: string } | null>(null);
+
+  const party = partyLabel(adults, rooms);
+  const next = `/packages/${slug}?departure=${d.id}&adults=${adults}&rooms=${rooms}#dates`;
+  const nextQuery = encodeURIComponent(next);
+
+  // The party changed under an open confirmation: ask again rather than book a different one.
+  useEffect(() => {
+    setStep((s) => (s === "confirm" ? "idle" : s));
+  }, [adults, rooms]);
+
+  async function book() {
+    setStep("sending");
+    setError(null);
+    setNeedsLogin(false);
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "ITINERARY",
+          itineraryId,
+          departureId: d.id,
+          startDate: d.startDate,
+          travelers: adults,
+          rooms,
+        }),
+      });
+      if (res.status === 401) {
+        setNeedsLogin(true);
+        setStep("idle");
+        return;
+      }
+      const data = (await res.json().catch(() => ({}))) as { id?: string; reference?: string; error?: unknown };
+      if (!res.ok || !data.id || !data.reference) {
+        setError(
+          typeof data.error === "string"
+            ? data.error
+            : "We couldn't create the booking. Please check your details and try again."
+        );
+        setStep("idle");
+        return;
+      }
+      setBooked({ id: data.id, reference: data.reference });
+      setStep("done");
+    } catch {
+      setError("Couldn't reach the server. Check your connection and try again.");
+      setStep("idle");
+    }
+  }
+
+  return (
+    <div id={id} className="border-t border-stone-200">
+      {d.note && <p className="bg-emerald-50 px-5 py-2.5 text-sm text-emerald-900">{d.note}</p>}
+
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5 px-5 py-5">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <TripCalendar startIso={d.startDate} endIso={d.endDate} />
+          <div>
+            <p className="font-display text-3xl font-bold text-stone-900">
+              <Money btn={d.price} />
+              <span className="ml-1 text-base font-medium text-stone-500">/person</span>
+            </p>
+            <p className="mt-0.5 text-sm text-stone-600">
+              {party} &middot; <Money btn={d.price * adults} /> in total
+            </p>
+            <div className="mt-2">
+              <ItineraryRequestDrawer
+                slug={slug}
+                tripTitle={packageTitle}
+                departures={drawerDepartures}
+                initialDepartureId={d.id}
+                triggerLabel="Detailed itinerary"
+                triggerClassName="text-sm font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-900"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex min-w-[12rem] flex-col items-stretch gap-2 sm:items-end">
+          {step === "done" && booked ? null : bookable ? (
+            step === "confirm" || step === "sending" ? (
+              <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm sm:text-right">
+                <p className="font-semibold text-stone-900">
+                  Book {party} for <Money btn={d.price * adults} />?
+                </p>
+                <p className="mt-0.5 text-xs text-stone-600">Nothing is charged now. We confirm, then arrange payment.</p>
+                <div className="mt-2 flex gap-2 sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={book}
+                    disabled={step === "sending"}
+                    className="rounded-full bg-brand-900 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
+                  >
+                    {step === "sending" ? "Booking…" : "Confirm booking"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep("idle")}
+                    disabled={step === "sending"}
+                    className="rounded-full px-3 py-2 text-sm font-medium text-stone-600 hover:bg-white"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setStep("confirm")}
+                className="rounded-full bg-brand-900 px-10 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-800"
+              >
+                Book Now
+              </button>
+            )
+          ) : (
+            <span className="text-sm text-stone-500">This departure is closed — try another date.</span>
+          )}
+
+          {bookable && step !== "done" && (
+            <Link
+              href={holdHref}
+              title="Ask us to hold a place for you. Nothing is booked or charged."
+              className="text-sm font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-900"
+            >
+              Hold your spot
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <div aria-live="polite" className="px-5 pb-5 empty:hidden">
+        {needsLogin && (
+          <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Please{" "}
+            <Link href={`/login?next=${nextQuery}`} className="font-semibold underline">
+              log in
+            </Link>{" "}
+            or{" "}
+            <Link href={`/register?next=${nextQuery}`} className="font-semibold underline">
+              create a free account
+            </Link>{" "}
+            to book. You&apos;ll come straight back to this date.
+          </p>
+        )}
+        {error && <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        {step === "done" && booked && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            <p className="font-semibold">Booking requested &middot; reference {booked.reference}</p>
+            <p className="mt-0.5">
+              We&apos;ll confirm availability and the final price by email, then arrange payment. Nothing has been charged.{" "}
+              <Link href={`/dashboard/bookings/${booked.id}`} className="font-semibold underline">
+                View it in My trips →
+              </Link>
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

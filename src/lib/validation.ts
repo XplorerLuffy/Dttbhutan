@@ -210,6 +210,9 @@ export const itineraryBookingSchema = z.object({
   startDate: z.coerce.date(),
   travelers: z.coerce.number().int().min(1).max(30),
   notes: z.string().max(2000).optional(),
+  /** Set when booking a scheduled departure: its dates and price then win over `startDate`. */
+  departureId: z.string().min(1).max(40).optional(),
+  rooms: z.coerce.number().int().min(1).max(15).optional(),
 });
 
 export const bookingSchema = z

@@ -274,7 +274,13 @@ export default async function PackageDetailPage({
             answer to "when can I go" — hiding it behind a paragraph
             loses the enquiry. */}
         <div>
-          <DepartureList departures={departures} packageTitle={itinerary.title} />
+          <DepartureList
+            departures={departures}
+            packageTitle={itinerary.title}
+            slug={itinerary.slug}
+            itineraryId={itinerary.id}
+            drawerDepartures={drawerDepartures}
+          />
         </div>
 
         {/* No booking form here: every date row already carries its own

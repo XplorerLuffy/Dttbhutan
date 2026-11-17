@@ -7,6 +7,7 @@ import {
 } from "@/lib/availability";
 import { bookFlight } from "@/lib/flights/aggregator";
 import { generateBookingReference } from "@/lib/reference";
+import { resolveDepartureBooking } from "@/lib/departureBooking";
 import type { z } from "zod";
 import type { bookingSchema } from "@/lib/validation";
 
@@ -39,9 +40,48 @@ export async function createBooking(travelerId: string, input: BookingInput) {
       throw new BookingConflictError(`This package allows at most ${itinerary.maxGroupSize} travelers per booking`);
     }
 
-    const endDate = new Date(input.startDate);
+    let startDate = input.startDate;
+    let endDate = new Date(input.startDate);
     endDate.setDate(endDate.getDate() + itinerary.durationDays);
-    const totalPrice = Number(itinerary.pricePerPerson) * input.travelers;
+    let pricePerPerson = Number(itinerary.pricePerPerson);
+
+    if (input.departureId) {
+      // A scheduled departure carries its own dates and, sometimes, its own price.
+      const departure = await prisma.departure.findUnique({ where: { id: input.departureId } });
+      if (!departure) throw new BookingNotFoundError("That departure no longer exists");
+      const resolved = resolveDepartureBooking(
+        {
+          itineraryId: departure.itineraryId,
+          startDate: departure.startDate,
+          endDate: departure.endDate,
+          priceOverride: departure.priceOverride === null ? null : Number(departure.priceOverride),
+          status: departure.status,
+        },
+        { id: itinerary.id, pricePerPerson, maxGroupSize: itinerary.maxGroupSize },
+        input.travelers
+      );
+      if (!resolved.ok) throw new BookingConflictError(resolved.error);
+      ({ startDate, endDate, pricePerPerson } = resolved);
+
+      // The same traveler asking twice for the same date is a double click or
+      // a second tab, not two trips.
+      const already = await prisma.booking.findFirst({
+        where: {
+          travelerId,
+          type: "ITINERARY",
+          status: { not: "CANCELLED" },
+          startDate,
+          itineraryBooking: { itineraryId: itinerary.id },
+        },
+        select: { reference: true },
+      });
+      if (already) {
+        throw new BookingConflictError(`You already have a booking for this departure (${already.reference}). You can see it in My trips.`);
+      }
+    }
+    const totalPrice = pricePerPerson * input.travelers;
+    // Rooms have no column of their own; the agency reads them in the notes.
+    const notes = [input.rooms ? `Rooms: ${input.rooms}` : null, input.notes].filter(Boolean).join(". ") || undefined;
 
     return prisma.$transaction(async (tx) => {
       const booking = await tx.booking.create({
@@ -52,7 +92,7 @@ export async function createBooking(travelerId: string, input: BookingInput) {
           // Package tours need the agency to assign an actual guide, hotel
           // rooms, and vehicle before confirming — not an instant reservation.
           status: "PENDING",
-          startDate: input.startDate,
+          startDate,
           endDate,
           totalPrice,
         },
@@ -63,7 +103,7 @@ export async function createBooking(travelerId: string, input: BookingInput) {
           bookingId: booking.id,
           itineraryId: itinerary.id,
           travelers: input.travelers,
-          notes: input.notes,
+          notes,
         },
       });
 

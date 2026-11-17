@@ -28,16 +28,19 @@ export default function ItineraryRequestDrawer({
   departures,
   triggerLabel,
   triggerClassName,
+  initialDepartureId = "",
 }: {
   slug: string;
   tripTitle: string;
   departures: DrawerDeparture[];
   triggerLabel: string;
   triggerClassName: string;
+  /** Opens with this departure already chosen (the one whose row it sits in). */
+  initialDepartureId?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>({ kind: "form" });
-  const [departureId, setDepartureId] = useState("");
+  const [departureId, setDepartureId] = useState(initialDepartureId);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
 

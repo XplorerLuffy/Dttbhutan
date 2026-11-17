@@ -1,4 +1,4 @@
-import Link from "next/link";
+import CarryNextLink from "@/components/auth/CarryNextLink";
 import AuthLayout from "@/components/auth/AuthLayout";
 import LoginForm from "@/components/auth/LoginForm";
 
@@ -11,9 +11,9 @@ export default function LoginPage() {
 
       <p className="mt-4 text-center text-sm text-stone-600">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-brand-700 hover:underline">
+        <CarryNextLink href="/register" className="text-brand-700 hover:underline">
           Sign up
-        </Link>
+        </CarryNextLink>
       </p>
     </AuthLayout>
   );

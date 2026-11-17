@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { dashboardPathForRole } from "@/lib/roles";
+import { safeNextPath } from "@/lib/safeNext";
 import type { Role } from "@prisma/client";
 
 /**
@@ -53,7 +54,10 @@ export default function LoginForm({ admin = false }: { admin?: boolean }) {
       // Drop ?expired so the notice doesn't come back on the next refresh.
       router.replace(window.location.pathname);
     } else {
-      router.push(dashboardPathForRole(data.role as Role));
+      // Someone sent here from a trip's "Book Now" goes back to that trip, but
+      // only a traveler: an operator or guide has a dashboard of their own.
+      const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+      router.push(next && data.role === "TRAVELER" ? next : dashboardPathForRole(data.role as Role));
     }
     router.refresh();
   }

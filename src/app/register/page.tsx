@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { apiErrorMessage } from "@/lib/apiError";
+import { safeNextPath } from "@/lib/safeNext";
+import CarryNextLink from "@/components/auth/CarryNextLink";
 
 const ROLE_OPTIONS = [
   { value: "TRAVELER", label: "Traveler — booking a trip" },
@@ -66,7 +68,9 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push(vendorRegisterPath[role] ?? "/dashboard");
+    // A traveler who came from a trip's "Book Now" returns to that trip.
+    const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+    router.push(role === "TRAVELER" && next ? next : (vendorRegisterPath[role] ?? "/dashboard"));
     router.refresh();
   }
 
@@ -149,9 +153,9 @@ export default function RegisterPage() {
 
       <p className="mt-4 text-center text-sm text-stone-600">
         Already have an account?{" "}
-        <Link href="/login" className="text-brand-700 hover:underline">
+        <CarryNextLink href="/login" className="text-brand-700 hover:underline">
           Log in
-        </Link>
+        </CarryNextLink>
       </p>
     </AuthLayout>
   );
