@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format, startOfToday } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import DepartureList, { type DepartureView } from "@/components/booking/DepartureList";
+import DepartureList, { type DepartureView, type StayView } from "@/components/booking/DepartureList";
 import TripPageHeader from "@/components/listing/TripPageHeader";
 import TripRouteMap from "@/components/listing/TripRouteMapClient";
 import type { RouteStop } from "@/components/listing/TripRouteMap";
@@ -16,6 +16,7 @@ import TripReviews, { type TripReview } from "@/components/listing/TripReviews";
 import TripCard, { CATEGORY_LABEL } from "@/components/listing/TripCard";
 import TripLodging, { type LodgingView } from "@/components/listing/TripLodging";
 import Money from "@/components/Money";
+import { getCompany } from "@/lib/content";
 import ItineraryRequestDrawer, {
   type DrawerDeparture,
 } from "@/components/listing/ItineraryRequestDrawer";
@@ -96,6 +97,7 @@ export default async function PackageDetailPage({
     },
   });
   if (!itinerary || itinerary.status !== "PUBLISHED") notFound();
+  const company = await getCompany();
 
   const [reviewRows, reviewStats, related] = await Promise.all([
     prisma.review.findMany({
@@ -187,6 +189,31 @@ export default async function PackageDetailPage({
   for (const d of itinerary.days) {
     if (d.lodgingId) nightsByLodging.set(d.lodgingId, (nightsByLodging.get(d.lodgingId) ?? 0) + 1);
   }
+  // One entry per run of nights at the same property: "NIGHT 1", "NIGHTS 2–3".
+  const lodgingById = new Map(itinerary.lodgings.map((l) => [l.id, l]));
+  const stays: StayView[] = [];
+  let run: { from: number; to: number; id: string } | null = null;
+  const closeRun = () => {
+    const l = run && lodgingById.get(run.id);
+    if (run && l) {
+      stays.push({
+        label: run.from === run.to ? `NIGHT ${run.from}` : `NIGHTS ${run.from}–${run.to}`,
+        name: l.name,
+        location: l.location,
+        photoUrl: l.photoUrl,
+      });
+    }
+  };
+  for (const d of [...itinerary.days].sort((a, b) => a.dayNumber - b.dayNumber)) {
+    if (!d.lodgingId || !lodgingById.has(d.lodgingId)) continue;
+    if (run && run.id === d.lodgingId && run.to === d.dayNumber - 1) run.to = d.dayNumber;
+    else {
+      closeRun();
+      run = { from: d.dayNumber, to: d.dayNumber, id: d.lodgingId };
+    }
+  }
+  closeRun();
+
   const lodgings: LodgingView[] = itinerary.lodgings.map((l) => ({
     id: l.id,
     name: l.name,
@@ -280,6 +307,8 @@ export default async function PackageDetailPage({
             slug={itinerary.slug}
             itineraryId={itinerary.id}
             drawerDepartures={drawerDepartures}
+            stays={stays}
+            phone={company.phone}
           />
         </div>
 

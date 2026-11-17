@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import Money from "@/components/Money";
@@ -26,6 +27,8 @@ import ItineraryRequestDrawer, { type DrawerDeparture } from "@/components/listi
  * as the 3rd for a visitor west of Greenwich.
  */
 
+export type StayView = { label: string; name: string; location: string | null; photoUrl: string | null };
+
 export type DepartureView = {
   id: string;
   startDate: string;
@@ -43,7 +46,7 @@ const STATUS_LABEL: Record<DepartureView["status"], string> = {
 };
 
 const STATUS_CLASS: Record<DepartureView["status"], string> = {
-  OPEN: "text-pine-600",
+  OPEN: "text-green-700",
   LIMITED: "text-amber-700",
   SOLD_OUT: "text-stone-400",
   CANCELLED: "text-stone-400",
@@ -53,6 +56,9 @@ const STATUS_CLASS: Record<DepartureView["status"], string> = {
 function partyLabel(adults: number, rooms: number) {
   return `${adults} adult${adults === 1 ? "" : "s"}, ${rooms} room${rooms === 1 ? "" : "s"}`;
 }
+
+/** A departure note this short is shown as a badge on the row; a longer one gets its own banner. */
+const BADGE_MAX = 32;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -64,12 +70,16 @@ export default function DepartureList({
   slug,
   itineraryId,
   drawerDepartures,
+  stays,
+  phone,
 }: {
   departures: DepartureView[];
   packageTitle: string;
   slug: string;
   itineraryId: string;
   drawerDepartures: DrawerDeparture[];
+  stays: StayView[];
+  phone: string;
 }) {
   const [tab, setTab] = useState<Tab>("scheduled");
   const [adults, setAdults] = useState(2);
@@ -204,6 +214,8 @@ export default function DepartureList({
                 slug={slug}
                 itineraryId={itineraryId}
                 drawerDepartures={drawerDepartures}
+                stays={stays}
+                phone={phone}
                 openOnArrival={preselect === d.id}
               />
             ))}
@@ -238,6 +250,8 @@ function DepartureRow({
   slug,
   itineraryId,
   drawerDepartures,
+  stays = [],
+  phone = "",
   openOnArrival = false,
 }: {
   departure: DepartureView;
@@ -249,6 +263,8 @@ function DepartureRow({
   slug?: string;
   itineraryId?: string;
   drawerDepartures?: DrawerDeparture[];
+  stays?: StayView[];
+  phone?: string;
   openOnArrival?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -274,14 +290,24 @@ function DepartureRow({
   const panelId = `departure-${d.id}-${mode}`;
 
   return (
-    <li className="overflow-hidden rounded-lg border border-stone-200 bg-white">
+    <li
+      className={`overflow-hidden rounded-md bg-white ${
+        open && !isPrivate ? "ring-1 ring-brand-900" : "shadow-[0_1px_4px_rgba(0,0,0,0.18)]"
+      }`}
+    >
       <div className="flex items-center gap-4 px-5 py-4">
-        <div className="flex min-w-0 flex-1 items-center gap-4">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-5 gap-y-2">
           <DateBlock iso={d.startDate} />
-          <span aria-hidden className="text-stone-300">
-            ›
-          </span>
+          <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5 shrink-0 text-stone-900">
+            <path d="m7 3 7 7-7 7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           <DateBlock iso={d.endDate} />
+          {!isPrivate && d.note && d.note.length <= BADGE_MAX && (
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-stone-300 bg-stone-50 px-2.5 py-1 text-sm text-stone-900">
+              <BedIcon />
+              {d.note}
+            </span>
+          )}
         </div>
 
         {isPrivate ? (
@@ -293,7 +319,7 @@ function DepartureRow({
             {groupSize ? "Priced on request" : "Select a group size for pricing"}
           </span>
         ) : (
-          <span className={`shrink-0 font-semibold ${STATUS_CLASS[d.status]}`}>{statusLabel}</span>
+          <span className={`shrink-0 text-sm font-bold ${STATUS_CLASS[d.status]}`}>{statusLabel}</span>
         )}
 
         <button
@@ -335,6 +361,8 @@ function DepartureRow({
           bookable={bookable}
           holdHref={bookHref}
           drawerDepartures={drawerDepartures}
+          stays={stays}
+          phone={phone}
         />
       )}
 
@@ -746,11 +774,9 @@ function Chip({
 function DateBlock({ iso }: { iso: string }) {
   const d = parseISO(iso);
   return (
-    <span className="block">
-      <span className="block font-display text-lg font-bold text-stone-900">
-        {format(d, "d MMM")}
-      </span>
-      <span className="block text-xs text-stone-500">{format(d, "EEEE")}</span>
+    <span className="block text-center">
+      <span className="block font-display text-xl font-bold leading-tight text-stone-900">{format(d, "MMM d")}</span>
+      <span className="block text-sm font-medium text-stone-500">{format(d, "EEEE")}</span>
     </span>
   );
 }
@@ -763,8 +789,9 @@ const DAY_MS = 86_400_000;
 const utcDay = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10));
 
 /**
- * The trip's days marked on a week-by-week calendar, so the length of the
- * trip is seen at a glance. Days outside the trip are dimmed.
+ * The trip's days on a week-by-week calendar: the days of the trip are filled
+ * in, the rest of those weeks are outlined, so the length of the trip reads at
+ * a glance.
  */
 function TripCalendar({ startIso, endIso }: { startIso: string; endIso: string }) {
   const start = utcDay(startIso);
@@ -777,12 +804,12 @@ function TripCalendar({ startIso, endIso }: { startIso: string; endIso: string }
 
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold text-stone-700">
-        {days} days &middot; {Math.max(0, days - 1)} nights
+      <p className="mb-3 text-base font-bold text-stone-900">
+        {days} Days &bull; {Math.max(0, days - 1)} Nights
       </p>
-      <div className="grid w-[8.75rem] grid-cols-7 gap-px text-center text-[11px]" aria-hidden>
+      <div className="grid w-[12.5rem] grid-cols-7 gap-1 text-center" aria-hidden>
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <span key={i} className="pb-0.5 font-semibold text-stone-500">
+          <span key={i} className="pb-0.5 text-sm font-semibold text-stone-900">
             {d}
           </span>
         ))}
@@ -791,8 +818,8 @@ function TripCalendar({ startIso, endIso }: { startIso: string; endIso: string }
           return (
             <span
               key={t}
-              className={`flex h-5 items-center justify-center rounded-sm ${
-                inTrip ? "bg-brand-800 font-semibold text-white" : "text-stone-300"
+              className={`flex h-6 items-center justify-center rounded-[3px] border text-[13px] ${
+                inTrip ? "border-brand-900 bg-brand-900 font-bold text-white" : "border-stone-300 text-stone-400"
               }`}
             >
               {new Date(t).getUTCDate()}
@@ -804,15 +831,34 @@ function TripCalendar({ startIso, endIso }: { startIso: string; endIso: string }
   );
 }
 
+function MapPinIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6 shrink-0 text-brand-900" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6.5 8.5 4l7 2.5L21 4v13.5L15.5 20l-7-2.5L3 20V6.5Z" />
+      <path d="M8.5 4v13.5M15.5 6.5V20" />
+      <path d="M12 12.2s-2.2-1.9-2.2-3.6a2.2 2.2 0 1 1 4.4 0c0 1.7-2.2 3.6-2.2 3.6Z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function InfoIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="10" cy="10" r="8" />
+      <path d="M10 9v5M10 6.2v.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /**
- * The open row for a scheduled departure: the price, the trip's days, and the
- * ways forward — Book Now (a pending booking the agency then confirms and
- * invoices), the detailed itinerary by email, or holding a place by asking.
+ * The open row for a scheduled departure, laid out like Backroads': a banner
+ * for the departure's note, the trip's days beside the price, Book Now and
+ * Hold your spot on the right, then where you stay, night by night.
  *
- * Book Now takes two presses on purpose: the first shows the party and the
- * total, the second creates the booking. A booking appears in the agency's
- * list and the traveler's inbox, so a stray click should not make one.
- * Nothing is charged here; payment is arranged with the agency afterwards.
+ * Book Now creates a pending booking that the agency then confirms and
+ * invoices. It takes two presses on purpose: the first shows the party and
+ * the total, the second creates the booking, so a stray click does not put one
+ * in the agency's list. Nothing is charged here.
  */
 function BookPanel({
   id,
@@ -825,6 +871,8 @@ function BookPanel({
   bookable,
   holdHref,
   drawerDepartures,
+  stays,
+  phone,
 }: {
   id: string;
   departure: DepartureView;
@@ -836,6 +884,8 @@ function BookPanel({
   bookable: boolean;
   holdHref: string;
   drawerDepartures: DrawerDeparture[];
+  stays: StayView[];
+  phone: string;
 }) {
   const [step, setStep] = useState<"idle" | "confirm" | "sending" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -892,47 +942,52 @@ function BookPanel({
   }
 
   return (
-    <div id={id} className="border-t border-stone-200">
-      {d.note && <p className="bg-emerald-50 px-5 py-2.5 text-sm text-emerald-900">{d.note}</p>}
+    <div id={id} className="border-t border-stone-300">
+      {d.note && d.note.length > BADGE_MAX && (
+        <p className="bg-[#d9eed9] px-5 py-3 text-sm text-stone-900">{d.note}</p>
+      )}
 
-      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5 px-5 py-5">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6 px-5 py-7">
+        <div className="flex flex-wrap items-start gap-x-16 gap-y-6">
           <TripCalendar startIso={d.startDate} endIso={d.endDate} />
           <div>
-            <p className="font-display text-3xl font-bold text-stone-900">
-              <Money btn={d.price} />
-              <span className="ml-1 text-base font-medium text-stone-500">/person</span>
+            <p className="text-stone-900">
+              <span className="font-display text-3xl font-bold">
+                <Money btn={d.price} />
+              </span>
+              <span className="text-xl">/person</span>
             </p>
-            <p className="mt-0.5 text-sm text-stone-600">
+            <p className="mt-1 text-sm text-stone-700">
               {party} &middot; <Money btn={d.price * adults} /> in total
             </p>
-            <div className="mt-2">
+            <div className="mt-4 flex items-center gap-2">
+              <MapPinIcon />
               <ItineraryRequestDrawer
                 slug={slug}
                 tripTitle={packageTitle}
                 departures={drawerDepartures}
                 initialDepartureId={d.id}
-                triggerLabel="Detailed itinerary"
-                triggerClassName="text-sm font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-900"
+                triggerLabel="Detailed Itinerary"
+                triggerClassName="text-base font-semibold text-brand-900 underline underline-offset-2 hover:text-brand-700"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex min-w-[12rem] flex-col items-stretch gap-2 sm:items-end">
+        <div className="flex min-w-[13rem] flex-col items-stretch gap-4 sm:items-center">
           {step === "done" && booked ? null : bookable ? (
             step === "confirm" || step === "sending" ? (
-              <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm sm:text-right">
+              <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm sm:text-center">
                 <p className="font-semibold text-stone-900">
                   Book {party} for <Money btn={d.price * adults} />?
                 </p>
                 <p className="mt-0.5 text-xs text-stone-600">Nothing is charged now. We confirm, then arrange payment.</p>
-                <div className="mt-2 flex gap-2 sm:justify-end">
+                <div className="mt-3 flex gap-2 sm:justify-center">
                   <button
                     type="button"
                     onClick={book}
                     disabled={step === "sending"}
-                    className="rounded-full bg-brand-900 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
+                    className="rounded-full bg-brand-900 px-6 py-2.5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-60"
                   >
                     {step === "sending" ? "Booking…" : "Confirm booking"}
                   </button>
@@ -940,7 +995,7 @@ function BookPanel({
                     type="button"
                     onClick={() => setStep("idle")}
                     disabled={step === "sending"}
-                    className="rounded-full px-3 py-2 text-sm font-medium text-stone-600 hover:bg-white"
+                    className="rounded-full px-3 py-2.5 text-sm font-medium text-stone-600 hover:bg-white"
                   >
                     Back
                   </button>
@@ -950,7 +1005,7 @@ function BookPanel({
               <button
                 type="button"
                 onClick={() => setStep("confirm")}
-                className="rounded-full bg-brand-900 px-10 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-800"
+                className="rounded-full bg-brand-900 px-14 py-5 text-xl font-bold text-white transition-colors hover:bg-brand-800"
               >
                 Book Now
               </button>
@@ -963,9 +1018,10 @@ function BookPanel({
             <Link
               href={holdHref}
               title="Ask us to hold a place for you. Nothing is booked or charged."
-              className="text-sm font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-900"
+              className="inline-flex items-center justify-center gap-1.5 text-base font-semibold text-brand-900 underline underline-offset-2 hover:text-brand-700"
             >
               Hold your spot
+              <InfoIcon />
             </Link>
           )}
         </div>
@@ -998,6 +1054,29 @@ function BookPanel({
           </div>
         )}
       </div>
+
+      {stays.length > 0 && (
+        <>
+          <p className="border-t border-stone-300 bg-[#fdecc4] px-5 py-4 text-sm text-stone-900">
+            <strong>Hotels are as planned for this trip. We confirm the exact hotels for your dates in writing before you pay anything.</strong>{" "}
+            Download a Detailed Itinerary{phone ? <> or call us at <a href={`tel:${phone.replace(/[^+\d]/g, "")}`} className="font-semibold underline">{phone}</a></> : null} to learn more.
+          </p>
+          <ul className="space-y-6 px-5 py-6">
+            {stays.map((s, i) => (
+              <li key={`${s.label}-${i}`} className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                <div className="relative h-[8.5rem] w-[13.75rem] shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-600 to-brand-950">
+                  {s.photoUrl && <Image src={s.photoUrl} alt={s.name} fill unoptimized sizes="220px" className="object-cover" />}
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-stone-900">{s.label}</p>
+                  <p className="mt-1 font-display text-xl text-stone-900">{s.name}</p>
+                  {s.location && <p className="mt-0.5 text-base text-stone-700">{s.location}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
