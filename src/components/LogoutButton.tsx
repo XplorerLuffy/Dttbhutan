@@ -8,6 +8,7 @@ export default function LogoutButton({
   label = "Log out",
   className = "text-stone-600 hover:text-stone-900 disabled:opacity-50",
   realm,
+  role,
 }: {
   /** Where to land afterwards — e.g. straight on to creating another account. */
   redirectTo?: string;
@@ -15,6 +16,8 @@ export default function LogoutButton({
   className?: string;
   /** "admin" ends the admin dashboard's login; otherwise the public site's. */
   realm?: "admin";
+  /** For when it sits in a menu: role="menuitem". */
+  role?: string;
 } = {}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -22,6 +25,7 @@ export default function LogoutButton({
   return (
     <button
       type="button"
+      role={role}
       disabled={isPending}
       onClick={() => {
         startTransition(async () => {

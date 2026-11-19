@@ -446,6 +446,14 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     ],
   },
   {
+    id: "dashboard",
+    label: "Customer dashboard",
+    description: "The signed-in traveler's dashboard (My trips).",
+    fields: [
+      { key: "dashboard.header.image", label: "Welcome banner — photo", type: "image", default: "/media/packages/dzong-ridge.webp", help: "The wide photo behind the greeting at the top. A landscape with the subject on the right works best; the left side is shaded so the greeting stays readable." },
+    ],
+  },
+  {
     id: "banners",
     label: "Page banner photos",
     description: "The wide photo at the top of the About, Contact and FAQ pages.",

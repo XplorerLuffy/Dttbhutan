@@ -1,10 +1,12 @@
 import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { dashboardPathForRole } from "@/lib/roles";
 import StatusBadge from "@/components/StatusBadge";
+import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
+import { getSiteContent } from "@/lib/content";
+import { bhutanHour, greetingForHour } from "@/lib/greeting";
 import type { Prisma } from "@prisma/client";
 
 export default async function TravelerDashboardPage() {
@@ -52,8 +54,7 @@ export default async function TravelerDashboardPage() {
     },
   });
 
-  const first = user.name.trim().split(/\s+/)[0];
-  const next = [...upcoming].sort((x, y) => x.startDate.getTime() - y.startDate.getTime())[0];
+  const content = await getSiteContent();
   const stats = [
     { label: "Upcoming & active", value: upcoming.length },
     { label: "Past & cancelled", value: past.length },
@@ -62,31 +63,11 @@ export default async function TravelerDashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
-      <section className="relative isolate overflow-hidden rounded-2xl border border-stone-200 bg-[#fcf6e9]">
-        <Image
-          src="/media/packages/dzong-ridge.webp"
-          alt=""
-          fill
-          priority
-          sizes="(min-width: 1024px) 64rem, 100vw"
-          className="-z-10 object-cover object-right opacity-60"
-        />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#fcf6e9] via-[#fcf6e9]/90 to-transparent" />
-        <div className="flex flex-wrap items-end justify-between gap-4 px-5 py-8 sm:px-8 sm:py-10">
-          <div>
-            <h1 className="font-display text-3xl font-semibold text-stone-900 sm:text-4xl">My trips</h1>
-            <p className="mt-1.5 max-w-md text-sm text-stone-700 sm:text-base">
-              Welcome back, {first}.{" "}
-              {next
-                ? `Your next trip starts ${next.startDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}.`
-                : "Ready to plan your next journey?"}
-            </p>
-          </div>
-          <Link href="/packages" className="btn-primary">
-            Browse tours
-          </Link>
-        </div>
-      </section>
+      <WelcomeHeader
+        name={user.name}
+        initialGreeting={greetingForHour(bhutanHour())}
+        imageUrl={content("dashboard.header.image")}
+      />
 
       <section className="grid grid-cols-3 gap-3 sm:gap-4" aria-label="Summary">
         {stats.map((c) => (
