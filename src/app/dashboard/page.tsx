@@ -9,6 +9,7 @@ import ProfileCompletionCard from "@/components/dashboard/ProfileCompletionCard"
 import TravelStatsPanel from "@/components/dashboard/TravelStatsPanel";
 import { profileCompletion } from "@/lib/profileCompletion";
 import NextAdventureCard, { type NextAdventureData } from "@/components/dashboard/NextAdventureCard";
+import UpcomingTrips, { type TripRow } from "@/components/dashboard/UpcomingTrips";
 import QuickActions from "@/components/dashboard/QuickActions";
 import BookingProgress from "@/components/dashboard/BookingProgress";
 import { bookingTimeline, pickNextBooking } from "@/lib/nextAdventure";
@@ -92,6 +93,22 @@ export default async function TravelerDashboardPage() {
     durationDays: nextRow.itineraryBooking?.itinerary.durationDays ?? 0,
     travelers: nextRow.itineraryBooking?.travelers ?? null,
   };
+  const tripRows: TripRow[] = [...upcoming]
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+    .map((b) => {
+      const it = b.itineraryBooking?.itinerary;
+      return {
+        id: b.id,
+        title: it?.title ?? bookingLabel(b),
+        imageUrl: it?.coverPhotoUrl ?? null,
+        destination: it ? destinationLine(b).replace(/, Bhutan$/, "") : null,
+        startDate: b.startDate,
+        endDate: b.endDate,
+        durationDays: it?.durationDays ?? Math.round((b.endDate.getTime() - b.startDate.getTime()) / 86_400_000) + 1,
+        travelers: b.itineraryBooking?.travelers ?? null,
+        status: b.status,
+      };
+    });
   const completion = profileCompletion(user);
   const stats = travelStats(bookings, now);
 
@@ -124,6 +141,8 @@ export default async function TravelerDashboardPage() {
       </div>
 
       <QuickActions />
+
+      <UpcomingTrips trips={tripRows} />
 
       {enquiries.length > 0 && (
         <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
