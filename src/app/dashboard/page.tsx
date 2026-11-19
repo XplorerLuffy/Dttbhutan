@@ -8,6 +8,9 @@ import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
 import ProfileCompletionCard from "@/components/dashboard/ProfileCompletionCard";
 import TravelStatsPanel from "@/components/dashboard/TravelStatsPanel";
 import { profileCompletion } from "@/lib/profileCompletion";
+import NextAdventureCard, { type NextAdventureData } from "@/components/dashboard/NextAdventureCard";
+import BookingProgress from "@/components/dashboard/BookingProgress";
+import { bookingTimeline, pickNextBooking } from "@/lib/nextAdventure";
 import { travelStats } from "@/lib/travelStats";
 import { getSiteContent } from "@/lib/content";
 import { bhutanHour, greetingForHour } from "@/lib/greeting";
@@ -28,7 +31,14 @@ export default async function TravelerDashboardPage() {
       trip: true,
       review: true,
       flightBooking: true,
-      itineraryBooking: { include: { itinerary: true } },
+      payment: true,
+      itineraryBooking: {
+        include: {
+          itinerary: {
+            include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: { select: { name: true } } } } },
+          },
+        },
+      },
     },
   });
 
@@ -59,6 +69,28 @@ export default async function TravelerDashboardPage() {
   });
 
   const content = await getSiteContent();
+  const nextBooking = pickNextBooking(
+    bookings.map((b) => ({
+      ...b,
+      totalPrice: Number(b.totalPrice),
+      payment: b.payment && { ...b.payment, amount: Number(b.payment.amount) },
+    })),
+    now
+  );
+  const nextRow = nextBooking && bookings.find((b) => b.id === nextBooking.id)!;
+  const next: NextAdventureData | null = nextRow && {
+    id: nextRow.id,
+    title: nextRow.itineraryBooking?.itinerary.title ?? bookingLabel(nextRow),
+    imageUrl: nextRow.itineraryBooking?.itinerary.coverPhotoUrl ?? null,
+    destination: destinationLine(nextRow),
+    status: nextRow.status,
+    paymentLabel: nextRow.payment ? nextRow.payment.status.charAt(0) + nextRow.payment.status.slice(1).toLowerCase() : null,
+    startDate: nextRow.startDate,
+    endDate: nextRow.endDate,
+    createdAt: nextRow.createdAt,
+    durationDays: nextRow.itineraryBooking?.itinerary.durationDays ?? 0,
+    travelers: nextRow.itineraryBooking?.travelers ?? null,
+  };
   const completion = profileCompletion(user);
   const stats = travelStats(bookings, now);
 
@@ -77,6 +109,17 @@ export default async function TravelerDashboardPage() {
         <div className="lg:col-span-3">
           <TravelStatsPanel stats={stats} />
         </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-10">
+        <div className={nextBooking ? "lg:col-span-7" : "lg:col-span-10"}>
+          <NextAdventureCard data={next} />
+        </div>
+        {nextBooking && (
+          <div className="lg:col-span-3">
+            <BookingProgress steps={bookingTimeline(nextBooking)} href={`/dashboard/bookings/${nextBooking.id}`} />
+          </div>
+        )}
       </div>
 
       {enquiries.length > 0 && (
@@ -183,7 +226,10 @@ type BookingRow = Prisma.BookingGetPayload<{
     trip: true;
     review: true;
     flightBooking: true;
-    itineraryBooking: { include: { itinerary: true } };
+    payment: true;
+    itineraryBooking: {
+      include: { itinerary: { include: { days: { include: { destination: { select: { name: true } } } } } } };
+    };
   };
 }>;
 
@@ -221,6 +267,18 @@ function Section({ id, title, bookings }: { id: string; title: string; bookings:
       )}
     </section>
   );
+}
+
+/** "Paro → Thimphu, Bhutan" from the distinct places the itinerary's days are in, in order. */
+function destinationLine(b: BookingRow) {
+  const names: string[] = [];
+  for (const d of b.itineraryBooking?.itinerary.days ?? []) {
+    const n = d.destination?.name;
+    if (n && names[names.length - 1] !== n && !names.includes(n)) names.push(n);
+  }
+  if (names.length === 0) return "Bhutan";
+  const shown = names.length > 3 ? [names[0], names[names.length - 1]] : names;
+  return `${shown.join(" → ")}, Bhutan`;
 }
 
 function bookingLabel(b: BookingRow) {
