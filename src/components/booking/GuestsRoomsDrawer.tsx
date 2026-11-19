@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { format, parseISO } from "date-fns";
+import Money from "@/components/Money";
 import { bookDeparture } from "@/lib/bookDeparture";
 import {
   MAX_ADULTS_PER_ROOM,
@@ -42,7 +43,7 @@ type Props = {
   tripImage: string | null;
   slug: string;
   itineraryId: string;
-  departure: { id: string; startDate: string; endDate: string };
+  departure: { id: string; startDate: string; endDate: string; price: number };
   maxTravelers: number | null;
 };
 
@@ -162,9 +163,14 @@ export default function GuestsRoomsDrawer({
         }`}
       >
         <div className="flex items-start justify-between gap-4 px-5 pb-2 pt-6 sm:px-8">
-          <h2 id={titleId} className="font-display text-3xl font-bold text-brand-950 sm:text-[2rem]">
-            {step === "rooms" ? "Select Guests & Rooms" : "Traveler Details"}
-          </h2>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">
+              Booking &middot; Step {step === "rooms" ? 1 : 2}
+            </p>
+            <h2 id={titleId} className="mt-1 font-display text-3xl font-bold text-brand-950 sm:text-[2rem]">
+              {step === "rooms" ? "Select Guests & Rooms" : "Traveler Details"}
+            </h2>
+          </div>
           <button
             ref={closeRef}
             type="button"
@@ -204,13 +210,13 @@ export default function GuestsRoomsDrawer({
                           aria-label={`Remove room ${i + 1}`}
                           className="text-sm font-semibold text-stone-600 underline underline-offset-2 hover:text-red-700"
                         >
-                          Remove
+                          Remove room
                         </button>
                       )}
                     </div>
 
                     <div className="divide-y divide-stone-200 px-5">
-                      <Row label="Adults (18+)">
+                      <Row label="Adults (18+)" hint="Number of adults in this room">
                         <Stepper
                           label={`adults in room ${i + 1}`}
                           value={room.adults}
@@ -220,7 +226,7 @@ export default function GuestsRoomsDrawer({
                           onChange={(n) => update(room.id, (r) => withAdults(r, n))}
                         />
                       </Row>
-                      <Row label="Beds needed" hint="(1 bed = 1 person, 2 beds = twin room)">
+                      <Row label="Beds needed" hint="1 bed = 1 person, 2 beds = twin room">
                         <Stepper
                           label={`beds in room ${i + 1}`}
                           value={room.beds}
@@ -253,6 +259,7 @@ export default function GuestsRoomsDrawer({
                 endDate={departure.endDate}
                 travelers={travelers}
                 rooms={roomCount}
+                pricePerPerson={departure.price}
               />
             </>
           ) : (
@@ -277,6 +284,14 @@ export default function GuestsRoomsDrawer({
                 ))}
               </ul>
             )}
+            <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={close}
+              className="shrink-0 rounded-xl border border-stone-300 bg-white px-6 py-4 text-lg font-semibold text-stone-800 transition-colors hover:bg-stone-50"
+            >
+              Cancel
+            </button>
             <button
               type="button"
               disabled={!valid}
@@ -284,13 +299,14 @@ export default function GuestsRoomsDrawer({
                 onContinue(rooms);
                 setStep("next");
               }}
-              className="flex w-full items-center justify-center gap-3 rounded-xl bg-brand-900 px-6 py-4 text-xl font-bold text-white transition-colors hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-stone-300"
+              className="flex flex-1 items-center justify-center gap-3 rounded-xl bg-brand-900 px-6 py-4 text-xl font-bold text-white transition-colors hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-stone-300"
             >
               Continue
               <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </button>
+            </div>
           </div>
         )}
       </div>
@@ -368,6 +384,7 @@ function TripSummary({
   endDate,
   travelers,
   rooms,
+  pricePerPerson,
 }: {
   title: string;
   image: string | null;
@@ -375,6 +392,7 @@ function TripSummary({
   endDate: string;
   travelers: number;
   rooms: number;
+  pricePerPerson: number;
 }) {
   const rows: { icon: React.ReactNode; text: string }[] = [
     { icon: <CalendarIcon />, text: dateRangeLabel(startDate, endDate) },
@@ -384,7 +402,10 @@ function TripSummary({
   ];
   return (
     <section aria-label="Trip summary" className="mt-8 rounded-xl bg-stone-50 p-5">
-      <h3 className="font-display text-2xl font-bold text-brand-950">Trip Summary</h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-display text-2xl font-bold text-brand-950">Trip Summary</h3>
+        <span className="rounded-full bg-gold-100 px-3 py-1 text-xs font-bold text-gold-800">Selected departure</span>
+      </div>
       <div className="mt-4 flex gap-4">
         <div className="relative h-36 w-28 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-brand-600 to-brand-950">
           {image && <Image src={image} alt="" fill unoptimized sizes="112px" className="object-cover" />}
@@ -401,6 +422,24 @@ function TripSummary({
           </ul>
         </div>
       </div>
+
+      <dl className="mt-5 space-y-2 border-t border-stone-200 pt-4 text-[15px]">
+        <div className="flex items-center justify-between">
+          <dt className="text-stone-700">Price per person</dt>
+          <dd className="font-semibold text-stone-900">
+            <Money btn={pricePerPerson} />
+          </dd>
+        </div>
+        <div className="flex items-center justify-between text-lg">
+          <dt className="font-bold text-stone-900">Estimated total</dt>
+          <dd className="font-bold text-brand-950">
+            <Money btn={pricePerPerson * travelers} />
+          </dd>
+        </div>
+      </dl>
+      <p className="mt-2 text-xs text-stone-600">
+        Final price may vary based on room configuration and applicable supplements. Nothing is charged at this step.
+      </p>
     </section>
   );
 }
@@ -424,7 +463,7 @@ function NextStep({
   tripImage: string | null;
   slug: string;
   itineraryId: string;
-  departure: { id: string; startDate: string; endDate: string };
+  departure: { id: string; startDate: string; endDate: string; price: number };
   onBack: () => void;
 }) {
   const { travelers, rooms: roomCount } = totals(rooms);
@@ -470,6 +509,7 @@ function NextStep({
         endDate={departure.endDate}
         travelers={travelers}
         rooms={roomCount}
+        pricePerPerson={departure.price}
       />
 
       <div className="mt-6 rounded-xl border border-brand-200 bg-brand-50 p-5">
