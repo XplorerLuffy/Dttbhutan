@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { dashboardPathForRole } from "@/lib/roles";
 import StatusBadge from "@/components/StatusBadge";
 import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
+import ProfileCompletionCard from "@/components/dashboard/ProfileCompletionCard";
+import TravelStatsPanel from "@/components/dashboard/TravelStatsPanel";
+import { profileCompletion } from "@/lib/profileCompletion";
+import { travelStats } from "@/lib/travelStats";
 import { getSiteContent } from "@/lib/content";
 import { bhutanHour, greetingForHour } from "@/lib/greeting";
 import type { Prisma } from "@prisma/client";
@@ -55,11 +59,8 @@ export default async function TravelerDashboardPage() {
   });
 
   const content = await getSiteContent();
-  const stats = [
-    { label: "Upcoming & active", value: upcoming.length },
-    { label: "Past & cancelled", value: past.length },
-    { label: "Requests", value: customTourRequests.length + enquiries.length },
-  ];
+  const completion = profileCompletion(user);
+  const stats = travelStats(bookings, now);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
@@ -69,14 +70,14 @@ export default async function TravelerDashboardPage() {
         imageUrl={content("dashboard.header.image")}
       />
 
-      <section className="grid grid-cols-3 gap-3 sm:gap-4" aria-label="Summary">
-        {stats.map((c) => (
-          <div key={c.label} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-            <p className="text-sm font-medium text-stone-600">{c.label}</p>
-            <p className="mt-1 font-display text-2xl font-bold text-stone-900 sm:text-3xl">{c.value}</p>
-          </div>
-        ))}
-      </section>
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-2">
+          <ProfileCompletionCard completion={completion} />
+        </div>
+        <div className="lg:col-span-3">
+          <TravelStatsPanel stats={stats} />
+        </div>
+      </div>
 
       {enquiries.length > 0 && (
         <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
@@ -136,8 +137,8 @@ export default async function TravelerDashboardPage() {
         </section>
       )}
 
-      <Section title="Upcoming & active" bookings={upcoming} />
-      <Section title="Past & cancelled" bookings={past} />
+      <Section id="upcoming-trips" title="Upcoming & active" bookings={upcoming} />
+      <Section id="past-trips" title="Past & cancelled" bookings={past} />
 
       {customTourRequests.length > 0 && (
         <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
@@ -186,9 +187,9 @@ type BookingRow = Prisma.BookingGetPayload<{
   };
 }>;
 
-function Section({ title, bookings }: { title: string; bookings: BookingRow[] }) {
+function Section({ id, title, bookings }: { id: string; title: string; bookings: BookingRow[] }) {
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+    <section id={id} className="scroll-mt-24 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
       <h2 className="mb-3 font-display text-lg font-semibold">{title}</h2>
       {bookings.length === 0 ? (
         <p className="rounded-xl bg-stone-50 px-4 py-6 text-center text-sm text-stone-500">Nothing here yet.</p>
