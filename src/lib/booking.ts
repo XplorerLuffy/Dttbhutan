@@ -8,6 +8,7 @@ import {
 import { bookFlight } from "@/lib/flights/aggregator";
 import { generateBookingReference } from "@/lib/reference";
 import { resolveDepartureBooking } from "@/lib/departureBooking";
+import { detailsMismatch } from "@/lib/travelerDetails";
 import type { z } from "zod";
 import type { bookingSchema } from "@/lib/validation";
 
@@ -80,8 +81,16 @@ export async function createBooking(travelerId: string, input: BookingInput) {
       }
     }
     const totalPrice = pricePerPerson * input.travelers;
+
+    // The details must describe the party being booked: a mismatch means the
+    // form and the request disagree, and a booking built on it would be wrong.
+    if (input.details) {
+      const mismatch = detailsMismatch(input.details, input.travelers, input.rooms);
+      if (mismatch) throw new BookingConflictError(mismatch);
+    }
+    const roomCount = input.details?.rooms.length ?? input.rooms;
     // Rooms have no column of their own; the agency reads them in the notes.
-    const notes = [input.rooms ? `Rooms: ${input.rooms}` : null, input.notes].filter(Boolean).join(". ") || undefined;
+    const notes = [roomCount ? `Rooms: ${roomCount}` : null, input.notes].filter(Boolean).join(". ") || undefined;
 
     return prisma.$transaction(async (tx) => {
       const booking = await tx.booking.create({
@@ -104,6 +113,7 @@ export async function createBooking(travelerId: string, input: BookingInput) {
           itineraryId: itinerary.id,
           travelers: input.travelers,
           notes,
+          details: input.details ?? undefined,
         },
       });
 

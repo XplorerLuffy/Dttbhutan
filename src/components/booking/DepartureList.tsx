@@ -9,6 +9,7 @@ import ItineraryRequestDrawer, { type DrawerDeparture } from "@/components/listi
 import GuestsRoomsDrawer from "@/components/booking/GuestsRoomsDrawer";
 import { bookDeparture } from "@/lib/bookDeparture";
 import { defaultRooms, totals, type Room } from "@/lib/guestRooms";
+import { loadSaved } from "@/lib/bookingDraft";
 
 /**
  * Scheduled departures for one package: a year/month filter over a list of
@@ -107,11 +108,19 @@ export default function DepartureList({
   const [drawerDep, setDrawerDep] = useState<DepartureView | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  function openDrawer(d: DepartureView) {
-    // The bar above the list can change the party without the panel knowing;
-    // when it has, start from what the bar says.
-    const t = totals(roomsConfig);
-    if (t.travelers !== adults || t.rooms !== rooms) setRoomsConfig(defaultRooms(adults, rooms));
+  function openDrawer(d: DepartureView, party?: { adults: number; rooms: number }) {
+    const saved = loadSaved(d.id);
+    if (saved) {
+      // Back from logging in, or reopening: the rooms the traveler had chosen.
+      setRoomsConfig(saved.rooms);
+    } else {
+      // The bar above the list can change the party without the panel knowing;
+      // when it has, start from what the bar says.
+      const a = party?.adults ?? adults;
+      const r = party?.rooms ?? rooms;
+      const t = totals(roomsConfig);
+      if (party || t.travelers !== a || t.rooms !== r) setRoomsConfig(defaultRooms(a, r));
+    }
     setDrawerDep(d);
     setDrawerOpen(true);
   }
@@ -126,9 +135,15 @@ export default function DepartureList({
     if (!wanted) return;
     const a = Number(q.get("adults"));
     const r = Number(q.get("rooms"));
-    if (Number.isInteger(a) && a >= 1 && a <= 30) {
+    const validParty = Number.isInteger(a) && a >= 1 && a <= 30;
+    const validRooms = validParty && Number.isInteger(r) && r >= 1 && r <= a;
+    if (validParty) {
       setAdults(a);
-      if (Number.isInteger(r) && r >= 1 && r <= a) setRooms(r);
+      if (validRooms) setRooms(r);
+    }
+    // Sent back from logging in or signing up partway through a booking.
+    if (q.get("book") === "1" && wanted.status !== "SOLD_OUT" && wanted.status !== "CANCELLED") {
+      openDrawer(wanted, validParty ? { adults: a, rooms: validRooms ? r : 1 } : undefined);
     }
     setYear(wanted.startDate.slice(0, 4));
     setMonth("all");

@@ -16,6 +16,8 @@ export async function bookDeparture(args: {
   startDate: string;
   travelers: number;
   rooms: number;
+  /** From the traveler-details step; omitted for a plain request. */
+  details?: unknown;
 }): Promise<BookResult> {
   try {
     const res = await fetch("/api/bookings", {
@@ -31,7 +33,9 @@ export async function bookDeparture(args: {
         message:
           typeof data.error === "string"
             ? data.error
-            : "We couldn't create the booking. Please check your details and try again.",
+            : res.status === 400
+              ? "Some of the details weren't accepted. Please go back and check them."
+              : "We couldn't create the booking. Please check your details and try again.",
       };
     }
     return { kind: "ok", id: data.id, reference: data.reference };

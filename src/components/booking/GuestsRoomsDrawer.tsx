@@ -6,7 +6,17 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { format, parseISO } from "date-fns";
 import Money from "@/components/Money";
+import TravelerForm from "@/components/booking/TravelerForm";
 import { bookDeparture } from "@/lib/bookDeparture";
+import { clearSaved, loadSaved, save } from "@/lib/bookingDraft";
+import {
+  blankDraft,
+  draftToDetails,
+  resizeTravelers,
+  roomOfTraveler,
+  validateDraft,
+  type TravelerDraft,
+} from "@/lib/travelerDetails";
 import {
   MAX_ADULTS_PER_ROOM,
   MAX_BEDS_PER_ROOM,
@@ -64,7 +74,16 @@ export default function GuestsRoomsDrawer({
   // drives the slide itself.
   const [mounted, setMounted] = useState(open);
   const [shown, setShown] = useState(false);
-  const [step, setStep] = useState<"rooms" | "next">("rooms");
+  const [step, setStep] = useState<"rooms" | "travelers" | "review">("rooms");
+  // What the traveler has typed. It is restored from this tab's storage when
+  // they come back from logging in, and kept in step with the rooms.
+  const [draft, setDraft] = useState<TravelerDraft>(
+    () => loadSaved(departure.id)?.draft ?? blankDraft(totals(rooms).travelers)
+  );
+  const [showErrors, setShowErrors] = useState(false);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [sent, setSent] = useState(false);
+  const partySize = totals(rooms).travelers;
 
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -127,11 +146,65 @@ export default function GuestsRoomsDrawer({
     };
   }, [mounted, open, close]);
 
+  useEffect(() => {
+    setDraft((d) => resizeTravelers(d, partySize));
+  }, [partySize]);
+
+  useEffect(() => {
+    if (!mounted || sent) return;
+    save(departure.id, { rooms, draft });
+  }, [mounted, sent, departure.id, rooms, draft]);
+
+  // Who is signed in, asked when the traveler reaches the details: it fills in
+  // the lead traveler's name and email, or tells a visitor an account is needed.
+  useEffect(() => {
+    if (step !== "travelers" || signedIn !== null) return;
+    let live = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((me: { signedIn?: boolean; name?: string; email?: string }) => {
+        if (!live) return;
+        setSignedIn(Boolean(me.signedIn));
+        if (!me.signedIn) return;
+        const [first = "", ...rest] = String(me.name ?? "").trim().split(/\s+/);
+        setDraft((d) => ({
+          ...d,
+          email: d.email || me.email || "",
+          travelers: d.travelers.map((t, i) =>
+            i === 0 && !t.firstName && !t.lastName ? { ...t, firstName: first, lastName: rest.join(" ") } : t
+          ),
+        }));
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [step, signedIn]);
+
   if (!mounted) return null;
 
   const { travelers, rooms: roomCount } = totals(rooms);
   const errors = validateRooms(rooms, maxTravelers);
   const valid = errors.length === 0;
+  const detailErrors = validateDraft(draft, rooms);
+  const loginNext = encodeURIComponent(
+    `/packages/${slug}?departure=${departure.id}&adults=${travelers}&rooms=${roomCount}&book=1#dates`
+  );
+  const stepNumber = step === "rooms" ? 1 : step === "travelers" ? 2 : 3;
+  const stepTitle = step === "rooms" ? "Select Guests & Rooms" : step === "travelers" ? "Traveler Details" : "Review & Payment";
+
+  function goToReview() {
+    setShowErrors(true);
+    if (Object.keys(detailErrors).length > 0) {
+      requestAnimationFrame(() => {
+        const first = panelRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+        first?.scrollIntoView({ block: "center" });
+        first?.focus();
+      });
+      return;
+    }
+    setStep("review");
+  }
 
   const update = (id: string, change: (r: Room) => Room) =>
     onRooms(rooms.map((r) => (r.id === id ? change(r) : r)));
@@ -165,10 +238,10 @@ export default function GuestsRoomsDrawer({
         <div className="flex items-start justify-between gap-4 px-5 pb-1 pt-5">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-gold-700">
-              Booking &middot; Step {step === "rooms" ? 1 : 2}
+              Booking &middot; Step {stepNumber}
             </p>
             <h2 id={titleId} className="mt-0.5 font-display text-2xl font-bold text-brand-950">
-              {step === "rooms" ? "Select Guests & Rooms" : "Traveler Details"}
+              {stepTitle}
             </h2>
           </div>
           <button
@@ -262,50 +335,73 @@ export default function GuestsRoomsDrawer({
                 pricePerPerson={departure.price}
               />
             </>
-          ) : (
-            <NextStep
+          ) : step === "travelers" ? (
+            <TravelerForm
               rooms={rooms}
+              draft={draft}
+              onDraft={setDraft}
+              errors={detailErrors}
+              showErrors={showErrors}
+              signedIn={signedIn}
+              loginNext={loginNext}
+            />
+          ) : (
+            <ReviewStep
+              rooms={rooms}
+              draft={draft}
               tripTitle={tripTitle}
               tripImage={tripImage}
-              slug={slug}
               itineraryId={itineraryId}
               departure={departure}
-              onBack={() => setStep("rooms")}
+              loginNext={loginNext}
+              onSent={() => {
+                setSent(true);
+                clearSaved(departure.id);
+              }}
+              onBack={() => setStep("travelers")}
             />
           )}
         </div>
 
-        {step === "rooms" && (
+        {step !== "review" && (
           <div className="border-t border-stone-200 bg-white px-5 pb-[max(0.875rem,env(safe-area-inset-bottom))] pt-3">
-            {!valid && (
+            {step === "rooms" && !valid && (
               <ul role="alert" className="mb-2 space-y-0.5 text-xs text-red-700">
                 {errors.map((e) => (
                   <li key={e}>{e}</li>
                 ))}
               </ul>
             )}
+            {step === "travelers" && showErrors && Object.keys(detailErrors).length > 0 && (
+              <p role="alert" className="mb-2 text-xs text-red-700">
+                Please check the highlighted fields.
+              </p>
+            )}
             <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={close}
-              className="shrink-0 rounded-xl border border-stone-300 bg-white px-5 py-3 text-base font-semibold text-stone-800 transition-colors hover:bg-stone-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={!valid}
-              onClick={() => {
-                onContinue(rooms);
-                setStep("next");
-              }}
-              className="flex flex-1 items-center justify-center gap-2.5 rounded-xl bg-brand-900 px-5 py-3 text-base font-bold text-white transition-colors hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-stone-300"
-            >
-              Continue
-              <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </button>
+              <button
+                type="button"
+                onClick={step === "rooms" ? close : () => setStep("rooms")}
+                className="shrink-0 rounded-xl border border-stone-300 bg-white px-5 py-3 text-base font-semibold text-stone-800 transition-colors hover:bg-stone-50"
+              >
+                {step === "rooms" ? "Cancel" : "Back"}
+              </button>
+              <button
+                type="button"
+                disabled={step === "rooms" && !valid}
+                onClick={() => {
+                  if (step === "rooms") {
+                    onContinue(rooms);
+                    setShowErrors(false);
+                    setStep("travelers");
+                  } else goToReview();
+                }}
+                className="flex flex-1 items-center justify-center gap-2.5 rounded-xl bg-brand-900 px-5 py-3 text-base font-bold text-white transition-colors hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-stone-300"
+              >
+                Continue
+                <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
             </div>
           </div>
         )}
@@ -445,32 +541,37 @@ function TripSummary({
 }
 
 /**
- * Placeholder for Traveler Details, Payment and Confirmation, which are built
- * next. Meanwhile it keeps the chosen party and offers the booking request
- * that already works, so nobody is stranded.
+ * Step 3, for now a review: who is going, how to reach them, and a note that
+ * payment and confirmation are being added. Until they are, it offers the
+ * booking request that already works — it carries the traveler details — so a
+ * customer who gets this far is never left at a dead end.
  */
-function NextStep({
+function ReviewStep({
   rooms,
+  draft,
   tripTitle,
   tripImage,
-  slug,
   itineraryId,
   departure,
+  loginNext,
+  onSent,
   onBack,
 }: {
   rooms: Room[];
+  draft: TravelerDraft;
   tripTitle: string;
   tripImage: string | null;
-  slug: string;
   itineraryId: string;
   departure: { id: string; startDate: string; endDate: string; price: number };
+  loginNext: string;
+  onSent: () => void;
   onBack: () => void;
 }) {
   const { travelers, rooms: roomCount } = totals(rooms);
+  const roomFor = roomOfTraveler(rooms);
   const [state, setState] = useState<"idle" | "sending" | "done" | "login" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [booked, setBooked] = useState<{ id: string; reference: string } | null>(null);
-  const next = encodeURIComponent(`/packages/${slug}?departure=${departure.id}&adults=${travelers}&rooms=${roomCount}#dates`);
 
   async function send() {
     setState("sending");
@@ -481,10 +582,12 @@ function NextStep({
       startDate: departure.startDate,
       travelers,
       rooms: roomCount,
+      details: draftToDetails(draft, rooms),
     });
     if (result.kind === "ok") {
       setBooked({ id: result.id, reference: result.reference });
       setState("done");
+      onSent();
     } else if (result.kind === "login") setState("login");
     else {
       setMessage(result.message);
@@ -493,14 +596,42 @@ function NextStep({
   }
 
   return (
-    <div className="mt-4">
-      <div className="rounded-xl border border-dashed border-stone-300 bg-stone-50 p-5 text-[15px] text-stone-800">
-        <p className="font-semibold text-stone-900">Next step: traveler details</p>
-        <p className="mt-1">
-          Traveler details, payment and confirmation are being added. Your choices are saved, so you can go back and
-          change them.
-        </p>
-      </div>
+    <div className="mt-3 space-y-4">
+      <section aria-label="Travelers" className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+        <h3 className="text-sm font-bold text-brand-950">Who is travelling</h3>
+        <ul className="mt-2 divide-y divide-stone-100 text-sm">
+          {draft.travelers.map((t, i) => (
+            <li key={i} className="flex items-start justify-between gap-3 py-2">
+              <span>
+                <span className="font-semibold text-stone-900">
+                  {t.firstName} {t.lastName}
+                </span>
+                <span className="block text-xs text-stone-600">
+                  {t.nationality}
+                  {t.dietary ? ` · ${t.dietary}` : ""}
+                </span>
+              </span>
+              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-stone-500">Room {roomFor[i]}</span>
+            </li>
+          ))}
+        </ul>
+        <dl className="mt-2 space-y-1 border-t border-stone-100 pt-3 text-sm">
+          <div className="flex justify-between gap-3">
+            <dt className="text-stone-600">Email</dt>
+            <dd className="break-all text-right font-medium text-stone-900">{draft.email}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-stone-600">Phone</dt>
+            <dd className="font-medium text-stone-900">{draft.phone}</dd>
+          </div>
+          {draft.requests && (
+            <div className="flex justify-between gap-3">
+              <dt className="text-stone-600">Note</dt>
+              <dd className="text-right text-stone-900">{draft.requests}</dd>
+            </div>
+          )}
+        </dl>
+      </section>
 
       <TripSummary
         title={tripTitle}
@@ -512,15 +643,20 @@ function NextStep({
         pricePerPerson={departure.price}
       />
 
-      <div className="mt-6 rounded-xl border border-brand-200 bg-brand-50 p-5">
-        <p className="font-semibold text-stone-900">Want to go ahead now?</p>
+      <div className="rounded-xl border border-dashed border-stone-300 bg-stone-50 p-4 text-sm text-stone-800">
+        <p className="font-semibold text-stone-900">Payment and confirmation come next</p>
+        <p className="mt-1">These steps are being added. Your details are saved, so you can go back and change anything.</p>
+      </div>
+
+      <div className="rounded-xl border border-brand-200 bg-brand-50 p-4">
+        <p className="text-sm font-semibold text-stone-900">Want to go ahead now?</p>
         <p className="mt-1 text-sm text-stone-700">
-          Send this as a booking request. We confirm availability and the final price by email, then arrange payment.
-          Nothing is charged.
+          Send this as a booking request, with these details. We confirm availability and the final price by email, then
+          arrange payment. Nothing is charged.
         </p>
 
         {state === "done" && booked ? (
-          <p className="mt-3 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900">
             <strong>Booking requested &middot; reference {booked.reference}.</strong>{" "}
             <Link href={`/dashboard/bookings/${booked.id}`} className="font-semibold underline">
               View it in My trips →
@@ -531,7 +667,7 @@ function NextStep({
             type="button"
             onClick={send}
             disabled={state === "sending"}
-            className="mt-3 rounded-full bg-brand-900 px-7 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-800 disabled:opacity-60"
+            className="mt-3 rounded-full bg-brand-900 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-800 disabled:opacity-60"
           >
             {state === "sending" ? "Sending…" : "Send booking request"}
           </button>
@@ -539,29 +675,31 @@ function NextStep({
 
         <div aria-live="polite" className="empty:hidden">
           {state === "login" && (
-            <p className="mt-3 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
               Please{" "}
-              <Link href={`/login?next=${next}`} className="font-semibold underline">
+              <Link href={`/login?next=${loginNext}`} className="font-semibold underline">
                 log in
               </Link>{" "}
               or{" "}
-              <Link href={`/register?next=${next}`} className="font-semibold underline">
+              <Link href={`/register?next=${loginNext}`} className="font-semibold underline">
                 create a free account
               </Link>{" "}
-              to book. You&apos;ll come straight back to this date.
+              to book. Your rooms and details are kept, and you&apos;ll come straight back.
             </p>
           )}
-          {state === "error" && message && <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{message}</p>}
+          {state === "error" && message && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700">{message}</p>}
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onBack}
-        className="mt-6 text-sm font-semibold text-brand-800 underline underline-offset-2 hover:text-brand-950"
-      >
-        ← Back to guests &amp; rooms
-      </button>
+      {state !== "done" && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm font-semibold text-brand-800 underline underline-offset-2 hover:text-brand-950"
+        >
+          ← Edit traveler details
+        </button>
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { travelerDetailsSchema } from "@/lib/travelerDetails";
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { agencyInbox, sendEmail, sendEmails, type EmailMessage } from "@/lib/email/send";
@@ -157,10 +158,28 @@ export async function notifyBookingCreated(bookingId: string): Promise<void> {
         travelerEmail: booking.traveler.email,
         total,
         status: booking.status,
+        extraRows: travelerRows(booking.itineraryBooking?.details),
       }),
       booking.traveler.email
     ),
   ]);
+}
+
+/** The party entered when booking a departure, as rows for the agency's email. */
+function travelerRows(details: unknown): { label: string; value: string }[] {
+  const parsed = travelerDetailsSchema.safeParse(details);
+  if (!parsed.success) return [];
+  const d = parsed.data;
+  const rows = [
+    {
+      label: "Travelers",
+      value: d.travelers.map((t) => `${t.firstName} ${t.lastName} (${t.nationality})`).join("; "),
+    },
+    { label: "Rooms", value: d.rooms.map((r, i) => `Room ${i + 1}: ${r.adults} adult${r.adults === 1 ? "" : "s"}, ${r.beds} bed${r.beds === 1 ? "" : "s"}`).join("; ") },
+    { label: "Contact", value: `${d.contact.email} · ${d.contact.phone}` },
+  ];
+  if (d.requests) rows.push({ label: "Note from traveler", value: d.requests.slice(0, 400) });
+  return rows;
 }
 
 /**

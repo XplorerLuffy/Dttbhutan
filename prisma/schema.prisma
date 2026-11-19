@@ -522,6 +522,11 @@ model ItineraryBooking {
   itinerary   Itinerary @relation(fields: [itineraryId], references: [id])
   travelers   Int       @default(1)
   notes       String?
+  /// What the traveler entered when booking a scheduled departure: the room
+  /// layout, each traveler's name, date of birth and nationality, contact and
+  /// emergency details, and requests. Shape: see src/lib/travelerDetails.ts.
+  /// Null on bookings made before this step existed.
+  details     Json?
   createdAt   DateTime  @default(now())
 }
 

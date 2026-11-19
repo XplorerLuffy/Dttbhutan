@@ -1,3 +1,4 @@
+import TravelerDetailsCard from "@/components/booking/TravelerDetailsCard";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
@@ -252,6 +253,7 @@ export default async function BookingDetailPage({
                 Notes: {booking.itineraryBooking.notes}
               </p>
             )}
+            <TravelerDetailsCard details={booking.itineraryBooking.details} />
             <p className="mt-2 text-xs text-stone-400">
               This is a request — our team will confirm the assigned guide,
               hotel, and vehicle with you.

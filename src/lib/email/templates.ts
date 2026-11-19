@@ -200,6 +200,8 @@ export function newBookingToAgency(input: {
   travelerEmail: string;
   total: string;
   status: string;
+  /** Extra detail rows, e.g. the travelers and contact entered when booking a departure. */
+  extraRows?: { label: string; value: string }[];
 }): RenderedEmail {
   return render(`[Booking] ${input.type} — ${input.travelerName}`, {
     heading: "New booking on the site",
@@ -212,6 +214,7 @@ export function newBookingToAgency(input: {
       { label: "Traveler", value: `${input.travelerName} (${input.travelerEmail})` },
       { label: "Total", value: input.total },
       { label: "Status", value: input.status },
+      ...(input.extraRows ?? []),
     ],
     cta: { label: "Open admin bookings", href: `${siteUrl()}/chim/bookings` },
   });

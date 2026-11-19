@@ -1,3 +1,4 @@
+import { travelerDetailsSchema } from "@/lib/travelerDetails";
 import { z } from "zod";
 
 export const registerSchema = z.object({
@@ -213,6 +214,8 @@ export const itineraryBookingSchema = z.object({
   /** Set when booking a scheduled departure: its dates and price then win over `startDate`. */
   departureId: z.string().min(1).max(40).optional(),
   rooms: z.coerce.number().int().min(1).max(15).optional(),
+  /** Step 2 of booking a departure: who is travelling and how to reach them. */
+  details: travelerDetailsSchema.optional(),
 });
 
 export const bookingSchema = z
