@@ -399,6 +399,7 @@ export default async function PackageDetailPage({
         ]}
       />
       <TripPageHeader
+        itineraryId={itinerary.id}
         title={itinerary.title}
         categoryLabel={CATEGORY_LABEL[itinerary.category]}
         categoryHref={`/packages?category=${itinerary.category}`}

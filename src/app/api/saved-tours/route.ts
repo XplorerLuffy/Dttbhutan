@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
+/** Which tours the visitor has saved. 200 either way: signed out is a normal answer (public pages are cached, so they ask). */
+export async function GET() {
+  const user = await getCurrentUser();
+  let body: { signedIn: boolean; ids: string[] } = { signedIn: false, ids: [] };
+  if (user?.role === "TRAVELER") {
+    const rows = await prisma.savedTour.findMany({ where: { userId: user.id }, select: { itineraryId: true } });
+    body = { signedIn: true, ids: rows.map((r) => r.itineraryId) };
+  }
+  const res = NextResponse.json(body);
+  res.headers.set("Cache-Control", "private, no-store");
+  return res;
+}
+
 /** Save (POST) or remove (DELETE) a tour on the signed-in traveler's wishlist. Both are idempotent. */
 async function traveler() {
   const user = await getCurrentUser();

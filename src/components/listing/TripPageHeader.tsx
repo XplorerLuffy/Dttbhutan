@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { TripDifficulty } from "@prisma/client";
+import SaveTourButton from "@/components/SaveTourButton";
 
 export type TripHeaderStats = {
   durationDays: number;
@@ -30,6 +31,7 @@ const DIFFICULTY_LABEL: Record<TripDifficulty, string> = {
  * also lets the photograph run full-bleed without a scrim dulling it.
  */
 export default function TripPageHeader({
+  itineraryId,
   title,
   categoryLabel,
   categoryHref,
@@ -39,6 +41,8 @@ export default function TripPageHeader({
   ratingAverage,
   ratingCount,
 }: {
+  /** Enables the save-to-wishlist heart on the photo. */
+  itineraryId?: string;
   title: string;
   categoryLabel: string;
   categoryHref: string;
@@ -100,6 +104,7 @@ export default function TripPageHeader({
         {imageUrl && (
           <Image src={imageUrl} alt={`${title}: Bhutan tour package`} fill priority unoptimized className="object-cover" />
         )}
+        {itineraryId && <SaveTourButton itineraryId={itineraryId} title={title} className="absolute right-4 top-4" />}
         {galleryHref && (
           <a
             href={galleryHref}
