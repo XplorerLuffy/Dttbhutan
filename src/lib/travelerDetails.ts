@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { COUNTRIES } from "@/lib/countries";
 import { MAX_ADULTS_PER_ROOM, MAX_BEDS_PER_ROOM, MAX_ROOMS } from "@/lib/guestRooms";
+import { PAYMENT_METHODS } from "@/lib/payment";
 
 /**
  * What a traveler tells us when booking a scheduled departure (step 2). One
@@ -83,6 +84,8 @@ export const travelerDetailsSchema = z
       })
       .optional(),
     requests: optionalText(1000, "Your note"),
+    /** Chosen on the payment step; absent on a booking made without it. */
+    paymentMethod: z.enum(PAYMENT_METHODS).optional(),
     acceptedTerms: z.literal(true, { message: "Please accept the terms to continue" }),
   })
   .superRefine((d, ctx) => {
@@ -104,6 +107,8 @@ export type TravelerDraft = {
   emergencyPhone: string;
   requests: string;
   acceptedTerms: boolean;
+  /** One of PAYMENT_METHODS once chosen on the payment step, else "". */
+  paymentMethod: string;
 };
 
 export const blankTraveler = () => ({ firstName: "", lastName: "", dateOfBirth: "", nationality: "", gender: "", dietary: "" });
@@ -116,6 +121,7 @@ export const blankDraft = (travelerCount: number): TravelerDraft => ({
   emergencyPhone: "",
   requests: "",
   acceptedTerms: false,
+  paymentMethod: "",
 });
 
 /** Keeps what has been typed when the party size changes: extra rows are cut off the end, new ones added blank. */
@@ -133,6 +139,7 @@ export function draftToDetails(draft: TravelerDraft, rooms: { adults: number; be
     contact: { email: draft.email, phone: draft.phone },
     emergency: draft.emergencyName || draft.emergencyPhone ? { name: draft.emergencyName, phone: draft.emergencyPhone } : undefined,
     requests: draft.requests,
+    paymentMethod: (draft.paymentMethod || undefined) as (typeof PAYMENT_METHODS)[number] | undefined,
     acceptedTerms: draft.acceptedTerms as true,
   };
 }

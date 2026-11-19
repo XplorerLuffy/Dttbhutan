@@ -72,17 +72,17 @@ export default function TravelerForm({
   const setTraveler = (i: number, patch: Partial<TravelerDraft["travelers"][number]>) =>
     onDraft({ ...draft, travelers: draft.travelers.map((t, j) => (j === i ? { ...t, ...patch } : t)) });
 
-  const field = "input !py-2";
+  const field = "input !px-2.5 !py-1.5";
   const bad = (path: string) => (err(path) ? " !border-red-500" : "");
 
   return (
-    <div className="mt-3 space-y-4">
-      <p className="text-sm text-stone-800">
+    <div className="mt-2 space-y-3">
+      <p className="text-xs leading-snug text-stone-800">
         Tell us who is travelling. Please enter names exactly as they appear on each traveler&apos;s passport.
       </p>
 
       {signedIn === false && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
           You&apos;ll need an account to book.{" "}
           <Link href={`/login?next=${loginNext}`} className="font-semibold underline">
             Log in
@@ -97,14 +97,14 @@ export default function TravelerForm({
 
       {draft.travelers.map((t, i) => (
         <section key={i} aria-label={`Traveler ${i + 1}`} className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between gap-3 bg-gold-50 px-4 py-2.5">
-            <h3 className="text-sm font-bold text-brand-950">
+          <div className="flex items-center justify-between gap-3 bg-gold-50 px-3 py-2">
+            <h3 className="text-xs font-bold text-brand-950">
               Traveler {i + 1}
               {i === 0 && <span className="ml-2 rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gold-800">Lead traveler</span>}
             </h3>
-            <span className="text-xs font-semibold uppercase tracking-wide text-stone-600">Room {roomFor[i]}</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-600">Room {roomFor[i]}</span>
           </div>
-          <div className="grid grid-cols-2 gap-3 p-4">
+          <div className="grid grid-cols-2 gap-x-2.5 gap-y-2 p-3">
             <Field id={`${uid}-t${i}-first`} label="First name" message={err(`travelers.${i}.firstName`)}>
               {(p) => <input {...p} autoComplete={i === 0 ? "given-name" : "off"} value={t.firstName} onChange={(e) => setTraveler(i, { firstName: e.target.value })} className={field + bad(`travelers.${i}.firstName`)} />}
             </Field>
@@ -143,10 +143,10 @@ export default function TravelerForm({
         </section>
       ))}
 
-      <section aria-label="Contact details" className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-bold text-brand-950">How can we reach you?</h3>
-        <p className="mt-0.5 text-xs text-stone-600">For the lead traveler. We send the booking confirmation here.</p>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <section aria-label="Contact details" className="rounded-xl border border-stone-200 bg-white p-3 shadow-sm">
+        <h3 className="text-xs font-bold text-brand-950">How can we reach you?</h3>
+        <p className="mt-0.5 text-[11px] text-stone-600">For the lead traveler. We send the booking confirmation here.</p>
+        <div className="mt-2 grid grid-cols-2 gap-2.5">
           <Field id={`${uid}-email`} label="Email" message={err("contact.email")}>
             {(p) => <input {...p} type="email" autoComplete="email" value={draft.email} onChange={(e) => onDraft({ ...draft, email: e.target.value })} className={field + bad("contact.email")} />}
           </Field>
@@ -156,12 +156,12 @@ export default function TravelerForm({
         </div>
       </section>
 
-      <section aria-label="Emergency contact" className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-bold text-brand-950">
+      <section aria-label="Emergency contact" className="rounded-xl border border-stone-200 bg-white p-3 shadow-sm">
+        <h3 className="text-xs font-bold text-brand-950">
           Emergency contact <span className="font-normal text-stone-600">(optional)</span>
         </h3>
-        <p className="mt-0.5 text-xs text-stone-600">Someone at home we can call if needed. Not travelling with you.</p>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <p className="mt-0.5 text-[11px] text-stone-600">Someone at home we can call if needed. Not travelling with you.</p>
+        <div className="mt-2 grid grid-cols-2 gap-2.5">
           <Field id={`${uid}-em-name`} label="Name" message={err("emergency.name")}>
             {(p) => <input {...p} autoComplete="off" value={draft.emergencyName} onChange={(e) => onDraft({ ...draft, emergencyName: e.target.value })} className={field + bad("emergency.name")} />}
           </Field>
@@ -172,11 +172,11 @@ export default function TravelerForm({
       </section>
 
       <Field id={`${uid}-notes`} label="Anything else we should know? (optional)" message={err("requests")}>
-        {(p) => <textarea {...p} rows={3} maxLength={1000} value={draft.requests} onChange={(e) => onDraft({ ...draft, requests: e.target.value })} className={field + bad("requests")} placeholder="Allergies, mobility, celebrations, preferred hotels…" />}
+        {(p) => <textarea {...p} rows={2} maxLength={1000} value={draft.requests} onChange={(e) => onDraft({ ...draft, requests: e.target.value })} className={field + bad("requests")} placeholder="Allergies, mobility, celebrations, preferred hotels…" />}
       </Field>
 
       <div>
-        <label className="flex items-start gap-3 text-sm text-stone-800">
+        <label className="flex items-start gap-2.5 text-xs leading-snug text-stone-800">
           <input
             type="checkbox"
             checked={draft.acceptedTerms}

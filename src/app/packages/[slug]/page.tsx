@@ -16,7 +16,8 @@ import TripReviews, { type TripReview } from "@/components/listing/TripReviews";
 import TripCard, { CATEGORY_LABEL } from "@/components/listing/TripCard";
 import TripLodging, { type LodgingView } from "@/components/listing/TripLodging";
 import Money from "@/components/Money";
-import { getCompany } from "@/lib/content";
+import type { PaymentCopy } from "@/lib/payment";
+import { companyFrom, getSiteContent } from "@/lib/content";
 import ItineraryRequestDrawer, {
   type DrawerDeparture,
 } from "@/components/listing/ItineraryRequestDrawer";
@@ -97,7 +98,17 @@ export default async function PackageDetailPage({
     },
   });
   if (!itinerary || itinerary.status !== "PUBLISHED") notFound();
-  const company = await getCompany();
+  const siteContent = await getSiteContent();
+  const company = companyFrom(siteContent);
+  const paymentCopy: PaymentCopy = {
+    intro: siteContent("booking.payment.intro"),
+    next: siteContent("booking.payment.next"),
+    methods: {
+      BANK_TRANSFER: siteContent("booking.payment.bankTransfer"),
+      MOBILE_WALLET: siteContent("booking.payment.mobileWallet"),
+      CASH: siteContent("booking.payment.cash"),
+    },
+  };
 
   const [reviewRows, reviewStats, related] = await Promise.all([
     prisma.review.findMany({
@@ -310,6 +321,7 @@ export default async function PackageDetailPage({
             stays={stays}
             phone={company.phone}
             tripImage={itinerary.coverPhotoUrl}
+            paymentCopy={paymentCopy}
             maxTravelers={itinerary.maxGroupSize}
           />
         </div>

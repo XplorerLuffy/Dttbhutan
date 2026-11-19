@@ -434,6 +434,18 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     ],
   },
   {
+    id: "booking.payment",
+    label: "Booking — payment step",
+    description: "The wording on the last step of booking a departure. Nothing is charged on the site: the traveler picks how they will pay, and you send the details once you confirm the booking.",
+    fields: [
+      { key: "booking.payment.intro", label: "Under the payment methods", type: "textarea", default: "You won't be charged now. We confirm your booking and the final price by email first, then you pay by the method you choose." },
+      { key: "booking.payment.bankTransfer", label: "Bank transfer — what happens next", type: "textarea", default: "We email you our bank details and a payment reference once your booking is confirmed.", help: "Put real account numbers in your confirmation email, not here: this text is public." },
+      { key: "booking.payment.mobileWallet", label: "Mobile wallet — what happens next", type: "textarea", default: "We send you the wallet number or a payment request once your booking is confirmed." },
+      { key: "booking.payment.cash", label: "Cash — what happens next", type: "textarea", default: "Pay in cash at our office before you travel. We confirm the address and the amount with your booking." },
+      { key: "booking.payment.next", label: "After booking — what happens next", type: "textarea", default: "We'll email you within one working day to confirm availability and the final price, then send the payment details for the method you chose." },
+    ],
+  },
+  {
     id: "banners",
     label: "Page banner photos",
     description: "The wide photo at the top of the About, Contact and FAQ pages.",

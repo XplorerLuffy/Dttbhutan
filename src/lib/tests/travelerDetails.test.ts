@@ -24,6 +24,7 @@ const good = (): TravelerDraft => ({
   emergencyPhone: "",
   requests: "",
   acceptedTerms: true,
+  paymentMethod: "",
 });
 
 describe("ageOn", () => {
@@ -129,6 +130,13 @@ describe("server-side schema", () => {
       assert.equal(r.data.requests, "Window seat");
       assert.equal(r.data.travelers[0].dietary, "");
     }
+  });
+  it("accepts the three payment methods and nothing else", () => {
+    for (const m of ["BANK_TRANSFER", "MOBILE_WALLET", "CASH"]) {
+      assert.equal(travelerDetailsSchema.safeParse(draftToDetails({ ...good(), paymentMethod: m }, rooms)).success, true, m);
+    }
+    assert.equal(travelerDetailsSchema.safeParse(draftToDetails({ ...good(), paymentMethod: "CARD" }, rooms)).success, false);
+    assert.equal(travelerDetailsSchema.safeParse(draftToDetails({ ...good(), paymentMethod: "" }, rooms)).success, true, "not chosen yet is allowed by the schema; the screen requires it");
   });
   it("rejects an oversized room layout", () => {
     const bad = draftToDetails(good(), [{ adults: 9, beds: 1 }]);

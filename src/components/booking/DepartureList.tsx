@@ -10,6 +10,7 @@ import GuestsRoomsDrawer from "@/components/booking/GuestsRoomsDrawer";
 import { bookDeparture } from "@/lib/bookDeparture";
 import { defaultRooms, totals, type Room } from "@/lib/guestRooms";
 import { loadSaved } from "@/lib/bookingDraft";
+import type { PaymentCopy } from "@/lib/payment";
 
 /**
  * Scheduled departures for one package: a year/month filter over a list of
@@ -78,6 +79,7 @@ export default function DepartureList({
   phone,
   tripImage,
   maxTravelers,
+  paymentCopy,
 }: {
   departures: DepartureView[];
   packageTitle: string;
@@ -88,6 +90,7 @@ export default function DepartureList({
   phone: string;
   tripImage: string | null;
   maxTravelers: number | null;
+  paymentCopy: PaymentCopy;
 }) {
   const [tab, setTab] = useState<Tab>("scheduled");
   const [adults, setAdults] = useState(2);
@@ -294,6 +297,7 @@ export default function DepartureList({
           itineraryId={itineraryId}
           departure={drawerDep}
           maxTravelers={maxTravelers}
+          paymentCopy={paymentCopy}
         />
       )}
     </div>

@@ -1,3 +1,4 @@
+import { PAYMENT_LABEL } from "@/lib/payment";
 import { roomOfTraveler, travelerDetailsSchema } from "@/lib/travelerDetails";
 
 const GENDER: Record<string, string> = { F: "Female", M: "Male", X: "Another" };
@@ -47,6 +48,12 @@ export default function TravelerDetailsCard({ details }: { details: unknown }) {
             <dd className="text-stone-900">
               {d.emergency.name} · {d.emergency.phone}
             </dd>
+          </div>
+        )}
+        {d.paymentMethod && (
+          <div className="flex gap-2">
+            <dt className="w-24 shrink-0 text-stone-500">Will pay by</dt>
+            <dd className="text-stone-900">{PAYMENT_LABEL[d.paymentMethod]}</dd>
           </div>
         )}
         {d.requests && (

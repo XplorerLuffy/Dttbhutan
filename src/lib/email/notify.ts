@@ -1,3 +1,4 @@
+import { PAYMENT_LABEL } from "@/lib/payment";
 import { travelerDetailsSchema } from "@/lib/travelerDetails";
 import "server-only";
 import { prisma } from "@/lib/prisma";
@@ -178,6 +179,7 @@ function travelerRows(details: unknown): { label: string; value: string }[] {
     { label: "Rooms", value: d.rooms.map((r, i) => `Room ${i + 1}: ${r.adults} adult${r.adults === 1 ? "" : "s"}, ${r.beds} bed${r.beds === 1 ? "" : "s"}`).join("; ") },
     { label: "Contact", value: `${d.contact.email} · ${d.contact.phone}` },
   ];
+  if (d.paymentMethod) rows.push({ label: "Will pay by", value: PAYMENT_LABEL[d.paymentMethod] });
   if (d.requests) rows.push({ label: "Note from traveler", value: d.requests.slice(0, 400) });
   return rows;
 }
