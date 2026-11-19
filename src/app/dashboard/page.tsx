@@ -9,6 +9,7 @@ import ProfileCompletionCard from "@/components/dashboard/ProfileCompletionCard"
 import TravelStatsPanel from "@/components/dashboard/TravelStatsPanel";
 import { profileCompletion } from "@/lib/profileCompletion";
 import NextAdventureCard, { type NextAdventureData } from "@/components/dashboard/NextAdventureCard";
+import Wishlist, { type SavedTourCard } from "@/components/dashboard/Wishlist";
 import UpcomingTrips, { type TripRow } from "@/components/dashboard/UpcomingTrips";
 import QuickActions from "@/components/dashboard/QuickActions";
 import BookingProgress from "@/components/dashboard/BookingProgress";
@@ -70,6 +71,39 @@ export default async function TravelerDashboardPage() {
     },
   });
 
+  const saved = await prisma.savedTour.findMany({
+    where: { userId: user.id, itinerary: { status: "PUBLISHED" } },
+    orderBy: { createdAt: "desc" },
+    include: {
+      itinerary: {
+        include: { days: { orderBy: { dayNumber: "asc" }, include: { destination: { select: { name: true } } } } },
+      },
+    },
+  });
+  const ratings = await prisma.review.groupBy({
+    by: ["targetId"],
+    where: { targetType: "ITINERARY", targetId: { in: saved.map((s) => s.itineraryId) } },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+  const CATEGORY: Record<string, string> = { TREKKING: "Trekking", CULTURAL: "Cultural Journey", WILDLIFE: "Wildlife", HONEYMOON: "Honeymoon" };
+  const savedCards: SavedTourCard[] = saved.map((s) => {
+    const r = ratings.find((x) => x.targetId === s.itineraryId);
+    const it = s.itinerary;
+    return {
+      itineraryId: it.id,
+      slug: it.slug,
+      title: it.title,
+      imageUrl: it.coverPhotoUrl,
+      category: CATEGORY[it.category] ?? it.category,
+      destination: placesOf(it.days),
+      durationDays: it.durationDays,
+      priceBTN: Number(it.pricePerPerson),
+      rating: r?._avg.rating ?? null,
+      reviewCount: r?._count._all ?? 0,
+    };
+  });
+
   const content = await getSiteContent();
   const nextBooking = pickNextBooking(
     bookings.map((b) => ({
@@ -110,7 +144,7 @@ export default async function TravelerDashboardPage() {
       };
     });
   const completion = profileCompletion(user);
-  const stats = travelStats(bookings, now);
+  const stats = travelStats(bookings, now, savedCards.length);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
@@ -143,6 +177,8 @@ export default async function TravelerDashboardPage() {
       <QuickActions />
 
       <UpcomingTrips trips={tripRows} />
+
+      <Wishlist initial={savedCards} />
 
       {enquiries.length > 0 && (
         <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
@@ -289,6 +325,12 @@ function Section({ id, title, bookings }: { id: string; title: string; bookings:
       )}
     </section>
   );
+}
+
+function placesOf(days: { destination: { name: string } | null }[]) {
+  const names: string[] = [];
+  for (const d of days) if (d.destination && !names.includes(d.destination.name)) names.push(d.destination.name);
+  return (names.length > 3 ? [names[0], names[names.length - 1]] : names).join(" → ");
 }
 
 /** "Paro → Thimphu, Bhutan" from the distinct places the itinerary's days are in, in order. */

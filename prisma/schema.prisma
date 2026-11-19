@@ -70,6 +70,9 @@ model User {
   /// rows; every account gets one when it is imported or registered.
   authId String? @unique @db.Uuid
 
+  /// Tours this traveler saved to their wishlist.
+  savedTours SavedTour[]
+
   /// When this account's password last changed. Sessions are stateless JWTs,
   /// so there is nothing to delete server-side when someone changes their
   /// password — without this, a token minted under the old password keeps
@@ -415,6 +418,7 @@ model Itinerary {
 
   days       ItineraryDay[]
   bookings   ItineraryBooking[]
+  savedBy    SavedTour[]
   departures Departure[]
   lodgings   ItineraryLodging[]
   photos     ItineraryPhoto[]
@@ -1031,4 +1035,20 @@ enum DepartureStatus {
   LIMITED
   SOLD_OUT
   CANCELLED
+}
+
+// ---------------------------------------------------------------------------
+// Wishlist — tours a traveler saved. One row per (traveler, tour).
+// ---------------------------------------------------------------------------
+
+model SavedTour {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, itineraryId])
+  @@index([userId, createdAt])
 }
