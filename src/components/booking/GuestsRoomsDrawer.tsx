@@ -158,16 +158,16 @@ export default function GuestsRoomsDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`absolute inset-y-0 right-0 flex w-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-out motion-reduce:transition-none md:w-[46vw] md:min-w-[26rem] md:max-w-[40rem] ${
+        className={`absolute inset-y-0 right-0 flex w-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-out motion-reduce:transition-none md:w-[30rem] md:max-w-[90vw] lg:w-[32rem] ${
           shown ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-start justify-between gap-4 px-5 pb-2 pt-6 sm:px-8">
+        <div className="flex items-start justify-between gap-4 px-5 pb-1 pt-5">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-gold-700">
               Booking &middot; Step {step === "rooms" ? 1 : 2}
             </p>
-            <h2 id={titleId} className="mt-1 font-display text-3xl font-bold text-brand-950 sm:text-[2rem]">
+            <h2 id={titleId} className="mt-0.5 font-display text-2xl font-bold text-brand-950">
               {step === "rooms" ? "Select Guests & Rooms" : "Traveler Details"}
             </h2>
           </div>
@@ -176,18 +176,18 @@ export default function GuestsRoomsDrawer({
             type="button"
             onClick={close}
             aria-label="Close"
-            className="-mr-2 rounded-full p-2 text-stone-700 transition-colors hover:bg-stone-100 hover:text-stone-900"
+            className="-mr-1.5 rounded-full p-1.5 text-stone-700 transition-colors hover:bg-stone-100 hover:text-stone-900"
           >
-            <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-8">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5">
           {step === "rooms" ? (
             <>
-              <p className="mt-3 text-[15px] leading-relaxed text-stone-800">
+              <p className="mt-2 text-sm leading-relaxed text-stone-800">
                 If you require more than {MAX_ROOMS} rooms or more than {MAX_BEDS_PER_ROOM} beds per room please{" "}
                 <Link href="/contact" className="font-semibold text-gold-700 underline underline-offset-2 hover:text-gold-800">
                   contact us
@@ -195,12 +195,12 @@ export default function GuestsRoomsDrawer({
                 .
               </p>
 
-              <ul className="mt-5 space-y-4">
+              <ul className="mt-4 space-y-3">
                 {rooms.map((room, i) => (
                   <li key={room.id} className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-                    <div className="flex items-center justify-between gap-3 bg-gold-50 px-5 py-3.5">
-                      <h3 className="flex items-center gap-3 text-base font-bold uppercase tracking-wide text-brand-950">
-                        <BedIcon className="h-7 w-7 text-brand-900" />
+                    <div className="flex items-center justify-between gap-3 bg-gold-50 px-4 py-2.5">
+                      <h3 className="flex items-center gap-2.5 text-sm font-bold uppercase tracking-wide text-brand-950">
+                        <BedIcon className="h-5 w-5 text-brand-900" />
                         Room {i + 1}
                       </h3>
                       {rooms.length > 1 && (
@@ -208,14 +208,14 @@ export default function GuestsRoomsDrawer({
                           type="button"
                           onClick={() => onRooms(rooms.filter((r) => r.id !== room.id))}
                           aria-label={`Remove room ${i + 1}`}
-                          className="text-sm font-semibold text-stone-600 underline underline-offset-2 hover:text-red-700"
+                          className="text-xs font-semibold text-stone-600 underline underline-offset-2 hover:text-red-700"
                         >
                           Remove room
                         </button>
                       )}
                     </div>
 
-                    <div className="divide-y divide-stone-200 px-5">
+                    <div className="divide-y divide-stone-200 px-4">
                       <Row label="Adults (18+)" hint="Number of adults in this room">
                         <Stepper
                           label={`adults in room ${i + 1}`}
@@ -244,9 +244,9 @@ export default function GuestsRoomsDrawer({
                 type="button"
                 onClick={addRoom}
                 disabled={!canAddRoom(rooms, maxTravelers)}
-                className="mt-5 flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gold-500 px-4 py-4 text-base font-bold uppercase tracking-wide text-gold-700 transition-colors hover:bg-gold-50 disabled:cursor-not-allowed disabled:border-stone-300 disabled:text-stone-400 disabled:hover:bg-transparent"
+                className="mt-4 flex w-full items-center justify-center gap-2.5 rounded-xl border-2 border-dashed border-gold-500 px-4 py-3 text-sm font-bold uppercase tracking-wide text-gold-700 transition-colors hover:bg-gold-50 disabled:cursor-not-allowed disabled:border-stone-300 disabled:text-stone-400 disabled:hover:bg-transparent"
               >
-                <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
                 Add another room
@@ -276,9 +276,9 @@ export default function GuestsRoomsDrawer({
         </div>
 
         {step === "rooms" && (
-          <div className="border-t border-stone-200 bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-8">
+          <div className="border-t border-stone-200 bg-white px-5 pb-[max(0.875rem,env(safe-area-inset-bottom))] pt-3">
             {!valid && (
-              <ul role="alert" className="mb-3 space-y-0.5 text-sm text-red-700">
+              <ul role="alert" className="mb-2 space-y-0.5 text-xs text-red-700">
                 {errors.map((e) => (
                   <li key={e}>{e}</li>
                 ))}
@@ -288,7 +288,7 @@ export default function GuestsRoomsDrawer({
             <button
               type="button"
               onClick={close}
-              className="shrink-0 rounded-xl border border-stone-300 bg-white px-6 py-4 text-lg font-semibold text-stone-800 transition-colors hover:bg-stone-50"
+              className="shrink-0 rounded-xl border border-stone-300 bg-white px-5 py-3 text-base font-semibold text-stone-800 transition-colors hover:bg-stone-50"
             >
               Cancel
             </button>
@@ -299,10 +299,10 @@ export default function GuestsRoomsDrawer({
                 onContinue(rooms);
                 setStep("next");
               }}
-              className="flex flex-1 items-center justify-center gap-3 rounded-xl bg-brand-900 px-6 py-4 text-xl font-bold text-white transition-colors hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-stone-300"
+              className="flex flex-1 items-center justify-center gap-2.5 rounded-xl bg-brand-900 px-5 py-3 text-base font-bold text-white transition-colors hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-stone-300"
             >
               Continue
-              <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </button>
@@ -317,9 +317,9 @@ export default function GuestsRoomsDrawer({
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-4">
+    <div className="flex items-center justify-between gap-3 py-3">
       <div>
-        <p className="text-base font-medium text-stone-900">{label}</p>
+        <p className="text-[15px] font-medium text-stone-900">{label}</p>
         {hint && <p className="mt-0.5 text-xs text-stone-600">{hint}</p>}
       </div>
       {children}
@@ -343,19 +343,19 @@ function Stepper({
   onChange: (n: number) => void;
 }) {
   const btn =
-    "flex h-11 w-11 items-center justify-center rounded-lg border border-stone-300 bg-white text-stone-900 shadow-sm transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:text-stone-300 disabled:shadow-none disabled:hover:bg-white";
+    "flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 md:h-9 md:w-9 bg-white text-stone-900 shadow-sm transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:text-stone-300 disabled:shadow-none disabled:hover:bg-white";
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       <button type="button" aria-label={`Decrease ${label}`} disabled={value <= min} onClick={() => onChange(value - 1)} className={btn}>
-        <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+        <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
           <path d="M5 12h14" />
         </svg>
       </button>
-      <span aria-live="polite" aria-label={`${value} ${label}`} className="w-6 text-center text-xl font-bold text-stone-900">
+      <span aria-live="polite" aria-label={`${value} ${label}`} className="w-5 text-center text-lg font-bold text-stone-900">
         {value}
       </span>
       <button type="button" aria-label={`Increase ${label}`} disabled={value >= max || !canIncrease} onClick={() => onChange(value + 1)} className={btn}>
-        <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+        <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
       </button>
@@ -401,20 +401,20 @@ function TripSummary({
     { icon: <BedIcon className="h-5 w-5" />, text: `${rooms} Room${rooms === 1 ? "" : "s"}` },
   ];
   return (
-    <section aria-label="Trip summary" className="mt-8 rounded-xl bg-stone-50 p-5">
+    <section aria-label="Trip summary" className="mt-6 rounded-xl bg-stone-50 p-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-display text-2xl font-bold text-brand-950">Trip Summary</h3>
-        <span className="rounded-full bg-gold-100 px-3 py-1 text-xs font-bold text-gold-800">Selected departure</span>
+        <h3 className="font-display text-xl font-bold text-brand-950">Trip Summary</h3>
+        <span className="rounded-full bg-gold-100 px-2.5 py-0.5 text-[11px] font-bold text-gold-800">Selected departure</span>
       </div>
-      <div className="mt-4 flex gap-4">
-        <div className="relative h-36 w-28 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-brand-600 to-brand-950">
-          {image && <Image src={image} alt="" fill unoptimized sizes="112px" className="object-cover" />}
+      <div className="mt-3 flex gap-3">
+        <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-brand-600 to-brand-950">
+          {image && <Image src={image} alt="" fill unoptimized sizes="80px" className="object-cover" />}
         </div>
         <div className="min-w-0">
-          <p className="font-display text-lg font-bold leading-snug text-brand-950">{title}</p>
-          <ul className="mt-3 space-y-2 text-[15px] text-stone-800">
+          <p className="font-display text-base font-bold leading-snug text-brand-950">{title}</p>
+          <ul className="mt-2 space-y-1.5 text-sm text-stone-800">
             {rows.map((r) => (
-              <li key={r.text} className="flex items-center gap-3">
+              <li key={r.text} className="flex items-center gap-2.5">
                 <span className="text-stone-600">{r.icon}</span>
                 {r.text}
               </li>
@@ -423,21 +423,21 @@ function TripSummary({
         </div>
       </div>
 
-      <dl className="mt-5 space-y-2 border-t border-stone-200 pt-4 text-[15px]">
+      <dl className="mt-4 space-y-1.5 border-t border-stone-200 pt-3 text-sm">
         <div className="flex items-center justify-between">
           <dt className="text-stone-700">Price per person</dt>
           <dd className="font-semibold text-stone-900">
             <Money btn={pricePerPerson} />
           </dd>
         </div>
-        <div className="flex items-center justify-between text-lg">
+        <div className="flex items-center justify-between text-base">
           <dt className="font-bold text-stone-900">Estimated total</dt>
           <dd className="font-bold text-brand-950">
             <Money btn={pricePerPerson * travelers} />
           </dd>
         </div>
       </dl>
-      <p className="mt-2 text-xs text-stone-600">
+      <p className="mt-2 text-[11px] leading-snug text-stone-600">
         Final price may vary based on room configuration and applicable supplements. Nothing is charged at this step.
       </p>
     </section>
