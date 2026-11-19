@@ -309,6 +309,8 @@ export default async function PackageDetailPage({
             drawerDepartures={drawerDepartures}
             stays={stays}
             phone={company.phone}
+            tripImage={itinerary.coverPhotoUrl}
+            maxTravelers={itinerary.maxGroupSize}
           />
         </div>
 

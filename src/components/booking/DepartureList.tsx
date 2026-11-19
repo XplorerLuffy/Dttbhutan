@@ -6,6 +6,9 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import Money from "@/components/Money";
 import ItineraryRequestDrawer, { type DrawerDeparture } from "@/components/listing/ItineraryRequestDrawer";
+import GuestsRoomsDrawer from "@/components/booking/GuestsRoomsDrawer";
+import { bookDeparture } from "@/lib/bookDeparture";
+import { defaultRooms, totals, type Room } from "@/lib/guestRooms";
 
 /**
  * Scheduled departures for one package: a year/month filter over a list of
@@ -72,6 +75,8 @@ export default function DepartureList({
   drawerDepartures,
   stays,
   phone,
+  tripImage,
+  maxTravelers,
 }: {
   departures: DepartureView[];
   packageTitle: string;
@@ -80,6 +85,8 @@ export default function DepartureList({
   drawerDepartures: DrawerDeparture[];
   stays: StayView[];
   phone: string;
+  tripImage: string | null;
+  maxTravelers: number | null;
 }) {
   const [tab, setTab] = useState<Tab>("scheduled");
   const [adults, setAdults] = useState(2);
@@ -93,6 +100,22 @@ export default function DepartureList({
   );
   const [year, setYear] = useState(years[0] ?? "");
   const [month, setMonth] = useState<string>("all");
+
+  // The guests-and-rooms panel. `drawerDep` stays set after closing so the panel
+  // can slide out, and so reopening the same departure keeps its room choices.
+  const [roomsConfig, setRoomsConfig] = useState<Room[]>(() => defaultRooms(2, 1));
+  const [drawerDep, setDrawerDep] = useState<DepartureView | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  function openDrawer(d: DepartureView) {
+    // The bar above the list can change the party without the panel knowing;
+    // when it has, start from what the bar says.
+    const t = totals(roomsConfig);
+    if (t.travelers !== adults || t.rooms !== rooms) setRoomsConfig(defaultRooms(adults, rooms));
+    setDrawerDep(d);
+    setDrawerOpen(true);
+  }
+
   /** A departure to open on arrival: where "Book Now" returns after logging in. */
   const [preselect, setPreselect] = useState<string | null>(null);
 
@@ -216,6 +239,7 @@ export default function DepartureList({
                 drawerDepartures={drawerDepartures}
                 stays={stays}
                 phone={phone}
+                onBookTrip={() => openDrawer(d)}
                 openOnArrival={preselect === d.id}
               />
             ))}
@@ -236,6 +260,27 @@ export default function DepartureList({
           )}
         </>
       )}
+
+      {drawerDep && (
+        <GuestsRoomsDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          rooms={roomsConfig}
+          onRooms={setRoomsConfig}
+          onContinue={(r) => {
+            // Make the bar above the list, and Book Now, agree with the choice.
+            const t = totals(r);
+            setAdults(t.travelers);
+            setRooms(t.rooms);
+          }}
+          tripTitle={packageTitle}
+          tripImage={tripImage}
+          slug={slug}
+          itineraryId={itineraryId}
+          departure={drawerDep}
+          maxTravelers={maxTravelers}
+        />
+      )}
     </div>
   );
 }
@@ -252,6 +297,7 @@ function DepartureRow({
   drawerDepartures,
   stays = [],
   phone = "",
+  onBookTrip,
   openOnArrival = false,
 }: {
   departure: DepartureView;
@@ -265,6 +311,7 @@ function DepartureRow({
   drawerDepartures?: DrawerDeparture[];
   stays?: StayView[];
   phone?: string;
+  onBookTrip?: () => void;
   openOnArrival?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -295,7 +342,7 @@ function DepartureRow({
         open && !isPrivate ? "ring-1 ring-brand-900" : "shadow-[0_1px_4px_rgba(0,0,0,0.18)]"
       }`}
     >
-      <div className="flex items-center gap-4 px-5 py-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-5 gap-y-2">
           <DateBlock iso={d.startDate} />
           <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5 shrink-0 text-stone-900">
@@ -320,6 +367,26 @@ function DepartureRow({
           </span>
         ) : (
           <span className={`shrink-0 text-sm font-bold ${STATUS_CLASS[d.status]}`}>{statusLabel}</span>
+        )}
+
+        {!isPrivate && bookable && onBookTrip && (
+          <div className="order-last flex w-full items-center justify-between gap-4 sm:order-none sm:w-auto">
+            <p className="text-sm leading-tight text-stone-700">
+              From <strong className="text-base text-stone-900"><Money btn={d.price} /></strong>
+              <span className="block">per person</span>
+            </p>
+            <button
+              type="button"
+              onClick={onBookTrip}
+              aria-label={`Book this trip: ${fmtLong(d.startDate)} to ${fmtLong(d.endDate)}`}
+              className="inline-flex items-center gap-2 rounded-lg border-2 border-gold-600 bg-white px-4 py-2 text-sm font-bold text-gold-700 transition-colors hover:bg-gold-500 hover:text-white"
+            >
+              Book This Trip
+              <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
+          </div>
         )}
 
         <button
@@ -905,38 +972,21 @@ function BookPanel({
     setStep("sending");
     setError(null);
     setNeedsLogin(false);
-    try {
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "ITINERARY",
-          itineraryId,
-          departureId: d.id,
-          startDate: d.startDate,
-          travelers: adults,
-          rooms,
-        }),
-      });
-      if (res.status === 401) {
-        setNeedsLogin(true);
-        setStep("idle");
-        return;
-      }
-      const data = (await res.json().catch(() => ({}))) as { id?: string; reference?: string; error?: unknown };
-      if (!res.ok || !data.id || !data.reference) {
-        setError(
-          typeof data.error === "string"
-            ? data.error
-            : "We couldn't create the booking. Please check your details and try again."
-        );
-        setStep("idle");
-        return;
-      }
-      setBooked({ id: data.id, reference: data.reference });
+    const result = await bookDeparture({
+      itineraryId,
+      departureId: d.id,
+      startDate: d.startDate,
+      travelers: adults,
+      rooms,
+    });
+    if (result.kind === "ok") {
+      setBooked({ id: result.id, reference: result.reference });
       setStep("done");
-    } catch {
-      setError("Couldn't reach the server. Check your connection and try again.");
+    } else if (result.kind === "login") {
+      setNeedsLogin(true);
+      setStep("idle");
+    } else {
+      setError(result.message);
       setStep("idle");
     }
   }
