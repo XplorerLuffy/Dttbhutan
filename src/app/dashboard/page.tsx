@@ -9,6 +9,7 @@ import ProfileCompletionCard from "@/components/dashboard/ProfileCompletionCard"
 import TravelStatsPanel from "@/components/dashboard/TravelStatsPanel";
 import { profileCompletion } from "@/lib/profileCompletion";
 import NextAdventureCard, { type NextAdventureData } from "@/components/dashboard/NextAdventureCard";
+import QuickActions from "@/components/dashboard/QuickActions";
 import BookingProgress from "@/components/dashboard/BookingProgress";
 import { bookingTimeline, pickNextBooking } from "@/lib/nextAdventure";
 import { travelStats } from "@/lib/travelStats";
@@ -121,6 +122,8 @@ export default async function TravelerDashboardPage() {
           </div>
         )}
       </div>
+
+      <QuickActions />
 
       {enquiries.length > 0 && (
         <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
